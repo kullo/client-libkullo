@@ -1,0 +1,25 @@
+# compiled stuff
+Makefile
+moc_*
+*.o
+*.a
+
+# text editor backups
+*~
+
+# Qt Creator backups
+*.autosave
+
+# generated docs
+/docs
+
+# local configuration
+/CMakeLists.txt.user
+/CMakeLists.txt.user.*
+/*.pro.user
+/*.pro.user.*
+/coverage_settings
+
+# tmp files
+*.tmp
+*.swp

@@ -1,0 +1,258 @@
+/* Copyright 2013–2015 Kullo GmbH. All rights reserved. */
+#include "tests/http/fake_httpclientfactory.h"
+
+#include <jsoncpp/jsoncpp.h>
+
+#include <kulloclient/http/RequestListener.h>
+#include <kulloclient/http/ResponseListener.h>
+#include <kulloclient/crypto/symmetrickeygenerator.h>
+#include <kulloclient/util/assert.h>
+#include <kulloclient/util/base64.h>
+#include <kulloclient/util/binary.h>
+#include <kulloclient/util/hex.h>
+
+#include "tests/testdata.h"
+
+using namespace Kullo;
+
+namespace {
+const std::string EXISTING_USER = "exists#example.com";
+const std::string BLOCKED_USER = "blocked#example.com";
+
+int32_t validateAuth(const std::vector<Http::HttpHeader> headers)
+{
+    for (const auto &header : headers)
+    {
+        if (header.key == "Authorization")
+        {
+            const std::string prefix = "Basic ";
+            if (header.value.find(prefix) != 0)
+            {
+                // no basic auth;
+                return 401;
+            }
+
+            auto loginStringBase64 = header.value.substr(prefix.size());
+            auto loginString = Util::to_string(
+                        Util::Base64::decode(loginStringBase64));
+
+            auto colonPos = loginString.find(':');
+            if (colonPos == std::string::npos)
+            {
+                return 401;
+            }
+
+            auto username = loginString.substr(0, colonPos);
+            if (username != EXISTING_USER)
+            {
+                return 401;
+            }
+
+            auto loginKeyHex = loginString.substr(
+                        colonPos + 1,
+                        loginString.size() - colonPos - 1);
+
+            auto expected = Crypto::SymmetricKeyGenerator().makeLoginKey(
+                        Util::KulloAddress(EXISTING_USER),
+                        Util::MasterKey(MasterKeyData::VALID_DATA_BLOCKS));
+            if (loginKeyHex != expected.toHex())
+            {
+                return 401;
+            }
+
+            // all tests where successful
+            return 200;
+        }
+    }
+
+    // no Authorization header found
+    return 401;
+}
+}
+
+Http::Response FakeHttpClient::sendRequest(
+        const Kullo::Http::Request &request,
+        int64_t /*timeout*/,
+        const std::shared_ptr<Http::RequestListener> &requestListener,
+        const std::shared_ptr<Http::ResponseListener> &responseListener)
+{
+    int32_t statusCode = 0;
+    std::vector<uint8_t> responseBody;
+
+    // public encryption key for existing address
+    if (request.method == Http::HttpMethod::Get && request.url ==
+            "https://kullo.example.com/v1/exists%23example.com"
+            "/keys/public/latest-enc")
+    {
+        statusCode = 200;
+        responseBody = Util::to_vector(
+                    R"({"id": 1, "type": "enc", "pubkey": "FakePubKey", )"
+                    R"("validFrom": "2015-01-01T01:01:01Z", )"
+                    R"("validUntil": "2015-01-01T01:01:01Z", )"
+                    R"("revocation": ""})");
+    }
+
+    // public encryption key for non-existing address
+    else if (request.method == Http::HttpMethod::Get && request.url ==
+             "https://kullo.example.com/v1/doesntexist%23example.com"
+             "/keys/public/latest-enc")
+    {
+        statusCode = 404;
+    }
+
+    // empty inbox for existing address
+    else if (request.method == Http::HttpMethod::Get &&
+             request.url.find(
+                 "https://kullo.example.com/v1/exists%23example.com/messages"
+                 ) == 0)
+    {
+        auto authCode = validateAuth(request.headers);
+        if (authCode != 200)
+        {
+            statusCode = authCode;
+        }
+        else
+        {
+            statusCode = 200;
+            responseBody = Util::to_vector(
+                        R"({"resultsTotal": 0, "resultsReturned": 0, )"
+                        R"("data": []})");
+        }
+    }
+
+    // account info
+    else if (request.method == Http::HttpMethod::Get &&
+             request.url ==
+             "https://kullo.example.com/v1/exists%23example.com/account/info")
+    {
+        auto authCode = validateAuth(request.headers);
+        if (authCode != 200)
+        {
+            statusCode = authCode;
+        }
+        else
+        {
+            statusCode = 200;
+            responseBody = Util::to_vector(
+                        R"({"settingsLocation": )"
+                        R"("https://accounts.example.com/foo/bar"})");
+        }
+    }
+
+    // registration
+    else if (request.method == Http::HttpMethod::Post &&
+             request.url == "https://kullo.example.com/v1/accounts")
+    {
+        auto json = readJson(
+                    requestListener->read(std::numeric_limits<int64_t>::max()));
+
+        auto address = json["address"];
+
+        // non-existing address which doesn't need a challenge: success
+        if (address == "nochallenge#example.com")
+        {
+            statusCode = 200;
+        }
+
+        // existing address: conflict
+        else if (address == "exists#example.com")
+        {
+            statusCode = 409;
+        }
+
+        else if (address == "withchallenge#example.com")
+        {
+            const std::string TYPE = "code";
+            const std::string USER = "withchallenge#example.com";
+            const uint64_t TIMESTAMP = 1433768060000000ull;
+            const std::string TEXT = "foofoofoo";
+            const std::string AUTH = "deadbeef";
+            const std::string ANSWER = "42";
+
+            auto jsonChallenge = json["challenge"];
+            if (
+                    jsonChallenge["type"] == TYPE &&
+                    jsonChallenge["user"] == USER &&
+                    jsonChallenge["timestamp"] == Json::Value::UInt64(TIMESTAMP) &&
+                    jsonChallenge["text"] == TEXT &&
+                    json["challengeAuth"] == AUTH &&
+                    json["challengeAnswer"] == ANSWER)
+            {
+                statusCode = 200;
+            }
+            else
+            {
+                statusCode = 403;
+                responseBody = Util::to_vector(
+                            std::string() +
+                            R"({"challenge": {)"
+                                R"("type": ")" + TYPE + "\", "
+                                R"("user": ")" + USER + "\", "
+                                R"("timestamp": )" + std::to_string(TIMESTAMP) + ", "
+                                R"("text": ")" + TEXT + "\"}, "
+                            R"("challengeAuth": ")" + AUTH + "\"}");
+            }
+        }
+
+        else if (address == BLOCKED_USER)
+        {
+            const std::string TYPE = "blocked";
+            const std::string USER = "blockeduser#example.com";
+            const uint64_t TIMESTAMP = 1433768060000000ull;
+            const std::string TEXT = "foofoofoo";
+            const std::string AUTH = "deadbeef";
+            const std::string ANSWER = "42";
+
+            auto jsonChallenge = json["challenge"];
+
+            // "blocked" challenge cannot be colved => always send challenge
+            statusCode = 403;
+            responseBody = Util::to_vector(
+                        R"({"challenge": {)"
+                            R"("type": ")" + TYPE + "\", "
+                            R"("user": ")" + USER + "\", "
+                            R"("timestamp": )" + std::to_string(TIMESTAMP) + ", "
+                            R"("text": ")" + TEXT + "\"}, "
+                        R"("challengeAuth": ")" + AUTH + "\"}");
+        }
+
+        else
+        {
+            kulloAssert(false);
+        }
+    }
+
+    else
+    {
+        // If we get here, we received a request that isn't handled (yet)
+        kulloAssert(false);
+    }
+
+    if (responseListener) responseListener->dataReceived(responseBody);
+    return Http::Response(
+                boost::optional<Http::ResponseError>(),
+                statusCode,
+                std::vector<Http::HttpHeader>());
+}
+
+Json::Value FakeHttpClient::readJson(const std::vector<uint8_t> &responseBody)
+{
+    auto respBodyData = reinterpret_cast<const char*>(responseBody.data());
+    Json::Value json;
+    Json::Reader(Json::Features::strictMode()).parse(
+                respBodyData,
+                respBodyData + responseBody.size(),
+                json,
+                false);
+    return json;
+}
+
+std::shared_ptr<Http::HttpClient> FakeHttpClientFactory::createHttpClient()
+{
+    return std::make_shared<FakeHttpClient>();
+}
+
+std::unordered_map<std::string, std::string> FakeHttpClientFactory::versions()
+{
+    return std::unordered_map<std::string, std::string>();
+}
