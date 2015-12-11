@@ -21,22 +21,18 @@ namespace Kullo {
 namespace ApiImpl {
 
 SyncerWorker::SyncerWorker(
-        std::shared_ptr<std::mutex> syncMutex,
         std::shared_ptr<SessionData> sessionData,
         std::shared_ptr<Api::SessionListener> sessionListener,
-        std::shared_ptr<Api::SyncerRunListener> listener)
+        std::shared_ptr<Api::SyncerListener> listener)
     : shouldCancel_(std::make_shared<std::atomic<bool>>(false))
     , syncer_(
           sessionData->dbPath_,
           sessionData->userSettings_->userSettings(),
           sessionData->privKeyProvider_)
-    , syncMutex_(syncMutex)
     , sessionData_(sessionData)
     , sessionListener_(sessionListener)
     , listener_(listener)
-{
-    kulloAssert(syncMutex_);
-}
+{}
 
 void SyncerWorker::work()
 {
@@ -45,13 +41,6 @@ void SyncerWorker::work()
 
     try
     {
-        std::unique_lock<std::mutex> lock(*syncMutex_, std::try_to_lock);
-        // API clients must not run parallel syncs.
-        if (!lock)
-        {
-            Log.f() << "Tried to run multiple syncs in parallel, which is not "
-                       "allowed. Terminating.";
-        }
         doWork();
     }
     catch (Sync::SyncCanceled &)
@@ -63,19 +52,21 @@ void SyncerWorker::work()
     {
         Log.e() << "SyncerWorker failed: " << Util::formatException(ex);
 
-        std::lock_guard<std::mutex> lock(mutex_); K_RAII(lock);
-        if (listener_)
+        std::unique_lock<std::mutex> lock(mutex_);
+        if (auto listener = listener_)
         {
-            listener_->error(toNetworkError(std::current_exception()));
+            lock.unlock();
+            listener->error(toNetworkError(std::current_exception()));
         }
         return;
     }
 
     {
-        std::lock_guard<std::mutex> lock(mutex_); K_RAII(lock);
-        if (listener_)
+        std::unique_lock<std::mutex> lock(mutex_);
+        if (auto listener = listener_)
         {
-            listener_->finished();
+            lock.unlock();
+            listener->finished();
         }
     }
 
@@ -165,6 +156,25 @@ void SyncerWorker::setupEvents()
             K_UNUSED(size);
             K_UNUSED(sizeAllowed);
             listener_->draftAttachmentsTooBig(conversationId);
+        }
+    };
+
+    syncer_.events.progressed =
+            [this](Sync::SyncProgress progress)
+    {
+        std::lock_guard<std::mutex> lock(mutex_); K_RAII(lock);
+        if (listener_)
+        {
+            listener_->progressed(Api::SyncProgress(
+                                      progress.messages.countLeft,
+                                      progress.messages.countProcessed,
+                                      progress.messages.countTotal,
+                                      progress.messages.countNew,
+                                      progress.messages.countNewUnread,
+                                      progress.messages.countModified,
+                                      progress.messages.countDeleted,
+                                      progress.runTimeMs
+                                      ));
         }
     };
 }

@@ -9,10 +9,9 @@ namespace ApiImpl {
 SyncerRunWorker::SyncerRunWorker(
         std::shared_ptr<SessionData> sessionData,
         Api::SyncMode mode,
-        std::shared_ptr<std::mutex> syncMutex,
         std::shared_ptr<Api::SessionListener> sessionListener,
-        std::shared_ptr<Api::SyncerRunListener> listener)
-    : SyncerWorker(syncMutex, sessionData, sessionListener, listener)
+        std::shared_ptr<Api::SyncerListener> listener)
+    : SyncerWorker(sessionData, sessionListener, listener)
     , mode_(mode)
 {}
 

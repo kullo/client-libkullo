@@ -315,8 +315,8 @@ K_TEST_F(ApiMessageAttachments, idRangeWorks)
             EXPECT_NO_THROW(uut->mimeType(msgId, attId));
             EXPECT_NO_THROW(uut->size(msgId, attId));
             EXPECT_NO_THROW(uut->hash(msgId, attId));
-            EXPECT_NO_THROW(uut->contentAsync(msgId, attId, contentListener));
-            EXPECT_NO_THROW(uut->saveToAsync(msgId, attId, data.outpath, saveToListener));
+            EXPECT_NO_THROW(uut->contentAsync(msgId, attId, contentListener)->waitUntilDone());
+            EXPECT_NO_THROW(uut->saveToAsync(msgId, attId, data.outpath, saveToListener)->waitUntilDone());
         }
 
         for (auto attId : TEST_IDS_INVALID)
@@ -325,8 +325,8 @@ K_TEST_F(ApiMessageAttachments, idRangeWorks)
             EXPECT_ANY_THROW(uut->mimeType(msgId, attId));
             EXPECT_ANY_THROW(uut->size(msgId, attId));
             EXPECT_ANY_THROW(uut->hash(msgId, attId));
-            EXPECT_ANY_THROW(uut->contentAsync(msgId, attId, contentListener));
-            EXPECT_ANY_THROW(uut->saveToAsync(msgId, attId, data.outpath, saveToListener));
+            EXPECT_ANY_THROW(uut->contentAsync(msgId, attId, contentListener)->waitUntilDone());
+            EXPECT_ANY_THROW(uut->saveToAsync(msgId, attId, data.outpath, saveToListener)->waitUntilDone());
         }
     }
 
@@ -341,8 +341,8 @@ K_TEST_F(ApiMessageAttachments, idRangeWorks)
             EXPECT_ANY_THROW(uut->mimeType(msgId, attId));
             EXPECT_ANY_THROW(uut->size(msgId, attId));
             EXPECT_ANY_THROW(uut->hash(msgId, attId));
-            EXPECT_ANY_THROW(uut->contentAsync(msgId, attId, contentListener));
-            EXPECT_ANY_THROW(uut->saveToAsync(msgId, attId, data.outpath, saveToListener));
+            EXPECT_ANY_THROW(uut->contentAsync(msgId, attId, contentListener)->waitUntilDone());
+            EXPECT_ANY_THROW(uut->saveToAsync(msgId, attId, data.outpath, saveToListener)->waitUntilDone());
         }
 
         for (auto attId : TEST_IDS_INVALID)
@@ -351,8 +351,8 @@ K_TEST_F(ApiMessageAttachments, idRangeWorks)
             EXPECT_ANY_THROW(uut->mimeType(msgId, attId));
             EXPECT_ANY_THROW(uut->size(msgId, attId));
             EXPECT_ANY_THROW(uut->hash(msgId, attId));
-            EXPECT_ANY_THROW(uut->contentAsync(msgId, attId, contentListener));
-            EXPECT_ANY_THROW(uut->saveToAsync(msgId, attId, data.outpath, saveToListener));
+            EXPECT_ANY_THROW(uut->contentAsync(msgId, attId, contentListener)->waitUntilDone());
+            EXPECT_ANY_THROW(uut->saveToAsync(msgId, attId, data.outpath, saveToListener)->waitUntilDone());
         }
     }
 }

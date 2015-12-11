@@ -1,5 +1,5 @@
 /*
-* Botan 1.11.24 Amalgamation
+* Botan 1.11.25 Amalgamation
 * (C) 1999-2013,2014,2015 Jack Lloyd and others
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -29,8 +29,8 @@
 #include <vector>
 
 /*
-* This file was automatically generated Thu Nov  5 19:09:43 2015 UTC by
-* simon@laptitude running '/tmp/update-botan/1.11.24/Botan-1.11.24/configure.py --via-amalgamation --no-autoload --disable-shared --with-boost --with-zlib --enable-modules=aes,sha1,sha2_32,sha2_64,auto_rng,codec_filt,eme_oaep,emsa_pssr,gcm,hres_timer,rsa,srp6,system_rng,dev_random,proc_walk,unix_procs --os=linux --cpu=x86_64 --cc=gcc'
+* This file was automatically generated Tue Dec  8 11:04:13 2015 UTC by
+* daniel@twentyone running '/tmp/update-botan/1.11.25/Botan-1.11.25/configure.py --via-amalgamation --no-autoload --disable-shared --with-boost --with-zlib --enable-modules=aes,sha1,sha2_32,sha2_64,auto_rng,codec_filt,eme_oaep,emsa_pssr,gcm,hres_timer,rsa,srp6,system_rng,dev_random,proc_walk,unix_procs --os=linux --cpu=x86_64 --cc=gcc'
 *
 * Target
 *  - Compiler: g++  -m64 -pthread -fstack-protector -std=c++11 -D_REENTRANT -O2 -momit-leaf-frame-pointer
@@ -40,12 +40,12 @@
 
 #define BOTAN_VERSION_MAJOR 1
 #define BOTAN_VERSION_MINOR 11
-#define BOTAN_VERSION_PATCH 24
-#define BOTAN_VERSION_DATESTAMP 20151104
+#define BOTAN_VERSION_PATCH 25
+#define BOTAN_VERSION_DATESTAMP 20151207
 
 #define BOTAN_VERSION_RELEASE_TYPE "released"
 
-#define BOTAN_VERSION_VC_REVISION "git:cb4ab0662dfbe462dbe578ffa7d6f44effa51d82"
+#define BOTAN_VERSION_VC_REVISION "git:91c194957a12b174f4a51f41319b0d9604450d87"
 
 #define BOTAN_DISTRIBUTION_INFO "unspecified"
 
@@ -67,6 +67,12 @@
 */
 #define BOTAN_MLOCK_ALLOCATOR_MIN_ALLOCATION 16
 #define BOTAN_MLOCK_ALLOCATOR_MAX_ALLOCATION 128
+
+/*
+* Total maximum amount of RAM (in KiB) we will lock into memory, even
+* if the OS would let us lock more
+*/
+#define BOTAN_MLOCK_ALLOCATOR_MAX_LOCKED_KB 512
 
 /* Multiplier on a block cipher's native parallelism */
 #define BOTAN_BLOCK_CIPHER_PAR_MULT 4
@@ -128,10 +134,66 @@
 * RNGs will automatically poll the system for additional seed material
 * after producing this many bytes of output.
 */
-#define BOTAN_RNG_MAX_OUTPUT_BEFORE_RESEED 512
+#define BOTAN_RNG_MAX_OUTPUT_BEFORE_RESEED 4096
 #define BOTAN_RNG_RESEED_POLL_BITS 128
 #define BOTAN_RNG_AUTO_RESEED_TIMEOUT std::chrono::milliseconds(10)
-#define BOTAN_RNG_RESEED_DEFAULT_TIMEOUT std::chrono::milliseconds(100)
+#define BOTAN_RNG_RESEED_DEFAULT_TIMEOUT std::chrono::milliseconds(50)
+
+/*
+* Specifies (in order) the list of entropy sources that will be used
+* to seed an in-memory RNG. The first few in the default list
+* ("timer", "proc_info", etc) do not count as contributing any entropy
+* but are included as they are fast and help protect against a
+* seriously broken system RNG.
+*/
+#define BOTAN_ENTROPY_DEFAULT_SOURCES \
+   { "timestamp", "rdrand", "proc_info", \
+   "darwin_secrandom", "dev_random", "win32_cryptoapi", "egd", \
+   "proc_walk", "system_stats", "unix_procs" }
+
+/*
+* These control the RNG used by the system RNG interface
+*/
+#define BOTAN_SYSTEM_RNG_DEVICE "/dev/urandom"
+#define BOTAN_SYSTEM_RNG_CRYPTOAPI_PROV_TYPE PROV_RSA_FULL
+
+/*
+* These paramaters control how many bytes to read from the system
+* PRNG, and how long to block if applicable.
+*
+* Timeout is ignored on Windows as CryptGenRandom doesn't block
+*/
+#define BOTAN_SYSTEM_RNG_POLL_DEVICES { "/dev/urandom", "/dev/random", "/dev/srandom" }
+
+#define BOTAN_SYSTEM_RNG_POLL_REQUEST 64
+#define BOTAN_SYSTEM_RNG_POLL_TIMEOUT_MS 20
+
+#define BOTAN_ENTROPY_EGD_PATHS { "/var/run/egd-pool", "/dev/egd-pool" }
+#define BOTAN_ENTROPY_PROC_FS_PATH "/proc"
+#define BOTAN_ENTROPY_SAFE_PATHS { "/bin", "/sbin", "/usr/bin", "/usr/sbin" }
+
+/*
+* Defines the static entropy estimates which each type of source uses.
+* These values are expressed as the bits of entropy per byte of
+* output (in double format) and should be conservative. These are used
+* unless an entropy source has some more specific opinion on the entropy
+* of the underlying source.
+*/
+
+// We include some high resolution timestamps because it can't hurt
+#define BOTAN_ENTROPY_ESTIMATE_TIMESTAMPS 0
+
+// Data which is system or process specific, but otherwise static
+#define BOTAN_ENTROPY_ESTIMATE_STATIC_SYSTEM_DATA 0
+
+// Binary system data of some kind
+#define BOTAN_ENTROPY_ESTIMATE_SYSTEM_DATA 0.5
+
+// Human readable text which has entropy
+#define BOTAN_ENTROPY_ESTIMATE_SYSTEM_TEXT (1.0 / 64)
+
+// The output of a PRNG we are trusting to be strong
+#define BOTAN_ENTROPY_ESTIMATE_STRONG_RNG 7.0
 
 /* Should we use GCC-style inline assembler? */
 #if !defined(BOTAN_USE_GCC_INLINE_ASM) && defined(__GNUG__)
@@ -149,7 +211,6 @@
 #define BOTAN_TARGET_OS_IS_LINUX
 #define BOTAN_TARGET_OS_HAS_CLOCK_GETTIME
 #define BOTAN_TARGET_OS_HAS_DLOPEN
-#define BOTAN_TARGET_OS_HAS_GETSID
 #define BOTAN_TARGET_OS_HAS_GETTIMEOFDAY
 #define BOTAN_TARGET_OS_HAS_GMTIME_R
 #define BOTAN_TARGET_OS_HAS_POSIX_MLOCK
@@ -176,6 +237,17 @@
 #if defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN) || \
     defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
   #define BOTAN_TARGET_CPU_HAS_KNOWN_ENDIANNESS
+#endif
+
+/*
+* If no way of dynamically determining the cache line size for the
+* system exists, this value is used as the default. Used by the side
+* channel countermeasures rather than for alignment purposes, so it is
+* better to be on the smaller side if the exact value cannot be
+* determined. Typically 32 or 64 bytes on modern CPUs.
+*/
+#if !defined(BOTAN_TARGET_CPU_DEFAULT_CACHE_LINE_SIZE)
+  #define BOTAN_TARGET_CPU_DEFAULT_CACHE_LINE_SIZE 32
 #endif
 
 #define BOTAN_BUILD_COMPILER_IS_GCC
@@ -249,7 +321,7 @@
 #define BOTAN_HAS_DL_GROUP 20131128
 #define BOTAN_HAS_EME_OAEP 20140118
 #define BOTAN_HAS_EMSA_PSSR 20131128
-#define BOTAN_HAS_ENTROPY_SOURCE 20150201
+#define BOTAN_HAS_ENTROPY_SOURCE 20151120
 #define BOTAN_HAS_ENTROPY_SRC_DEV_RANDOM 20131128
 #define BOTAN_HAS_ENTROPY_SRC_HIGH_RESOLUTION_TIMER 20131128
 #define BOTAN_HAS_ENTROPY_SRC_PROC_WALKER 20131128
@@ -2414,89 +2486,7 @@ bool BOTAN_DLL operator>(const X509_Time&, const X509_Time&);
 
 namespace Botan {
 
-/**
-* Class used to accumulate the poll results of EntropySources
-*/
-class BOTAN_DLL Entropy_Accumulator
-   {
-   public:
-      /**
-      * Initialize an Entropy_Accumulator
-      *
-      * @param accum will be called with poll results, first params the data and
-      * length, the second a best estimate of min-entropy for the entire buffer;
-      * out of an abundance of caution this will be zero for many sources.
-      * accum should return true if it wants the polling to stop, though it may
-      * still be called again a few more times, and should be careful to return
-      * true then as well.
-      */
-      Entropy_Accumulator(std::function<bool (const byte[], size_t, double)> accum) :
-         m_accum_fn(accum) {}
-
-      virtual ~Entropy_Accumulator() {}
-
-      /**
-      * @return if our polling goal has been achieved
-      */
-      bool polling_goal_achieved() const { return m_done; }
-
-      bool polling_finished() const { return m_done; }
-
-      /**
-      * Add entropy to the accumulator
-      * @param bytes the input bytes
-      * @param length specifies how many bytes the input is
-      * @param entropy_bits_per_byte is a best guess at how much
-      * entropy per byte is in this input
-      */
-      void add(const void* bytes, size_t length, double entropy_bits_per_byte)
-         {
-         m_done = m_accum_fn(reinterpret_cast<const byte*>(bytes),
-                             length, entropy_bits_per_byte * length) || m_done;
-         }
-
-      /**
-      * Add entropy to the accumulator
-      * @param v is some value
-      * @param entropy_bits_per_byte is a best guess at how much
-      * entropy per byte is in this input
-      */
-      template<typename T>
-      void add(const T& v, double entropy_bits_per_byte)
-         {
-         add(&v, sizeof(T), entropy_bits_per_byte);
-         }
-   private:
-      std::function<bool (const byte[], size_t, double)> m_accum_fn;
-      bool m_done = false;
-   };
-
-/**
-* Abstract interface to a source of entropy
-*/
-class BOTAN_DLL EntropySource
-   {
-   public:
-      static void poll_available_sources(class Entropy_Accumulator& accum);
-
-      /**
-      * @return name identifying this entropy source
-      */
-      virtual std::string name() const = 0;
-
-      /**
-      * Perform an entropy gathering poll
-      * @param accum is an accumulator object that will be given entropy
-      */
-      virtual void poll(Entropy_Accumulator& accum) = 0;
-
-      virtual ~EntropySource() {}
-   };
-
-}
-
-
-namespace Botan {
+class Entropy_Sources;
 
 /**
 * This class represents a random number (RNG) generator object.
@@ -2583,11 +2573,29 @@ class BOTAN_DLL RandomNumberGenerator
       virtual std::string name() const = 0;
 
       /**
-      * Seed this RNG using the entropy sources it contains.
+      * Seed this RNG using the global entropy sources and default timeout
       * @param bits_to_collect is the number of bits of entropy to
                attempt to gather from the entropy sources
       */
-      virtual void reseed(size_t bits_to_collect) = 0;
+      size_t reseed(size_t bits_to_collect);
+
+      /**
+      * Seed this RNG using the global entropy sources
+      * @param bits_to_collect is the number of bits of entropy to
+               attempt to gather from the entropy sources
+      * @param poll_timeout try not to run longer than this, no matter what
+      */
+      size_t reseed_with_timeout(size_t bits_to_collect,
+                                 std::chrono::milliseconds poll_timeout);
+
+      /**
+      * Poll provided sources for up to poll_bits bits of entropy
+      * or until the timeout expires. Returns estimate of the number
+      * of bits collected.
+      */
+      virtual size_t reseed_with_sources(Entropy_Sources& srcs,
+                                         size_t poll_bits,
+                                         std::chrono::milliseconds poll_timeout) = 0;
 
       /**
       * Add entropy to this RNG.
@@ -2618,7 +2626,12 @@ class BOTAN_DLL Null_RNG : public RandomNumberGenerator
 
       std::string name() const override { return "Null_RNG"; }
 
-      void reseed(size_t) override {}
+      size_t reseed_with_sources(Entropy_Sources&, size_t,
+                                 std::chrono::milliseconds) override
+         {
+         return 0;
+         }
+
       bool is_seeded() const override { return false; }
       void add_entropy(const byte[], size_t) override {}
    };
@@ -2653,10 +2666,12 @@ class BOTAN_DLL Serialized_RNG : public RandomNumberGenerator
          return m_rng->name();
          }
 
-      void reseed(size_t poll_bits) override
+      size_t reseed_with_sources(Entropy_Sources& src,
+                                 size_t bits,
+                                 std::chrono::milliseconds msec) override
          {
          std::lock_guard<std::mutex> lock(m_mutex);
-         m_rng->reseed(poll_bits);
+         return m_rng->reseed_with_sources(src, bits, msec);
          }
 
       void add_entropy(const byte in[], size_t len) override
@@ -2666,6 +2681,7 @@ class BOTAN_DLL Serialized_RNG : public RandomNumberGenerator
          }
 
       Serialized_RNG() : m_rng(RandomNumberGenerator::make_rng()) {}
+      Serialized_RNG(RandomNumberGenerator* rng) : m_rng(rng) {}
    private:
       mutable std::mutex m_mutex;
       std::unique_ptr<RandomNumberGenerator> m_rng;
@@ -2688,7 +2704,12 @@ class BOTAN_DLL AutoSeeded_RNG : public RandomNumberGenerator
 
       std::string name() const override { return m_rng->name(); }
 
-      void reseed(size_t poll_bits = 256) override { m_rng->reseed(poll_bits); }
+      size_t reseed_with_sources(Entropy_Sources& srcs,
+                               size_t poll_bits,
+                               std::chrono::milliseconds poll_timeout) override
+         {
+         return m_rng->reseed_with_sources(srcs, poll_bits, poll_timeout);
+         }
 
       void add_entropy(const byte in[], size_t len) override
          { m_rng->add_entropy(in, len); }
@@ -3578,135 +3599,14 @@ BER_Decoder& BER_Decoder::decode_list(std::vector<T>& vec,
 
 namespace Botan {
 
-#if defined(__SIZEOF_INT128__)
-   #define BOTAN_TARGET_HAS_NATIVE_UINT128
-   typedef unsigned __int128 uint128_t;
-
-#elif (BOTAN_GCC_VERSION > 440) && defined(BOTAN_TARGET_CPU_HAS_NATIVE_64BIT)
-   #define BOTAN_TARGET_HAS_NATIVE_UINT128
-   typedef unsigned int uint128_t __attribute__((mode(TI)));
-#endif
-
-}
-
-#if defined(BOTAN_TARGET_HAS_NATIVE_UINT128)
-
-#define BOTAN_FAST_64X64_MUL(a,b,lo,hi)      \
-   do {                                      \
-      const uint128_t r = static_cast<uint128_t>(a) * b;   \
-      *hi = (r >> 64) & 0xFFFFFFFFFFFFFFFF;  \
-      *lo = (r      ) & 0xFFFFFFFFFFFFFFFF;  \
-   } while(0)
-
-#elif defined(BOTAN_BUILD_COMPILER_IS_MSVC) && defined(BOTAN_TARGET_CPU_HAS_NATIVE_64BIT)
-
-#include <intrin.h>
-#pragma intrinsic(_umul128)
-
-#define BOTAN_FAST_64X64_MUL(a,b,lo,hi) \
-   do { *lo = _umul128(a, b, hi); } while(0)
-
-#elif defined(BOTAN_USE_GCC_INLINE_ASM)
-
-#if defined(BOTAN_TARGET_ARCH_IS_X86_64)
-
-#define BOTAN_FAST_64X64_MUL(a,b,lo,hi) do {                           \
-   asm("mulq %3" : "=d" (*hi), "=a" (*lo) : "a" (a), "rm" (b) : "cc"); \
-   } while(0)
-
-#elif defined(BOTAN_TARGET_ARCH_IS_ALPHA)
-
-#define BOTAN_FAST_64X64_MUL(a,b,lo,hi) do {              \
-   asm("umulh %1,%2,%0" : "=r" (*hi) : "r" (a), "r" (b)); \
-   *lo = a * b;                                           \
-} while(0)
-
-#elif defined(BOTAN_TARGET_ARCH_IS_IA64)
-
-#define BOTAN_FAST_64X64_MUL(a,b,lo,hi) do {                \
-   asm("xmpy.hu %0=%1,%2" : "=f" (*hi) : "f" (a), "f" (b)); \
-   *lo = a * b;                                             \
-} while(0)
-
-#elif defined(BOTAN_TARGET_ARCH_IS_PPC64)
-
-#define BOTAN_FAST_64X64_MUL(a,b,lo,hi) do {                      \
-   asm("mulhdu %0,%1,%2" : "=r" (*hi) : "r" (a), "r" (b) : "cc"); \
-   *lo = a * b;                                                   \
-} while(0)
-
-#endif
-
-#endif
-
-namespace Botan {
-
-/**
-* Perform a 64x64->128 bit multiplication
-*/
-inline void mul64x64_128(u64bit a, u64bit b, u64bit* lo, u64bit* hi)
-   {
-#if defined(BOTAN_FAST_64X64_MUL)
-   BOTAN_FAST_64X64_MUL(a, b, lo, hi);
-#else
-
-   /*
-   * Do a 64x64->128 multiply using four 32x32->64 multiplies plus
-   * some adds and shifts. Last resort for CPUs like UltraSPARC (with
-   * 64-bit registers/ALU, but no 64x64->128 multiply) or 32-bit CPUs.
-   */
-   const size_t HWORD_BITS = 32;
-   const u32bit HWORD_MASK = 0xFFFFFFFF;
-
-   const u32bit a_hi = (a >> HWORD_BITS);
-   const u32bit a_lo = (a  & HWORD_MASK);
-   const u32bit b_hi = (b >> HWORD_BITS);
-   const u32bit b_lo = (b  & HWORD_MASK);
-
-   u64bit x0 = static_cast<u64bit>(a_hi) * b_hi;
-   u64bit x1 = static_cast<u64bit>(a_lo) * b_hi;
-   u64bit x2 = static_cast<u64bit>(a_hi) * b_lo;
-   u64bit x3 = static_cast<u64bit>(a_lo) * b_lo;
-
-   // this cannot overflow as (2^32-1)^2 + 2^32-1 < 2^64-1
-   x2 += x3 >> HWORD_BITS;
-
-   // this one can overflow
-   x2 += x1;
-
-   // propagate the carry if any
-   x0 += static_cast<u64bit>(static_cast<bool>(x2 < x1)) << HWORD_BITS;
-
-   *hi = x0 + (x2 >> HWORD_BITS);
-   *lo  = ((x2 & HWORD_MASK) << HWORD_BITS) + (x3 & HWORD_MASK);
-#endif
-   }
-
-}
-
-
-namespace Botan {
-
 #if (BOTAN_MP_WORD_BITS == 8)
   typedef byte word;
-  typedef u16bit dword;
-  #define BOTAN_HAS_MP_DWORD
 #elif (BOTAN_MP_WORD_BITS == 16)
   typedef u16bit word;
-  typedef u32bit dword;
-  #define BOTAN_HAS_MP_DWORD
 #elif (BOTAN_MP_WORD_BITS == 32)
   typedef u32bit word;
-  typedef u64bit dword;
-  #define BOTAN_HAS_MP_DWORD
 #elif (BOTAN_MP_WORD_BITS == 64)
   typedef u64bit word;
-
-  #if defined(BOTAN_TARGET_HAS_NATIVE_UINT128)
-    typedef uint128_t dword;
-    #define BOTAN_HAS_MP_DWORD
-  #endif
-
 #else
   #error BOTAN_MP_WORD_BITS must be 8, 16, 32, or 64
 #endif
@@ -6092,7 +5992,7 @@ struct BOTAN_DLL calendar_point
    /**
    * Returns an STL timepoint object
    */
-   std::chrono::system_clock::time_point to_std_timepoint();
+   std::chrono::system_clock::time_point to_std_timepoint() const;
 
    /**
    * Returns a human readable string of the struct's components.
@@ -6528,12 +6428,27 @@ class BOTAN_DLL CPUID
       /**
       * Return a best guess of the cache line size
       */
-      static size_t cache_line_size() { initialize(); return g_cache_line_size; }
+      static size_t cache_line_size()
+         {
+         if(!g_initialized)
+            {
+            initialize();
+            }
+         return g_cache_line_size;
+         }
 
       /**
       * Check if the processor supports AltiVec/VMX
       */
-      static bool has_altivec() { initialize(); return g_altivec_capable; }
+      static bool has_altivec()
+         {
+         if(!g_initialized)
+            {
+            initialize();
+            }
+
+         return g_altivec_capable;
+         }
 
       /**
       * Check if the processor supports RDTSC
@@ -6779,7 +6694,7 @@ class BOTAN_DLL SQL_Database
             virtual size_t get_size_t(int column) = 0;
 
             /* Run to completion */
-            virtual void spin() = 0;
+            virtual size_t spin() = 0;
 
             /* Maybe update */
             virtual bool step() = 0;
@@ -7255,6 +7170,119 @@ class BOTAN_DLL EMSA
 * @return pointer to newly allocated object of that type
 */
 BOTAN_DLL EMSA* get_emsa(const std::string& algo_spec);
+
+}
+
+
+namespace Botan {
+
+/**
+* Class used to accumulate the poll results of EntropySources
+*/
+class BOTAN_DLL Entropy_Accumulator
+   {
+   public:
+      /**
+      * Initialize an Entropy_Accumulator
+      *
+      * @param accum will be called with poll results, first params the data and
+      * length, the second a best estimate of min-entropy for the entire buffer;
+      * out of an abundance of caution this will be zero for many sources.
+      * accum should return true if it wants the polling to stop, though it may
+      * still be called again a few more times, and should be careful to return
+      * true then as well.
+      */
+      Entropy_Accumulator(std::function<bool (const byte[], size_t, double)> accum) :
+         m_accum_fn(accum) {}
+
+      virtual ~Entropy_Accumulator() {}
+
+      /**
+      * @return if our polling goal has been achieved
+      */
+      bool polling_goal_achieved() const { return m_done; }
+
+      bool polling_finished() const { return m_done; }
+
+      /**
+      * Add entropy to the accumulator
+      * @param bytes the input bytes
+      * @param length specifies how many bytes the input is
+      * @param entropy_bits_per_byte is a best guess at how much
+      * entropy per byte is in this input
+      */
+      void add(const void* bytes, size_t length, double entropy_bits_per_byte)
+         {
+         m_done = m_accum_fn(reinterpret_cast<const byte*>(bytes),
+                             length, entropy_bits_per_byte * length) || m_done;
+         }
+
+      /**
+      * Add entropy to the accumulator
+      * @param v is some value
+      * @param entropy_bits_per_byte is a best guess at how much
+      * entropy per byte is in this input
+      */
+      template<typename T>
+      void add(const T& v, double entropy_bits_per_byte)
+         {
+         add(&v, sizeof(T), entropy_bits_per_byte);
+         }
+
+      secure_vector<byte>& get_io_buf(size_t sz) { m_io_buf.resize(sz); return m_io_buf; }
+   private:
+      std::function<bool (const byte[], size_t, double)> m_accum_fn;
+      secure_vector<byte> m_io_buf;
+      bool m_done = false;
+   };
+
+/**
+* Abstract interface to a source of entropy
+*/
+class BOTAN_DLL Entropy_Source
+   {
+   public:
+      /*
+      * Return a new entropy source of a particular type, or null
+      * Each entropy source may require substantial resources (eg, a file handle
+      * or socket instance), so try to share them among multiple RNGs, or just
+      * use the preconfigured global list accessed by global_entropy_sources()
+      */
+      static std::unique_ptr<Entropy_Source> create(const std::string& type);
+
+      /**
+      * @return name identifying this entropy source
+      */
+      virtual std::string name() const = 0;
+
+      /**
+      * Perform an entropy gathering poll
+      * @param accum is an accumulator object that will be given entropy
+      */
+      virtual void poll(Entropy_Accumulator& accum) = 0;
+
+      virtual ~Entropy_Source() {}
+   };
+
+class BOTAN_DLL Entropy_Sources
+   {
+   public:
+      static Entropy_Sources& global_sources();
+
+      void add_source(std::unique_ptr<Entropy_Source> src);
+
+      std::vector<std::string> enabled_sources() const;
+
+      void poll(Entropy_Accumulator& accum);
+      bool poll_just(Entropy_Accumulator& accum, const std::string& src);
+
+      Entropy_Sources() {}
+      Entropy_Sources(const std::vector<std::string>& sources);
+
+      ~Entropy_Sources();
+   private:
+      std::vector<Entropy_Source*> m_srcs;
+   };
 
 }
 
@@ -8270,9 +8298,9 @@ class BOTAN_DLL HMAC_RNG : public RandomNumberGenerator
       void clear() override;
       std::string name() const override;
 
-      void reseed(size_t poll_bits) override;
-
-      void reseed_with_timeout(size_t poll_bits, std::chrono::milliseconds ms);
+      size_t reseed_with_sources(Entropy_Sources& srcs,
+                                 size_t poll_bits,
+                                 std::chrono::milliseconds poll_timeout) override;
 
       void add_entropy(const byte[], size_t) override;
 
@@ -8840,6 +8868,115 @@ namespace Botan {
 void mgf1_mask(HashFunction& hash,
                const byte in[], size_t in_len,
                byte out[], size_t out_len);
+
+}
+
+
+namespace Botan {
+
+// Prefer TI mode over __int128 as GCC rejects the latter in pendantic mode
+#if (BOTAN_GCC_VERSION > 440) && defined(BOTAN_TARGET_CPU_HAS_NATIVE_64BIT)
+   #define BOTAN_TARGET_HAS_NATIVE_UINT128
+   typedef unsigned int uint128_t __attribute__((mode(TI)));
+#elif defined(__SIZEOF_INT128__)
+   #define BOTAN_TARGET_HAS_NATIVE_UINT128
+   typedef unsigned __int128 uint128_t;
+#endif
+
+}
+
+#if defined(BOTAN_TARGET_HAS_NATIVE_UINT128)
+
+#define BOTAN_FAST_64X64_MUL(a,b,lo,hi)      \
+   do {                                      \
+      const uint128_t r = static_cast<uint128_t>(a) * b;   \
+      *hi = (r >> 64) & 0xFFFFFFFFFFFFFFFF;  \
+      *lo = (r      ) & 0xFFFFFFFFFFFFFFFF;  \
+   } while(0)
+
+#elif defined(BOTAN_BUILD_COMPILER_IS_MSVC) && defined(BOTAN_TARGET_CPU_HAS_NATIVE_64BIT)
+
+#include <intrin.h>
+#pragma intrinsic(_umul128)
+
+#define BOTAN_FAST_64X64_MUL(a,b,lo,hi) \
+   do { *lo = _umul128(a, b, hi); } while(0)
+
+#elif defined(BOTAN_USE_GCC_INLINE_ASM)
+
+#if defined(BOTAN_TARGET_ARCH_IS_X86_64)
+
+#define BOTAN_FAST_64X64_MUL(a,b,lo,hi) do {                           \
+   asm("mulq %3" : "=d" (*hi), "=a" (*lo) : "a" (a), "rm" (b) : "cc"); \
+   } while(0)
+
+#elif defined(BOTAN_TARGET_ARCH_IS_ALPHA)
+
+#define BOTAN_FAST_64X64_MUL(a,b,lo,hi) do {              \
+   asm("umulh %1,%2,%0" : "=r" (*hi) : "r" (a), "r" (b)); \
+   *lo = a * b;                                           \
+} while(0)
+
+#elif defined(BOTAN_TARGET_ARCH_IS_IA64)
+
+#define BOTAN_FAST_64X64_MUL(a,b,lo,hi) do {                \
+   asm("xmpy.hu %0=%1,%2" : "=f" (*hi) : "f" (a), "f" (b)); \
+   *lo = a * b;                                             \
+} while(0)
+
+#elif defined(BOTAN_TARGET_ARCH_IS_PPC64)
+
+#define BOTAN_FAST_64X64_MUL(a,b,lo,hi) do {                      \
+   asm("mulhdu %0,%1,%2" : "=r" (*hi) : "r" (a), "r" (b) : "cc"); \
+   *lo = a * b;                                                   \
+} while(0)
+
+#endif
+
+#endif
+
+namespace Botan {
+
+/**
+* Perform a 64x64->128 bit multiplication
+*/
+inline void mul64x64_128(u64bit a, u64bit b, u64bit* lo, u64bit* hi)
+   {
+#if defined(BOTAN_FAST_64X64_MUL)
+   BOTAN_FAST_64X64_MUL(a, b, lo, hi);
+#else
+
+   /*
+   * Do a 64x64->128 multiply using four 32x32->64 multiplies plus
+   * some adds and shifts. Last resort for CPUs like UltraSPARC (with
+   * 64-bit registers/ALU, but no 64x64->128 multiply) or 32-bit CPUs.
+   */
+   const size_t HWORD_BITS = 32;
+   const u32bit HWORD_MASK = 0xFFFFFFFF;
+
+   const u32bit a_hi = (a >> HWORD_BITS);
+   const u32bit a_lo = (a  & HWORD_MASK);
+   const u32bit b_hi = (b >> HWORD_BITS);
+   const u32bit b_lo = (b  & HWORD_MASK);
+
+   u64bit x0 = static_cast<u64bit>(a_hi) * b_hi;
+   u64bit x1 = static_cast<u64bit>(a_lo) * b_hi;
+   u64bit x2 = static_cast<u64bit>(a_hi) * b_lo;
+   u64bit x3 = static_cast<u64bit>(a_lo) * b_lo;
+
+   // this cannot overflow as (2^32-1)^2 + 2^32-1 < 2^64-1
+   x2 += x3 >> HWORD_BITS;
+
+   // this one can overflow
+   x2 += x1;
+
+   // propagate the carry if any
+   x0 += static_cast<u64bit>(static_cast<bool>(x2 < x1)) << HWORD_BITS;
+
+   *hi = x0 + (x2 >> HWORD_BITS);
+   *lo  = ((x2 & HWORD_MASK) << HWORD_BITS) + (x3 & HWORD_MASK);
+#endif
+   }
 
 }
 
@@ -9689,7 +9826,7 @@ class BOTAN_DLL PK_Signer
                 const std::string& provider = "");
 
       /**
-      * Sign a message.
+      * Sign a message all in one go
       * @param in the message to sign as a byte array
       * @param length the length of the above byte array
       * @param rng the rng to use
@@ -9734,6 +9871,15 @@ class BOTAN_DLL PK_Signer
       * @param in the message part to add
       */
       void update(const std::vector<byte>& in) { update(in.data(), in.size()); }
+
+      /**
+      * Add a message part.
+      * @param in the message part to add
+      */
+      void update(const std::string& in)
+         {
+         update(reinterpret_cast<const byte*>(in.data()), in.size());
+         }
 
       /**
       * Get the signature of the so far processed message (provided by the
@@ -9818,6 +9964,15 @@ class BOTAN_DLL PK_Verifier
       */
       void update(const std::vector<byte>& in)
          { update(in.data(), in.size()); }
+
+      /**
+      * Add a message part of the message corresponding to the
+      * signature to be verified.
+      */
+      void update(const std::string& in)
+         {
+         update(reinterpret_cast<const byte*>(in.data()), in.size());
+         }
 
       /**
       * Check the signature of the buffered message, i.e. the one build
@@ -10255,7 +10410,7 @@ class BOTAN_DLL SHA_512 : public MDx_HashFunction
 class BOTAN_DLL SHA_512_256 : public MDx_HashFunction
    {
    public:
-      std::string name() const override { return "SHA-512/256"; }
+      std::string name() const override { return "SHA-512-256"; }
       size_t output_length() const override { return 32; }
       HashFunction* clone() const override { return new SHA_512_256; }
 
@@ -10468,7 +10623,12 @@ class BOTAN_DLL System_RNG : public RandomNumberGenerator
 
       std::string name() const override { return m_rng.name(); }
 
-      void reseed(size_t poll_bits = 256) override { m_rng.reseed(poll_bits); }
+      size_t reseed_with_sources(Entropy_Sources& srcs,
+                                         size_t poll_bits,
+                                         std::chrono::milliseconds poll_timeout) override
+         {
+         return m_rng.reseed_with_sources(srcs, poll_bits, poll_timeout);
+         }
 
       void add_entropy(const byte in[], size_t len) override { m_rng.add_entropy(in, len); }
    private:
@@ -10542,6 +10702,25 @@ namespace Botan {
 * @return estimated security level for this group
 */
 size_t dl_work_factor(size_t prime_group_size);
+
+/**
+* Return the appropriate exponent size to use for a particular prime
+* group. This is twice the size of the estimated cost of breaking the
+* key using an index calculus attack; the assumption is that if an
+* arbitrary discrete log on a group of size bits would take about 2^n
+* effort, and thus using an exponent of size 2^(2*n) implies that all
+* available attacks are about as easy (as e.g Pollard's kangaroo
+* algorithm can compute the DL in sqrt(x) operations) while minimizing
+* the exponent size for performance reasons.
+*/
+size_t dl_exponent_size(size_t prime_group_size);
+
+/**
+* Estimate work factor for integer factorization
+* @param n_bits size of modulus in bits
+* @return estimated security level for this modulus
+*/
+size_t if_work_factor(size_t n_bits);
 
 /**
 * Estimate work factor for EC discrete logarithm

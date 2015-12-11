@@ -15,7 +15,47 @@
 #include <vector>
 
 
+#if defined(_MSC_VER) && (_MSC_VER <= 1800)
+
+   #define BOTAN_WORKAROUND_GH_321
+   #define NOMINMAX 1
+   #define WIN32_LEAN_AND_MEAN 1
+   #include <Windows.h>
+
+#endif
+
 namespace Botan {
+
+#if defined(BOTAN_WORKAROUND_GH_321)
+
+class WinCS_Mutex
+   {
+   public:
+       WinCS_Mutex()
+          {
+          InitializeCriticalSection(&m_cs);
+          }
+          
+       ~WinCS_Mutex()
+          {
+          DeleteCriticalSection(&m_cs);
+          }
+
+       void lock()
+          {
+          EnterCriticalSection(&m_cs);
+          }
+
+       void unlock()
+          {
+          LeaveCriticalSection(&m_cs);
+          }
+
+    private:
+        CRITICAL_SECTION   m_cs;
+   };
+
+#endif
 
 template<typename T>
 class Algo_Registry
@@ -33,14 +73,14 @@ class Algo_Registry
 
       void add(const std::string& name, const std::string& provider, maker_fn fn, byte pref)
          {
-         std::unique_lock<std::mutex> lock(m_mutex);
+         std::lock_guard<mutex> lock(m_mutex);
          if(!m_algo_info[name].add_provider(provider, fn, pref))
             throw std::runtime_error("Duplicated registration of " + name + "/" + provider);
          }
 
       std::vector<std::string> providers_of(const Spec& spec)
          {
-         std::unique_lock<std::mutex> lock(m_mutex);
+         std::lock_guard<mutex> lock(m_mutex);
          auto i = m_algo_info.find(spec.algo_name());
          if(i != m_algo_info.end())
             return i->second.providers();
@@ -49,7 +89,7 @@ class Algo_Registry
 
       void set_provider_preference(const Spec& spec, const std::string& provider, byte pref)
          {
-         std::unique_lock<std::mutex> lock(m_mutex);
+         std::lock_guard<mutex> lock(m_mutex);
          auto i = m_algo_info.find(spec.algo_name());
          if(i != m_algo_info.end())
             i->second.set_pref(provider, pref);
@@ -91,11 +131,18 @@ class Algo_Registry
          };
 
    private:
-      Algo_Registry() {}
+
+#if defined(BOTAN_WORKAROUND_GH_321)
+      using mutex = WinCS_Mutex;
+#else
+      using mutex = std::mutex;
+#endif
+
+      Algo_Registry()  { }
 
       std::vector<maker_fn> get_makers(const Spec& spec, const std::string& provider)
          {
-         std::unique_lock<std::mutex> lock(m_mutex);
+         std::lock_guard<mutex> lock(m_mutex);
          return m_algo_info[spec.algo_name()].get_makers(provider);
          }
 
@@ -157,7 +204,7 @@ class Algo_Registry
             std::unordered_map<std::string, maker_fn> m_maker_fns;
          };
 
-      std::mutex m_mutex;
+      mutex m_mutex;
       std::unordered_map<std::string, Algo_Info> m_algo_info;
    };
 
@@ -638,10 +685,10 @@ namespace Botan {
 /**
 * Entropy source reading from kernel devices like /dev/random
 */
-class Device_EntropySource : public EntropySource
+class Device_EntropySource : public Entropy_Source
    {
    public:
-      std::string name() const override { return "RNG Device Reader"; }
+      std::string name() const override { return "dev_random"; }
 
       void poll(Entropy_Accumulator& accum) override;
 
@@ -649,8 +696,6 @@ class Device_EntropySource : public EntropySource
       ~Device_EntropySource();
    private:
       typedef int fd_type;
-
-      secure_vector<byte> m_buf;
       std::vector<fd_type> m_devices;
    };
 
@@ -789,10 +834,10 @@ namespace Botan {
 * @note Any results from timers are marked as not contributing entropy
 * to the poll, as a local attacker could observe them directly.
 */
-class High_Resolution_Timestamp : public EntropySource
+class High_Resolution_Timestamp : public Entropy_Source
    {
    public:
-      std::string name() const override { return "High Resolution Timestamp"; }
+      std::string name() const override { return "timestamp"; }
       void poll(Entropy_Accumulator& accum) override;
    };
 
@@ -1331,6 +1376,34 @@ void bigint_sqr(word z[], size_t z_size, word workspace[],
 
 namespace Botan {
 
+namespace OS {
+
+/*
+* Returns the maximum amount of memory (in bytes) we could/should
+* hyptothetically allocate. Reads "BOTAN_MLOCK_POOL_SIZE" from
+* environment which can be set to zero.
+*/
+size_t get_memory_locking_limit();
+
+/*
+* Request so many bytes of page-aligned RAM locked into memory OS
+* calls (mlock, VirtualLock, or similar). Returns null on failure. The
+* memory returned is zeroed. Free it with free_locked_pages.
+*/
+void* allocate_locked_pages(size_t length);
+
+/*
+* Free memory allocated by allocate_locked_pages
+*/
+void free_locked_pages(void* ptr, size_t length);
+
+}
+
+}
+
+
+namespace Botan {
+
 /**
 * Container of output buffers for Pipe
 */
@@ -1566,10 +1639,10 @@ class File_Descriptor_Source
 /**
 * File Tree Walking Entropy Source
 */
-class ProcWalking_EntropySource : public EntropySource
+class ProcWalking_EntropySource : public Entropy_Source
    {
    public:
-      std::string name() const override { return "Proc Walker"; }
+      std::string name() const override { return "proc_walk"; }
 
       void poll(Entropy_Accumulator& accum) override;
 
@@ -1699,10 +1772,10 @@ namespace Botan {
 * effective against local attackers as they can sample from the same
 * distribution.
 */
-class Unix_EntropySource : public EntropySource
+class Unix_EntropySource : public Entropy_Source
    {
    public:
-      std::string name() const override { return "Unix Process Runner"; }
+      std::string name() const override { return "unix_procs"; }
 
       void poll(Entropy_Accumulator& accum) override;
 
@@ -1757,10 +1830,10 @@ class Unix_EntropySource : public EntropySource
       secure_vector<byte> m_buf;
    };
 
-class UnixProcessInfo_EntropySource : public EntropySource
+class UnixProcessInfo_EntropySource : public Entropy_Source
    {
    public:
-      std::string name() const override { return "Unix Process Info"; }
+      std::string name() const override { return "proc_info"; }
 
       void poll(Entropy_Accumulator& accum) override;
    };

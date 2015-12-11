@@ -43,7 +43,7 @@ void RegistrationRegisterAccountWorker::work()
     Util::LibraryLogger::setCurrentThreadName("RegAccW");
 
     boost::optional<std::string> optionalChallengeAnswer;
-    if (challengeAnswer_.size())
+    if (!challengeAnswer_.empty())
     {
         optionalChallengeAnswer.emplace(challengeAnswer_);
     }
@@ -59,7 +59,7 @@ void RegistrationRegisterAccountWorker::work()
                     optionalChallengeAnswer);
         auto masterKey = std::make_shared<MasterKeyImpl>(masterKey_.toVector());
 
-        std::lock_guard<std::mutex> lock(mutex_); (void)lock;
+        std::lock_guard<std::mutex> lock(mutex_); K_RAII(lock);
         if (listener_)
         {
             if (challenge)
@@ -98,7 +98,7 @@ void RegistrationRegisterAccountWorker::work()
         Log.e() << "RegistrationRegisterAccountWorker failed: "
                 << Util::formatException(ex);
 
-        std::lock_guard<std::mutex> lock(mutex_); (void)lock;
+        std::lock_guard<std::mutex> lock(mutex_); K_RAII(lock);
         if (listener_)
         {
             listener_->error(
@@ -113,7 +113,7 @@ void RegistrationRegisterAccountWorker::cancel()
     // thread-safe, can be called without locking
     accountsClient_.cancel();
 
-    std::lock_guard<std::mutex> lock(mutex_); (void)lock;
+    std::lock_guard<std::mutex> lock(mutex_); K_RAII(lock);
     listener_.reset();
 }
 

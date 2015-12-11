@@ -4,7 +4,7 @@
 #include "Syncer.h"  // my header
 #include "AsyncTask.h"
 #include "SyncMode.h"
-#include "SyncerRunListener.h"
+#include "SyncerListener.h"
 #include "jni/support-lib/jni/Marshal.hpp"
 
 namespace JNI { namespace Kullo { namespace Api {
@@ -22,24 +22,39 @@ CJNIEXPORT void JNICALL Java_net_kullo_libkullo_api_Syncer_00024CppProxy_nativeD
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, )
 }
 
-CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_Syncer_00024CppProxy_native_1runAsync(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef, jobject j_mode, jobject j_listener)
+CJNIEXPORT void JNICALL Java_net_kullo_libkullo_api_Syncer_00024CppProxy_native_1setListener(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef, jobject j_listener)
 {
     try {
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
         const auto& ref = ::djinni::CppProxyHandle<::Kullo::Api::Syncer>::get(nativeRef);
-        auto r = ref->runAsync(::JNI::Kullo::Api::SyncMode::toCpp(jniEnv, j_mode),
-                               ::JNI::Kullo::Api::SyncerRunListener::toCpp(jniEnv, j_listener));
-        return ::djinni::release(::JNI::Kullo::Api::AsyncTask::fromCpp(jniEnv, r));
-    } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, 0 /* value doesn't matter */)
+        ref->setListener(::JNI::Kullo::Api::SyncerListener::toCpp(jniEnv, j_listener));
+    } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, )
 }
 
-CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_Syncer_00024CppProxy_native_1downloadAttachmentsForMessageAsync(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef, jlong j_msgId, jobject j_listener)
+CJNIEXPORT void JNICALL Java_net_kullo_libkullo_api_Syncer_00024CppProxy_native_1requestSync(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef, jobject j_mode)
 {
     try {
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
         const auto& ref = ::djinni::CppProxyHandle<::Kullo::Api::Syncer>::get(nativeRef);
-        auto r = ref->downloadAttachmentsForMessageAsync(::djinni::I64::toCpp(jniEnv, j_msgId),
-                                                         ::JNI::Kullo::Api::SyncerRunListener::toCpp(jniEnv, j_listener));
+        ref->requestSync(::JNI::Kullo::Api::SyncMode::toCpp(jniEnv, j_mode));
+    } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, )
+}
+
+CJNIEXPORT void JNICALL Java_net_kullo_libkullo_api_Syncer_00024CppProxy_native_1requestDownloadingAttachmentsForMessage(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef, jlong j_msgId)
+{
+    try {
+        DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
+        const auto& ref = ::djinni::CppProxyHandle<::Kullo::Api::Syncer>::get(nativeRef);
+        ref->requestDownloadingAttachmentsForMessage(::djinni::I64::toCpp(jniEnv, j_msgId));
+    } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, )
+}
+
+CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_Syncer_00024CppProxy_native_1asyncTask(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef)
+{
+    try {
+        DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
+        const auto& ref = ::djinni::CppProxyHandle<::Kullo::Api::Syncer>::get(nativeRef);
+        auto r = ref->asyncTask();
         return ::djinni::release(::JNI::Kullo::Api::AsyncTask::fromCpp(jniEnv, r));
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, 0 /* value doesn't matter */)
 }

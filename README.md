@@ -65,6 +65,12 @@ Tips and Tricks
 Changelog
 ---------
 
+### v39 (2015-12-11)
+
+ * New Api: Make sync progress available
+ * New Api: Move sync logic from caller to libkullo
+ * Update Botan 1.11.25
+
 ### v38 (2015-11-30)
 
  * New Api: Let models update their data in synchronous calls (Messages.setRed/setDone, Messages.remove, Conversations.remove)

@@ -72,7 +72,7 @@ K_TEST_F(ApiDrafts, stateWorks)
 
 K_TEST_F(ApiDrafts, prepareToSendThrowsOnEmptySenderName)
 {
-    settings->setName("");
+    settings_->setName("");
     EXPECT_THROW(uut->prepareToSend(data.convId), std::exception);
 }
 
@@ -94,11 +94,11 @@ K_TEST_F(ApiDrafts, idRangeWorks)
 
     for (auto id : TEST_IDS_VALID)
     {
-        uut->state(id);
-        uut->text(id);
-        uut->setText(id, NEW_TEXT);
-        uut->prepareToSend(id);
-        uut->clear(id);
+        EXPECT_NO_THROW(uut->state(id));
+        EXPECT_NO_THROW(uut->text(id));
+        EXPECT_NO_THROW(uut->setText(id, NEW_TEXT));
+        EXPECT_NO_THROW(uut->prepareToSend(id));
+        EXPECT_NO_THROW(uut->clear(id));
     }
 
     for (auto id : TEST_IDS_INVALID)

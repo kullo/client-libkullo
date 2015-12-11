@@ -5,12 +5,20 @@ namespace Kullo {
     namespace Api {
         class Address;
         class AsyncTask;
+        class Challenge;
         class Client;
         class MasterKey;
         class Registration;
         class Session;
         class UserSettings;
 
+        // Records
+        struct AccountInfo;
+        struct DateTime;
+        struct Event;
+        struct SyncProgress;
+
+        enum class ChallengeType;
         enum class NetworkError;
     }
     namespace Codec {

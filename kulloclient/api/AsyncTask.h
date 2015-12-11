@@ -15,7 +15,10 @@ class AsyncTask {
 public:
     virtual ~AsyncTask() {}
 
-    /** Cancels the asynchronous task. This will also stop all callbacks. */
+    /**
+     * Tells the asynchronous task to finish, but doesn't wait for termination.
+     * Stops all callbacks, even if the task continues to run.
+     */
     virtual void cancel() = 0;
 
     /** Returns true iff the task has finished its work. */

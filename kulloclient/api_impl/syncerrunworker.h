@@ -13,9 +13,8 @@ public:
     SyncerRunWorker(
             std::shared_ptr<SessionData> sessionData,
             Api::SyncMode mode,
-            std::shared_ptr<std::mutex> syncMutex,
             std::shared_ptr<Api::SessionListener> sessionListener,
-            std::shared_ptr<Api::SyncerRunListener> listener);
+            std::shared_ptr<Api::SyncerListener> listener);
 
 protected:
     void doWork() override;

@@ -100,6 +100,33 @@ Http::Response FakeHttpClient::sendRequest(
         statusCode = 404;
     }
 
+    // private keys for existing logged in user
+    else if (request.method == Http::HttpMethod::Get
+             && request.url == "https://kullo.example.com/v1/exists%23example.com/keys/symm")
+    {
+        statusCode = 200;
+
+        // iv_raw=$(head -c 16 /dev/urandom)
+        // iv_hex=$(echo -n "$iv_raw" | xxd -ps -c 999)
+        // key_raw=$(./kullomasterkey.py --decode --file=masterkey-zero.kpem)
+        // key_hex=$(echo -n "$key_raw" | xxd -ps -c 999)
+        // (echo -n "$iv_raw" && head -c 32 /dev/urandom | ./Botan encryption --mode=aes-256-gcm --debug --key=$key_hex --iv=$iv_hex) | base64
+        //
+        responseBody = Util::to_vector(
+                    "{"
+                    "\"privateDataKey\":"
+                    "\"7mAPO6xlDsucgqV3P9vgqUaaRk02NvSdY0nYr2mjTkRzY0ifYi+KmHFuSfITg7aWiev3juGEaaoojo/QZ7GhqQ==\""
+                    "}\n");
+    }
+
+    // private keys for existing logged in user
+    else if (request.method == Http::HttpMethod::Get
+             && request.url == "https://kullo.example.com/v1/exists%23example.com/keys/private")
+    {
+        statusCode = 200;
+        responseBody = Util::to_vector("[]");
+    }
+
     // empty inbox for existing address
     else if (request.method == Http::HttpMethod::Get &&
              request.url.find(

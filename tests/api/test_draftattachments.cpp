@@ -583,7 +583,7 @@ K_TEST_F(ApiDraftAttachments, idRangeWorks)
     for (auto convId : TEST_IDS_VALID)
     {
         EXPECT_NO_THROW(uut->allForDraft(convId));
-        EXPECT_NO_THROW(uut->addAsync(convId, data.filepath, data.mimeType, addAsyncListener));
+        EXPECT_NO_THROW(uut->addAsync(convId, data.filepath, data.mimeType, addAsyncListener)->waitUntilDone());
 
         for (auto attId : TEST_IDS_VALID)
         {
@@ -593,8 +593,8 @@ K_TEST_F(ApiDraftAttachments, idRangeWorks)
             EXPECT_NO_THROW(uut->mimeType(convId, attId));
             EXPECT_NO_THROW(uut->size(convId, attId));
             EXPECT_NO_THROW(uut->hash(convId, attId));
-            EXPECT_NO_THROW(uut->contentAsync(convId, attId, contentListener));
-            EXPECT_NO_THROW(uut->saveToAsync(convId, attId, data.outpath, saveToListener));
+            EXPECT_NO_THROW(uut->contentAsync(convId, attId, contentListener)->waitUntilDone());
+            EXPECT_NO_THROW(uut->saveToAsync(convId, attId, data.outpath, saveToListener)->waitUntilDone());
         }
 
         for (auto attId : TEST_IDS_INVALID)
@@ -605,15 +605,15 @@ K_TEST_F(ApiDraftAttachments, idRangeWorks)
             EXPECT_ANY_THROW(uut->mimeType(convId, attId));
             EXPECT_ANY_THROW(uut->size(convId, attId));
             EXPECT_ANY_THROW(uut->hash(convId, attId));
-            EXPECT_ANY_THROW(uut->contentAsync(convId, attId, contentListener));
-            EXPECT_ANY_THROW(uut->saveToAsync(convId, attId, data.outpath, saveToListener));
+            EXPECT_ANY_THROW(uut->contentAsync(convId, attId, contentListener)->waitUntilDone());
+            EXPECT_ANY_THROW(uut->saveToAsync(convId, attId, data.outpath, saveToListener)->waitUntilDone());
         }
     }
 
     for (auto convId : TEST_IDS_INVALID)
     {
         EXPECT_ANY_THROW(uut->allForDraft(convId));
-        EXPECT_ANY_THROW(uut->addAsync(convId, data.filepath, data.mimeType, addAsyncListener));
+        EXPECT_ANY_THROW(uut->addAsync(convId, data.filepath, data.mimeType, addAsyncListener)->waitUntilDone());
 
         for (auto attId : TEST_IDS_VALID)
         {
@@ -623,8 +623,8 @@ K_TEST_F(ApiDraftAttachments, idRangeWorks)
             EXPECT_ANY_THROW(uut->mimeType(convId, attId));
             EXPECT_ANY_THROW(uut->size(convId, attId));
             EXPECT_ANY_THROW(uut->hash(convId, attId));
-            EXPECT_ANY_THROW(uut->contentAsync(convId, attId, contentListener));
-            EXPECT_ANY_THROW(uut->saveToAsync(convId, attId, data.outpath, saveToListener));
+            EXPECT_ANY_THROW(uut->contentAsync(convId, attId, contentListener)->waitUntilDone());
+            EXPECT_ANY_THROW(uut->saveToAsync(convId, attId, data.outpath, saveToListener)->waitUntilDone());
         }
 
         for (auto attId : TEST_IDS_INVALID)
@@ -635,8 +635,8 @@ K_TEST_F(ApiDraftAttachments, idRangeWorks)
             EXPECT_ANY_THROW(uut->mimeType(convId, attId));
             EXPECT_ANY_THROW(uut->size(convId, attId));
             EXPECT_ANY_THROW(uut->hash(convId, attId));
-            EXPECT_ANY_THROW(uut->contentAsync(convId, attId, contentListener));
-            EXPECT_ANY_THROW(uut->saveToAsync(convId, attId, data.outpath, saveToListener));
+            EXPECT_ANY_THROW(uut->contentAsync(convId, attId, contentListener)->waitUntilDone());
+            EXPECT_ANY_THROW(uut->saveToAsync(convId, attId, data.outpath, saveToListener)->waitUntilDone());
         }
     }
 }

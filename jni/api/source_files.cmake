@@ -76,10 +76,12 @@ api/SessionAccountInfoListener.h
 api/SessionListener.cpp
 api/SessionListener.h
 api/SyncMode.h
+api/SyncProgress.cpp
+api/SyncProgress.h
 api/Syncer.cpp
 api/Syncer.h
-api/SyncerRunListener.cpp
-api/SyncerRunListener.h
+api/SyncerListener.cpp
+api/SyncerListener.h
 api/Task.cpp
 api/Task.h
 api/TaskRunner.cpp

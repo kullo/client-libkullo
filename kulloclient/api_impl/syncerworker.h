@@ -5,7 +5,7 @@
 #include <memory>
 
 #include "kulloclient/api/SessionListener.h"
-#include "kulloclient/api/SyncerRunListener.h"
+#include "kulloclient/api/SyncerListener.h"
 #include "kulloclient/api_impl/sessiondata.h"
 #include "kulloclient/api_impl/worker.h"
 #include "kulloclient/sync/syncer.h"
@@ -17,10 +17,9 @@ class SyncerWorker : public Worker
 {
 public:
     SyncerWorker(
-            std::shared_ptr<std::mutex> syncMutex,
             std::shared_ptr<SessionData> sessionData,
             std::shared_ptr<Api::SessionListener> sessionListener,
-            std::shared_ptr<Api::SyncerRunListener> listener);
+            std::shared_ptr<Api::SyncerListener> listener);
 
     void work() override;
     void cancel() override;
@@ -37,12 +36,11 @@ private:
     void sendEvent(const std::shared_ptr<Api::InternalEvent> &event);
 
     // not synchronized, non-threadsafe stuff is only used from work()
-    std::shared_ptr<std::mutex> syncMutex_;
     std::shared_ptr<SessionData> sessionData_;
 
     // all uses must be synchronized
     std::shared_ptr<Api::SessionListener> sessionListener_;
-    std::shared_ptr<Api::SyncerRunListener> listener_;
+    std::shared_ptr<Api::SyncerListener> listener_;
 };
 
 }

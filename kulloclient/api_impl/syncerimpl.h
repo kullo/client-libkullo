@@ -1,10 +1,13 @@
 /* Copyright 2013–2015 Kullo GmbH. All rights reserved. */
 #pragma once
 
-#include <mutex>
+#include <atomic>
+#include <deque>
 
+#include "kulloclient/api/AsyncTask.h"
 #include "kulloclient/api/SessionListener.h"
 #include "kulloclient/api/Syncer.h"
+#include "kulloclient/api/SyncerListener.h"
 #include "kulloclient/api_impl/sessiondata.h"
 
 namespace Kullo {
@@ -17,21 +20,63 @@ public:
             std::shared_ptr<SessionData> session,
             std::shared_ptr<Api::SessionListener> sessionListener);
 
-    std::shared_ptr<Api::AsyncTask> runAsync(
-            Api::SyncMode mode,
-            const std::shared_ptr<Api::SyncerRunListener> &listener) override;
-
-    std::shared_ptr<Api::AsyncTask> downloadAttachmentsForMessageAsync(
-            int64_t msgId,
-            const std::shared_ptr<Api::SyncerRunListener> &listener
-            ) override;
+    void setListener(const std::shared_ptr<Api::SyncerListener> &listener)
+        override;
+    void requestSync(Api::SyncMode mode) override;
+    void requestDownloadingAttachmentsForMessage(int64_t msgId) override;
+    std::shared_ptr<Api::AsyncTask> asyncTask() override;
 
 private:
+    class SyncerAsyncTask : public Api::AsyncTask
+    {
+    public:
+        SyncerAsyncTask(SyncerImpl &parent);
+
+        // Api::AsyncTask implementation
+        void cancel() override;
+        bool isDone() override;
+        void waitUntilDone() override;
+        bool waitForMs(int32_t timeout) override;
+
+        void setTask(const std::shared_ptr<Api::AsyncTask> &task);
+        void onFinished();
+
+    private:
+        SyncerImpl &parent_;
+        std::shared_ptr<Api::AsyncTask> task_;
+    };
+
+    class SyncerSyncerListener : public Api::SyncerListener
+    {
+    public:
+        SyncerSyncerListener(SyncerImpl &parent);
+
+        // Api::SyncerListener implementation
+        void draftAttachmentsTooBig(int64_t convId) override;
+        void progressed(const Api::SyncProgress & progress) override;
+        void finished() override;
+        void error(Api::NetworkError error) override;
+
+    private:
+        SyncerImpl &parent_;
+    };
+
+    void runNextJobIfIdle();
+    std::shared_ptr<Api::AsyncTask> runAsync(Api::SyncMode mode);
+    std::shared_ptr<Api::AsyncTask> downloadAttachmentsForMessageAsync(id_type msgId);
+
     std::shared_ptr<SessionData> sessionData_;
     std::shared_ptr<Api::SessionListener> sessionListener_;
+    std::shared_ptr<Api::SyncerListener> listener_;
 
-    // lock this while syncing to ensure that only one syncer runs per session
-    std::shared_ptr<std::mutex> syncMutex_;
+    std::shared_ptr<SyncerAsyncTask> task_;
+    std::shared_ptr<SyncerSyncerListener> taskSyncerListener_;
+    std::recursive_mutex queueMutex_;
+
+    // members only to be accessed when queueMutex_ is held
+    boost::optional<Api::SyncMode> enqueuedSync_;
+    std::deque<id_type> messageAttachmentDownloadQueue_;
+    bool running_;
 };
 
 }

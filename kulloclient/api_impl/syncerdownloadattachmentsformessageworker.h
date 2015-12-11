@@ -13,9 +13,8 @@ public:
     SyncerDownloadAttachmentsForMessageWorker(
             std::shared_ptr<SessionData> sessionData,
             id_type msgId,
-            std::shared_ptr<std::mutex> syncMutex,
             std::shared_ptr<Api::SessionListener> sessionListener,
-            std::shared_ptr<Api::SyncerRunListener> listener);
+            std::shared_ptr<Api::SyncerListener> listener);
 
 protected:
     void doWork() override;

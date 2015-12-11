@@ -30,7 +30,7 @@ protected:
         -1, -100, 9007199254740993ll};
 
     std::string dbPath_;
-    std::shared_ptr<Kullo::Api::UserSettings> settings;
+    std::shared_ptr<Kullo::Api::UserSettings> settings_;
     std::shared_ptr<Kullo::Api::Session> session_;
     std::shared_ptr<StubSessionListener> sessionListener_;
 };

@@ -59,7 +59,7 @@ K_TEST_F(ApiSession, userSettingsWorks)
 {
     auto result = uut->userSettings();
     ASSERT_THAT(result, Not(IsNull()));
-    EXPECT_THAT(result, Eq(settings));
+    EXPECT_THAT(result, Eq(settings_));
 }
 
 K_TEST_F(ApiSession, conversationsWorks)

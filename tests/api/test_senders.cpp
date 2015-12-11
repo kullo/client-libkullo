@@ -106,11 +106,11 @@ K_TEST_F(ApiSenders, idRangeWorks)
 {
     for (auto id : TEST_IDS_VALID)
     {
-        uut->name(id);
-        uut->address(id);
-        uut->organization(id);
-        uut->avatarMimeType(id);
-        uut->avatar(id);
+        EXPECT_NO_THROW(uut->name(id));
+        EXPECT_NO_THROW(uut->address(id));
+        EXPECT_NO_THROW(uut->organization(id));
+        EXPECT_NO_THROW(uut->avatarMimeType(id));
+        EXPECT_NO_THROW(uut->avatar(id));
     }
 
     for (auto id : TEST_IDS_INVALID)
