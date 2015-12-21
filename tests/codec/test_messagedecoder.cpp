@@ -53,18 +53,18 @@ protected:
 
     void addAllOptionalParts()
     {
-        sender["avatar"] = senderAvatar;
+        sender_["avatar"] = senderAvatar_;
         auto attIndex = Json::Value(Json::arrayValue);
-        attIndex.append(attachmentsIndex[0]);
-        attIndex.append(attachmentsIndex[1]);
-        content["attachmentsIndex"] = attIndex;
+        attIndex.append(attachmentsIndex_[0]);
+        attIndex.append(attachmentsIndex_[1]);
+        content_["attachmentsIndex"] = attIndex;
     }
 
     void assembleMessage()
     {
-        content["sender"] = sender;
-        content["recipients"] = recipients;
-        message.content.data = Util::to_vector(Json::FastWriter().write(content));
+        content_["sender"] = sender_;
+        content_["recipients"] = recipients_;
+        message_.content.data = Util::to_vector(Json::FastWriter().write(content_));
         // leave out optional objects and arrays, as they could not be removed later on
     }
 
@@ -78,35 +78,35 @@ protected:
         return std::make_shared<MockPrivateKeyProvider>(dbPath_);
     }
 
-    Json::Value sender;
-    Json::Value senderAvatar;
-    Json::Value recipients;
-    Json::Value attachmentsIndex;
-    Json::Value content;
-    Codec::DecryptedMessage message;
-    std::pair<metaVersion_type, std::string> decryptedMeta;
+    Json::Value sender_;
+    Json::Value senderAvatar_;
+    Json::Value recipients_;
+    Json::Value attachmentsIndex_;
+    Json::Value content_;
+    Codec::DecryptedMessage message_;
+    std::pair<metaVersion_type, std::string> decryptedMeta_;
 
 private:
     void initContent()
     {
-        sender = Json::Value(Json::objectValue);
-        sender["name"]         = "John Doe";
-        sender["address"]      = "john.doe#kullo.net";
-        sender["organization"] = "Doe Corp.";
+        sender_ = Json::Value(Json::objectValue);
+        sender_["name"]         = "John Doe";
+        sender_["address"]      = "john.doe#kullo.net";
+        sender_["organization"] = "Doe Corp.";
 
         // echo -n "Hello, world." | base64
-        senderAvatar = Json::Value(Json::objectValue);
-        senderAvatar["data"]     = "SGVsbG8sIHdvcmxkLg==";
-        senderAvatar["mimeType"] = "text/plain";
+        senderAvatar_ = Json::Value(Json::objectValue);
+        senderAvatar_["data"]     = "SGVsbG8sIHdvcmxkLg==";
+        senderAvatar_["mimeType"] = "text/plain";
 
-        recipients = Json::Value(Json::arrayValue);
-        recipients.append("alice#kullo.net");
-        recipients.append("bob#kullo.net");
+        recipients_ = Json::Value(Json::arrayValue);
+        recipients_.append("alice#kullo.net");
+        recipients_.append("bob#kullo.net");
 
-        content = Json::Value(Json::objectValue);
-        content["dateSent"] = "2013-11-04T16:19:31+01:00";
-        content["text"]     = "Here comes the message text.";
-        content["footer"]   = "Here comes the footer.";
+        content_ = Json::Value(Json::objectValue);
+        content_["dateSent"] = "2013-11-04T16:19:31+01:00";
+        content_["text"]     = "Here comes the message text.";
+        content_["footer"]   = "Here comes the footer.";
 
         auto attIndex0 = Json::Value(Json::objectValue);
         attIndex0["filename"] = "my_first_file.pdf";
@@ -122,18 +122,18 @@ private:
         attIndex1["size"]     = 1234567;
         attIndex1["hash"]     = "35477e68e5476ace4ba9db8bc82d414e34c06d6b67ffba91a2145b0962ba37f2e7ded0ccef150851ec84d43e0e881788fa670ac30769ec391dfb011f3f7dd5a8";
 
-        attachmentsIndex = Json::Value(Json::arrayValue);
-        attachmentsIndex.append(attIndex0);
-        attachmentsIndex.append(attIndex1);
+        attachmentsIndex_ = Json::Value(Json::arrayValue);
+        attachmentsIndex_.append(attIndex0);
+        attachmentsIndex_.append(attIndex1);
     }
 
     void initMessage()
     {
-        message.id = 42;
-        message.lastModified = 1234567890;
-        message.dateReceived = Util::DateTime::nowUtc();
-        message.metaVersion = 1;
-        message.meta = "{\"read\": 0, \"done\": 0}";
+        message_.id = 42;
+        message_.lastModified = 1234567890;
+        message_.dateReceived = Util::DateTime::nowUtc();
+        message_.metaVersion = 1;
+        message_.meta = "{\"read\": 0, \"done\": 0}";
     }
 };
 
@@ -143,7 +143,7 @@ K_TEST_F(MessageDecoder, gettersReturnNullOrEmptyBeforeDecoding)
     TestData data;
 
     Codec::MessageDecoder decoder(
-                message,
+                message_,
                 data.userAddress,
                 session_
     );
@@ -161,7 +161,7 @@ K_TEST_F(MessageDecoder, validMax)
     assembleMessage();
 
     Codec::MessageDecoder decoder(
-                message,
+                message_,
                 data.userAddress,
                 session_,
                 makeMessageCompressor()
@@ -188,15 +188,15 @@ K_TEST_F(MessageDecoder, validMax)
     // message contents
     auto &msgDao = decoder.message();
     EXPECT_THAT(msgDao.old(), Eq(false));
-    EXPECT_THAT(msgDao.id(), Eq(message.id));
+    EXPECT_THAT(msgDao.id(), Eq(message_.id));
     EXPECT_THAT(msgDao.conversationId(), Eq(convDao.id()));
-    EXPECT_THAT(msgDao.lastModified(), Eq(message.lastModified));
-    EXPECT_THAT(msgDao.sender(), Eq(sender["address"].asString()));
+    EXPECT_THAT(msgDao.lastModified(), Eq(message_.lastModified));
+    EXPECT_THAT(msgDao.sender(), Eq(sender_["address"].asString()));
     EXPECT_THAT(msgDao.deleted(), Eq(false));
-    EXPECT_THAT(Util::DateTime(msgDao.dateSent()), Eq(Util::DateTime(content["dateSent"].asString())));
-    EXPECT_THAT(Util::DateTime(msgDao.dateReceived()), Eq(message.dateReceived));
-    EXPECT_THAT(msgDao.text(), Eq(content["text"].asString()));
-    EXPECT_THAT(msgDao.footer(), Eq(content["footer"].asString()));
+    EXPECT_THAT(Util::DateTime(msgDao.dateSent()), Eq(Util::DateTime(content_["dateSent"].asString())));
+    EXPECT_THAT(Util::DateTime(msgDao.dateReceived()), Eq(message_.dateReceived));
+    EXPECT_THAT(msgDao.text(), Eq(content_["text"].asString()));
+    EXPECT_THAT(msgDao.footer(), Eq(content_["footer"].asString()));
     EXPECT_THAT(msgDao.state(Dao::MessageState::Read), Eq(false));
     EXPECT_THAT(msgDao.state(Dao::MessageState::Done), Eq(false));
     EXPECT_THAT(msgDao.state(Dao::MessageState::Unread), Eq(true));
@@ -206,22 +206,22 @@ K_TEST_F(MessageDecoder, validMax)
     EXPECT_THAT(attDaos.size(), Eq(size_t{2}));
     for (Json::ArrayIndex i = 0; i < attDaos.size(); i++)
     {
-        EXPECT_THAT(attDaos[i]->messageId(), Eq(message.id));
+        EXPECT_THAT(attDaos[i]->messageId(), Eq(message_.id));
         EXPECT_THAT(attDaos[i]->index(), Eq(i));
-        EXPECT_THAT(attDaos[i]->filename(), Eq(attachmentsIndex[i]["filename"].asString()));
-        EXPECT_THAT(attDaos[i]->mimeType(), Eq(attachmentsIndex[i]["mimeType"].asString()));
-        EXPECT_THAT(attDaos[i]->size(), Eq(attachmentsIndex[i]["size"].asDouble()));
-        EXPECT_THAT(attDaos[i]->note(), Eq(attachmentsIndex[i]["note"].asString()));
+        EXPECT_THAT(attDaos[i]->filename(), Eq(attachmentsIndex_[i]["filename"].asString()));
+        EXPECT_THAT(attDaos[i]->mimeType(), Eq(attachmentsIndex_[i]["mimeType"].asString()));
+        EXPECT_THAT(attDaos[i]->size(), Eq(attachmentsIndex_[i]["size"].asDouble()));
+        EXPECT_THAT(attDaos[i]->note(), Eq(attachmentsIndex_[i]["note"].asString()));
         EXPECT_THAT(attDaos[i]->deleted(), Eq(false));
         EXPECT_THROW(attDaos[i]->content(), SmartSqlite::Exception);
     }
 
     // sender contents
-    EXPECT_THAT(senderDao.messageId(), Eq(message.id));
-    EXPECT_THAT(senderDao.name(), Eq(sender["name"].asString()));
-    EXPECT_THAT(senderDao.address().toString(), Eq(sender["address"].asString()));
-    EXPECT_THAT(senderDao.organization(), Eq(sender["organization"].asString()));
-    EXPECT_THAT(senderDao.avatarMimeType(), Eq(senderAvatar["mimeType"].asString()));
+    EXPECT_THAT(senderDao.messageId(), Eq(message_.id));
+    EXPECT_THAT(senderDao.name(), Eq(sender_["name"].asString()));
+    EXPECT_THAT(senderDao.address().toString(), Eq(sender_["address"].asString()));
+    EXPECT_THAT(senderDao.organization(), Eq(sender_["organization"].asString()));
+    EXPECT_THAT(senderDao.avatarMimeType(), Eq(senderAvatar_["mimeType"].asString()));
     EXPECT_THAT(senderDao.avatar(), Eq(Util::to_vector("Hello, world.")));
 }
 
@@ -234,14 +234,14 @@ K_TEST_F(MessageDecoder, validMin)
 {
     TestData data;
 
-    sender.removeMember("organization");
-    recipients.resize(1); // Send to alice#kullo.net only
-    content.removeMember("text");
-    content.removeMember("footer");
+    sender_.removeMember("organization");
+    recipients_.resize(1); // Send to alice#kullo.net only
+    content_.removeMember("text");
+    content_.removeMember("footer");
     assembleMessage();
 
     Codec::MessageDecoder decoder(
-                message,
+                message_,
                 data.userAddress,
                 session_,
                 makeMessageCompressor()
@@ -271,12 +271,12 @@ K_TEST_F(MessageDecoder, optionalAttachmentNote)
 {
     TestData data;
 
-    attachmentsIndex[0].removeMember("note");
+    attachmentsIndex_[0].removeMember("note");
     addAllOptionalParts();
     assembleMessage();
 
     Codec::MessageDecoder decoder(
-                message,
+                message_,
                 data.userAddress,
                 session_,
                 makeMessageCompressor()
@@ -297,7 +297,7 @@ K_TEST_F(MessageDecoder, runDecodeTwice)
     assembleMessage();
 
     Codec::MessageDecoder decoder(
-                message,
+                message_,
                 data.userAddress,
                 session_,
                 makeMessageCompressor()
@@ -314,7 +314,7 @@ K_TEST_F(MessageDecoder, runDecodeMakeParticipantsAndConversationTwice)
     assembleMessage();
 
     Codec::MessageDecoder decoder(
-                message,
+                message_,
                 data.userAddress,
                 session_,
                 makeMessageCompressor()
@@ -332,7 +332,7 @@ K_TEST_F(MessageDecoder, runMakeParticipantsAndConversationBeforeDecode)
     assembleMessage();
 
     Codec::MessageDecoder decoder(
-                message,
+                message_,
                 data.userAddress,
                 session_,
                 makeMessageCompressor()
@@ -347,10 +347,10 @@ K_TEST_F(MessageDecoder, throwsOnInvalidContentJson)
     TestData data;
 
     assembleMessage();
-    message.content.data = Util::to_vector("{this is invalid json");
+    message_.content.data = Util::to_vector("{this is invalid json");
 
     Codec::MessageDecoder decoder(
-                message,
+                message_,
                 data.userAddress,
                 session_,
                 makeMessageCompressor()
@@ -363,10 +363,10 @@ K_TEST_F(MessageDecoder, throwsOnArrayInContentJson)
     TestData data;
 
     assembleMessage();
-    message.content.data = Util::to_vector("[23, 42]");
+    message_.content.data = Util::to_vector("[23, 42]");
 
     Codec::MessageDecoder decoder(
-                message,
+                message_,
                 data.userAddress,
                 session_,
                 makeMessageCompressor()
@@ -378,12 +378,12 @@ K_TEST_F(MessageDecoder, invalidAvatar1)
 {
     TestData data;
 
-    senderAvatar.removeMember("mimeType");
+    senderAvatar_.removeMember("mimeType");
     addAllOptionalParts();
     assembleMessage();
 
     Codec::MessageDecoder decoder(
-                message,
+                message_,
                 data.userAddress,
                 session_,
                 makeMessageCompressor()
@@ -396,12 +396,12 @@ K_TEST_F(MessageDecoder, invalidAvatar2)
 {
     TestData data;
 
-    senderAvatar.removeMember("data");
+    senderAvatar_.removeMember("data");
     addAllOptionalParts();
     assembleMessage();
 
     Codec::MessageDecoder decoder(
-                message,
+                message_,
                 data.userAddress,
                 session_,
                 makeMessageCompressor()
@@ -409,36 +409,55 @@ K_TEST_F(MessageDecoder, invalidAvatar2)
     ASSERT_THROW(decoder.decode(Codec::VerifySignature::False), Codec::InvalidContentFormat);
 }
 
-K_TEST_F(MessageDecoder, invalidRecipients)
+K_TEST_F(MessageDecoder, recipientsEmpty)
 {
     TestData data;
 
-    recipients.resize(0);
-    EXPECT_THAT(recipients, IsEmpty());
+    recipients_.resize(0);
+    EXPECT_THAT(recipients_, IsEmpty());
 
     addAllOptionalParts();
     assembleMessage();
 
     Codec::MessageDecoder decoder(
-                message,
+                message_,
                 data.userAddress,
                 session_,
                 makeMessageCompressor()
     );
+
     ASSERT_THROW(decoder.decode(Codec::VerifySignature::False), Codec::InvalidContentFormat);
 }
 
+K_TEST_F(MessageDecoder, recipientsContainSender)
+{
+    TestData data;
+
+    recipients_.append(sender_["address"]);
+
+    addAllOptionalParts();
+    assembleMessage();
+
+    Codec::MessageDecoder decoder(
+                message_,
+                data.userAddress,
+                session_,
+                makeMessageCompressor()
+    );
+
+    ASSERT_THROW(decoder.decode(Codec::VerifySignature::False), Codec::InvalidContentFormat);
+}
 
 K_TEST_F(MessageDecoder, invalidAttachment1)
 {
     TestData data;
 
-    attachmentsIndex[0].removeMember("filename");
+    attachmentsIndex_[0].removeMember("filename");
     addAllOptionalParts();
     assembleMessage();
 
     Codec::MessageDecoder decoder(
-                message,
+                message_,
                 data.userAddress,
                 session_,
                 makeMessageCompressor()
@@ -450,12 +469,12 @@ K_TEST_F(MessageDecoder, invalidAttachment2)
 {
     TestData data;
 
-    attachmentsIndex[0].removeMember("mimeType");
+    attachmentsIndex_[0].removeMember("mimeType");
     addAllOptionalParts();
     assembleMessage();
 
     Codec::MessageDecoder decoder(
-                message,
+                message_,
                 data.userAddress,
                 session_,
                 makeMessageCompressor()
@@ -467,12 +486,12 @@ K_TEST_F(MessageDecoder, invalidAttachment3)
 {
     TestData data;
 
-    attachmentsIndex[0].removeMember("size");
+    attachmentsIndex_[0].removeMember("size");
     addAllOptionalParts();
     assembleMessage();
 
     Codec::MessageDecoder decoder(
-                message,
+                message_,
                 data.userAddress,
                 session_,
                 makeMessageCompressor()
@@ -484,12 +503,12 @@ K_TEST_F(MessageDecoder, invalidAttachment4)
 {
     TestData data;
 
-    attachmentsIndex[0].removeMember("hash");
+    attachmentsIndex_[0].removeMember("hash");
     addAllOptionalParts();
     assembleMessage();
 
     Codec::MessageDecoder decoder(
-                message,
+                message_,
                 data.userAddress,
                 session_,
                 makeMessageCompressor()

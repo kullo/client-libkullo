@@ -21,9 +21,9 @@ public:
 
         internalEventCounts_[std::type_index(typeid(*event))]++;
 
-        if (session_)
+        if (auto session = session_.lock())
         {
-            auto result = session_->notify(event);
+            auto result = session->notify(event);
             externalEvents_.insert(result.begin(), result.end());
         }
     }
@@ -44,9 +44,9 @@ public:
     }
 
 private:
-    // Those membeers are accessed from different threads via internalEvent()
+    // Those members are accessed from different threads via internalEvent()
     std::mutex mutex_;
     std::unordered_map<std::type_index, int> internalEventCounts_;
-    std::shared_ptr<Kullo::Api::Session> session_;
+    std::weak_ptr<Kullo::Api::Session> session_;
     Kullo::Event::ApiEvents externalEvents_;
 };

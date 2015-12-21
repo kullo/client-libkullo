@@ -176,6 +176,11 @@ void MessageDecoder::parseContent(const DecryptedContent &content)
                    ConversionException,
                    InvalidContentFormat("recipient address invalid"));
 
+        if (*address == sender_->address())
+        {
+            throw InvalidContentFormat("Sender must not be in recipients list.");
+        }
+
         if (*address != userAddress_)
         {
             participantAddresses_.insert(*address);

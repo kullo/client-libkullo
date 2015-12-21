@@ -1,3 +1,8 @@
+This code is part of the Kullo client. An overview of all related
+repositories can be found here:
+[https://www.kullo.net/open/](https://www.kullo.net/open/)
+***********
+
 libkullo
 ========
 
@@ -64,6 +69,13 @@ Tips and Tricks
 
 Changelog
 ---------
+
+### v40 (2015-12-22)
+
+ * Bugfix: Continue sync when handling a message with sender in recipients list
+ * New Api: Use nowide for streams to ensure filenames work on Windows
+ * New Api: Disallow creating a conversation with current user in recipients
+ * New Api: Add NetworkError.Unknown as fallback for errors in syncer
 
 ### v39 (2015-12-11)
 

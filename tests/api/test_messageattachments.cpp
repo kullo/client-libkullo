@@ -12,6 +12,7 @@
 #include <kulloclient/api_impl/sessionimpl.h>
 #include <kulloclient/dao/attachmentdao.h>
 #include <kulloclient/util/binary.h>
+#include <kulloclient/util/filesystem.h>
 
 #include "tests/testutil.h"
 
@@ -240,9 +241,9 @@ K_TEST_F(ApiMessageAttachments, saveToAsyncWorks)
     EXPECT_THAT(listener->attId_, Eq(data.attId));
     EXPECT_THAT(listener->path_, Eq(data.outpath));
 
-    std::ifstream stream(data.outpath);
+    auto stream = Util::Filesystem::makeIfstream(data.outpath);
     std::stringstream result;
-    result << stream.rdbuf();
+    result << stream->rdbuf();
     EXPECT_THAT(result.str(), Eq(data.content));
 }
 

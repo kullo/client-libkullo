@@ -20,11 +20,12 @@ Api::NetworkError toNetworkError(std::exception_ptr exptr)
     catch (Protocol::ProtocolError)       {return Api::NetworkError::Protocol;}
     catch (Protocol::Unauthorized)        {return Api::NetworkError::Unauthorized;}
     catch (Protocol::InternalServerError) {return Api::NetworkError::Server;}
-    catch (...)                       {return Api::NetworkError::Connection;}
+    catch (Protocol::NetworkError)        {return Api::NetworkError::Connection;}
+    catch (...)                           {return Api::NetworkError::Unknown;}
 
     // cannot happen, but make compiler happy
     kulloAssert(false);
-    return Api::NetworkError::Connection;
+    return Api::NetworkError::Unknown;
 }
 
 Api::LocalError toLocalError(std::exception_ptr exptr)

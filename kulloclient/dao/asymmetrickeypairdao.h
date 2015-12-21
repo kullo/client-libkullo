@@ -16,9 +16,6 @@ using AsymmetricKeyPairResult = Result<AsymmetricKeyPairDao>;
 class AsymmetricKeyPairDao
 {
 public:
-    static const std::string ENCRYPTION_STRING;
-    static const std::string SIGNATURE_STRING;
-
     static Crypto::PrivateKey loadPrivateKey(
             Crypto::AsymmetricKeyType type,
             id_type keyId,
@@ -85,8 +82,6 @@ public:
     bool setRevocation(const std::vector<unsigned char> &revocation);
 
 private:
-    static std::string keyTypeToString(Crypto::AsymmetricKeyType type);
-    static Crypto::AsymmetricKeyType stringToKeyType(std::string const &type);
     static std::unique_ptr<AsymmetricKeyPairDao> loadFromDb(const SmartSqlite::Row &row, Db::SharedSessionPtr session);
 
     Db::SharedSessionPtr session_;

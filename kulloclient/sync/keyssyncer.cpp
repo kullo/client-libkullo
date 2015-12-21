@@ -68,17 +68,10 @@ void KeysSyncer::storeAsymmKeyPairs(const std::vector<Protocol::KeyPair> &keyPai
 {
     for (const Protocol::KeyPair &keyPair : keyPairs)
     {
-        Crypto::AsymmetricKeyType type;
-        if (keyPair.type == Dao::AsymmetricKeyPairDao::SIGNATURE_STRING) {
-            type = Crypto::AsymmetricKeyType::Signature;
-
-        } else if (keyPair.type == Dao::AsymmetricKeyPairDao::ENCRYPTION_STRING) {
-            type = Crypto::AsymmetricKeyType::Encryption;
-
-        } else {
-            throw Codec::InvalidContentFormat("unknown keyPair.type");
-            return;
-        }
+        auto type = Crypto::AsymmetricKeyType::Invalid;
+        FWD_NESTED(type = Crypto::keyTypeFromString(keyPair.type),
+                   InvalidArgument,
+                   Codec::InvalidContentFormat("unknown keyPair.type"));
 
         // don't store keys when there's no private key, since we couldn't use
         // them for signing

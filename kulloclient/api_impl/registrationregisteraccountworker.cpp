@@ -149,17 +149,7 @@ Protocol::KeyPair RegistrationRegisterAccountWorker::encodeKeyPair(
                 Crypto::SymmetricCryptor::RANDOM_IV_BYTES);
 
     Protocol::KeyPair result;
-    switch (privKey.type())
-    {
-    case Crypto::AsymmetricKeyType::Encryption:
-        result.type = Dao::AsymmetricKeyPairDao::ENCRYPTION_STRING;
-        break;
-    case Crypto::AsymmetricKeyType::Signature:
-        result.type = Dao::AsymmetricKeyPairDao::SIGNATURE_STRING;
-        break;
-    default:
-        kulloAssert(false);
-    }
+    result.type = Crypto::toString(privKey.type());
     result.validFrom = validFrom;
     result.validUntil = validUntil;
     result.pubkey = Crypto::AsymmetricKeyLoader().toVector(privKey.pubkey());

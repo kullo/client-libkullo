@@ -13,6 +13,7 @@
 #include "kulloclient/util/assert.h"
 #include "kulloclient/util/librarylogger.h"
 #include "kulloclient/util/misc.h"
+#include "kulloclient/util/scopedbenchmark.h"
 
 namespace Kullo {
 namespace ApiImpl {
@@ -27,45 +28,52 @@ void ClientGenerateKeysWorker::work()
 {
     Util::LibraryLogger::setCurrentThreadName("GenKeysW");
 
-    // trigger initial progress report
-    addToProgress(0);
-    if (cancelGenKeysRequested_) return;
+    std::shared_ptr<RegistrationImpl> registration;
 
-    // generate masterKey
-    auto masterKey = make_unique<Crypto::SymmetricKey>(
-                Crypto::SymmetricKeyGenerator().makeMasterKey());
-    addToProgress(10);
-    if (cancelGenKeysRequested_) return;
+    {
+        Util::ScopedBenchmark benchmark("Key generation");
+        K_RAII(benchmark);
 
-    // Start generation of keypairSignature in another thread.
-    // NOTE: Due to concurrency issues in Botan::EntropySource::poll_available_sources,
-    // this must only run after the first key has been generated.
-    keypairSignature_.reset();
-    AsyncTaskImpl keypairSignatureTask(
-                std::make_shared<ClientGenerateKeysSigningWorker>(*this));
+        // trigger initial progress report
+        addToProgress(0);
+        if (cancelGenKeysRequested_) return;
 
-    // generate privateDataKey
-    auto privateDataKey = make_unique<Crypto::SymmetricKey>(
-                Crypto::SymmetricKeyGenerator().makePrivateDataKey());
-    addToProgress(10);
-    if (cancelGenKeysRequested_) return;
+        // generate masterKey
+        auto masterKey = make_unique<Crypto::SymmetricKey>(
+                    Crypto::SymmetricKeyGenerator().makeMasterKey());
+        addToProgress(10);
+        if (cancelGenKeysRequested_) return;
 
-    // generate keypairEncryption
-    auto keypairEncryption = make_unique<Crypto::PrivateKey>(
-                Crypto::AsymmetricKeyGenerator().makeKeyPair(
-                    Crypto::AsymmetricKeyType::Encryption));
-    addToProgress(40);
-    if (cancelGenKeysRequested_) return;
+        // Start generation of keypairSignature in another thread.
+        // NOTE: Due to concurrency issues in Botan::EntropySource::poll_available_sources,
+        // this must only run after the first key has been generated.
+        keypairSignature_.reset();
+        AsyncTaskImpl keypairSignatureTask(
+                    std::make_shared<ClientGenerateKeysSigningWorker>(*this));
 
-    // wait for keypairSignature
-    keypairSignatureTask.waitUntilDone();
-    kulloAssert(keypairSignature_);
+        // generate privateDataKey
+        auto privateDataKey = make_unique<Crypto::SymmetricKey>(
+                    Crypto::SymmetricKeyGenerator().makePrivateDataKey());
+        addToProgress(10);
+        if (cancelGenKeysRequested_) return;
 
-    auto registration = std::make_shared<RegistrationImpl>(
-                std::move(masterKey),
-                std::move(privateDataKey),
-                std::move(keypairEncryption),
-                std::move(keypairSignature_));
+        // generate keypairEncryption
+        auto keypairEncryption = make_unique<Crypto::PrivateKey>(
+                    Crypto::AsymmetricKeyGenerator().makeKeyPair(
+                        Crypto::AsymmetricKeyType::Encryption));
+        addToProgress(40);
+        if (cancelGenKeysRequested_) return;
+
+        // wait for keypairSignature
+        keypairSignatureTask.waitUntilDone();
+        kulloAssert(keypairSignature_);
+
+        registration = std::make_shared<RegistrationImpl>(
+                    std::move(masterKey),
+                    std::move(privateDataKey),
+                    std::move(keypairEncryption),
+                    std::move(keypairSignature_));
+    }
 
     // notify listener of completion
     std::lock_guard<std::mutex> lock(mutex_); K_RAII(lock);

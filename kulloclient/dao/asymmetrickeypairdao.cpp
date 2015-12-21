@@ -15,9 +15,6 @@ using namespace Kullo::Util;
 namespace Kullo {
 namespace Dao {
 
-const std::string AsymmetricKeyPairDao::ENCRYPTION_STRING = "enc";
-const std::string AsymmetricKeyPairDao::SIGNATURE_STRING = "sig";
-
 Crypto::PrivateKey AsymmetricKeyPairDao::loadPrivateKey(
         Crypto::AsymmetricKeyType type,
         id_type keyId,
@@ -59,7 +56,7 @@ std::unique_ptr<AsymmetricKeyPairDao> AsymmetricKeyPairDao::load(Crypto::Asymmet
     auto stmt = session->prepare(
                 "SELECT * FROM keys_asymm WHERE id = :id AND key_type = :key_type");
     stmt.bind(":id", id);
-    stmt.bind(":key_type", keyTypeToString(type));
+    stmt.bind(":key_type", Crypto::toString(type));
 
     return AsymmetricKeyPairResult(std::move(stmt), session).next();
 }
@@ -74,7 +71,7 @@ std::unique_ptr<AsymmetricKeyPairDao> AsymmetricKeyPairDao::load(Crypto::Asymmet
                     "AND datetime(valid_from) <= datetime('now') "
                     "AND datetime(valid_until) >= datetime('now') "
                 "ORDER BY datetime(valid_from) DESC");
-    stmt.bind(":key_type", keyTypeToString(type));
+    stmt.bind(":key_type", Crypto::toString(type));
 
     return AsymmetricKeyPairResult(std::move(stmt), session).next();
 }
@@ -99,7 +96,7 @@ bool AsymmetricKeyPairDao::save()
     }
     auto stmt = session_->prepare(sql);
     stmt.bind(":id", id_);
-    stmt.bind(":key_type", keyTypeToString(keyType_));
+    stmt.bind(":key_type", Crypto::toString(keyType_));
     stmt.bind(":pubkey", pubkey_);
     stmt.bind(":privkey", privkey_);
     stmt.bind(":valid_from", validFrom_);
@@ -187,34 +184,11 @@ bool AsymmetricKeyPairDao::setRevocation(const std::vector<unsigned char> &revoc
     return assignAndUpdateDirty(revocation_, revocation, dirty_);
 }
 
-std::string AsymmetricKeyPairDao::keyTypeToString(Crypto::AsymmetricKeyType type)
-{
-    switch (type) {
-    case Crypto::AsymmetricKeyType::Encryption:
-        return ENCRYPTION_STRING;
-
-    case Crypto::AsymmetricKeyType::Signature:
-        return SIGNATURE_STRING;
-
-    default:
-        kulloAssert(false);
-        return "";
-    }
-}
-
-Crypto::AsymmetricKeyType AsymmetricKeyPairDao::stringToKeyType(const std::string &type)
-{
-    if (type == ENCRYPTION_STRING) return Crypto::AsymmetricKeyType::Encryption;
-    if (type == SIGNATURE_STRING) return Crypto::AsymmetricKeyType::Signature;
-    kulloAssert(false);
-    return Crypto::AsymmetricKeyType::Invalid;
-}
-
 std::unique_ptr<AsymmetricKeyPairDao> AsymmetricKeyPairDao::loadFromDb(const SmartSqlite::Row &row, SharedSessionPtr session)
 {
     auto dao = make_unique<AsymmetricKeyPairDao>(session);
     dao->id_ = row.get<id_type>("id");
-    dao->keyType_ = stringToKeyType(row.get<std::string>("key_type"));
+    dao->keyType_ = Crypto::keyTypeFromString(row.get<std::string>("key_type"));
     dao->pubkey_ = row.get<std::vector<unsigned char>>("pubkey");
     dao->privkey_ = row.get<std::vector<unsigned char>>("privkey");
     dao->validFrom_ = row.get<std::string>("valid_from");

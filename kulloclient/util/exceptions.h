@@ -47,6 +47,15 @@ public:
     virtual ~FilesystemError() = default;
 };
 
+/// An exception for invalud agument values.
+class InvalidArgument : public Util::BaseException
+{
+public:
+    /// @copydoc InvalidArgument::InvalidArgument(const std::string&)
+    InvalidArgument(const std::string &message = "") throw() : BaseException(message) {}
+    virtual ~InvalidArgument() = default;
+};
+
 /// An exception for errors while constructing a DateTime
 class InvalidDateTime : public Util::BaseException
 {

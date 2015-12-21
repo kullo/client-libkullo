@@ -29,7 +29,6 @@ SyncerWorker::SyncerWorker(
           sessionData->dbPath_,
           sessionData->userSettings_->userSettings(),
           sessionData->privKeyProvider_)
-    , sessionData_(sessionData)
     , sessionListener_(sessionListener)
     , listener_(listener)
 {}

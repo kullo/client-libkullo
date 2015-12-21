@@ -8,6 +8,7 @@
 #include "kulloclient/api_impl/exception_conversion.h"
 #include "kulloclient/dao/attachmentdao.h"
 #include "kulloclient/util/exceptions.h"
+#include "kulloclient/util/filesystem.h"
 #include "kulloclient/util/librarylogger.h"
 
 namespace Kullo {
@@ -52,15 +53,8 @@ void AttachmentsSaveToWorker::work()
                         isDraft, convOrMsgId_, attId_, session);
             if (dao)
             {
-                // throwStreamFailureIfFailed is used to work around a GCC bug
-                // which is present from 5.0 and will probably be fixed in 5.3:
-                // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=66145
-                std::ofstream stream(path_, std::ios::binary);
-                throwStreamFailureIfFailed(stream, "Opening the file has failed.");
-
-                stream.exceptions(std::ios_base::failbit | std::ios_base::badbit);
-                dao->saveContent(stream);
-                throwStreamFailureIfFailed(stream, "Saving to the file has failed.");
+                auto stream = Util::Filesystem::makeOfstream(path_);
+                dao->saveContent(*stream);
             }
 
             tx.commit();

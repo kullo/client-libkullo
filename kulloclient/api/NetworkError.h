@@ -18,6 +18,8 @@ enum class NetworkError : int {
     Server,
     /** Network connection couldn't be established */
     Connection,
+    /** Any other error */
+    Unknown,
 };
 
 } }  // namespace Kullo::Api

@@ -9,27 +9,6 @@
 namespace Kullo {
 namespace Codec {
 
-namespace {
-std::string toString(Crypto::AsymmetricKeyType type)
-{
-    std::string out;
-
-    switch (type)
-    {
-    case Crypto::AsymmetricKeyType::Encryption:
-        out = Dao::AsymmetricKeyPairDao::ENCRYPTION_STRING;
-        break;
-    case Crypto::AsymmetricKeyType::Signature:
-        out = Dao::AsymmetricKeyPairDao::SIGNATURE_STRING;
-        break;
-    default:
-        kulloAssert(false);
-    }
-
-    return out;
-}
-}
-
 PrivateKeyProvider::PrivateKeyProvider(const std::string &dbPath)
     : session_(Db::makeSession(dbPath))
 {

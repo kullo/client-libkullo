@@ -55,14 +55,8 @@ void DraftAttachmentsAddWorker::work()
             Util::ScopedBenchmark benchmark("Copy attachment from filesystem to DB");
             K_RAII(benchmark);
 
-            std::ifstream istream(path_, std::ios::binary);
-            if (istream.fail())
-            {
-                throw Util::FilesystemError(
-                            std::string("File could not be opened: ") + path_);
-            }
-
-            auto hash = Crypto::Hasher::sha512Hex(istream);
+            auto istream = Util::Filesystem::makeIfstream(path.string());
+            auto hash = Crypto::Hasher::sha512Hex(*istream);
 
             auto session = Db::makeSession(dbPath_);
             SmartSqlite::ScopedTransaction tx(session, SmartSqlite::Immediate);
@@ -80,9 +74,9 @@ void DraftAttachmentsAddWorker::work()
             dao.setHash(hash);
             dao.save();
 
-            istream.clear();
-            istream.seekg(0);
-            dao.setContent(istream);
+            istream->clear();
+            istream->seekg(0);
+            dao.setContent(*istream);
 
             tx.commit();
         }

@@ -3,6 +3,8 @@
 
 #include <botan/botan.h>
 
+#include "kulloclient/util/exceptions.h"
+
 using namespace Botan;
 
 namespace Kullo {
@@ -40,11 +42,18 @@ std::string Hasher::sha512Hex(const std::vector<unsigned char> &data)
 
 std::string Hasher::sha512Hex(std::istream &input)
 {
-    Pipe pipe(new Hash_Filter("SHA-512"), new Hex_Encoder(Hex_Encoder::Lowercase));
-    DataSource_Stream source(input);
-    pipe.process_msg(source);
-    auto result = pipe.read_all(0);
-    return std::string(result.cbegin(), result.cend());
+    try
+    {
+        Pipe pipe(new Hash_Filter("SHA-512"), new Hex_Encoder(Hex_Encoder::Lowercase));
+        DataSource_Stream source(input);
+        pipe.process_msg(source);
+        auto result = pipe.read_all(0);
+        return std::string(result.cbegin(), result.cend());
+    }
+    catch (Botan::Stream_IO_Error &)
+    {
+        std::throw_with_nested(Util::FilesystemError("Error while calculating hash for stream"));
+    }
 }
 
 }

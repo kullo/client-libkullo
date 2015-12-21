@@ -12,6 +12,7 @@
 #include <kulloclient/api_impl/sessionimpl.h>
 #include <kulloclient/dao/attachmentdao.h>
 #include <kulloclient/util/binary.h>
+#include <kulloclient/util/filesystem.h>
 
 #include "tests/testutil.h"
 
@@ -108,7 +109,10 @@ public:
                     "280d6ef7e68f133e6211e2e5a9a31504"
                     "45d76f1708e04521b0ee034f0b0baf26";
         data.filepath = TestUtil::tempPath() + "/apidraftattachments-in.txt";
-        std::ofstream(data.filepath) << data.content;
+        {
+            auto outstream = Util::Filesystem::makeOfstream(data.filepath);
+            *outstream << data.content;
+        }
 
         data.outpath = TestUtil::tempPath() + "/apidraftattachments-out.txt";
         data.errorOutpath = "/some/non-existing/dir/-.-.-.-.-.-/file.txt";
@@ -497,9 +501,9 @@ K_TEST_F(ApiDraftAttachments, saveToAsyncWorks)
     EXPECT_THAT(listener->attId_, Eq(data.attId));
     EXPECT_THAT(listener->path_, Eq(data.outpath));
 
-    std::ifstream stream(data.outpath);
+    auto stream = Util::Filesystem::makeIfstream(data.outpath);
     std::stringstream result;
-    result << stream.rdbuf();
+    result << stream->rdbuf();
     EXPECT_THAT(result.str(), Eq(data.content));
 }
 

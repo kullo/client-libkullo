@@ -9,6 +9,7 @@
 #include "kulloclient/db/exceptions.h"
 #include "kulloclient/util/binary.h"
 #include "kulloclient/util/checkedconverter.h"
+#include "kulloclient/util/exceptions.h"
 #include "kulloclient/util/misc.h"
 
 using namespace Kullo::Db;
@@ -270,6 +271,10 @@ void AttachmentDao::saveContent(std::ostream &stream) const
             kulloAssert(bytesRead > 0);
             bytesReadTotal += bytesRead;
             stream.write(buffer, bytesRead);
+            if (!stream)
+            {
+                throw Util::FilesystemError("Failed to write attachment to stream");
+            }
         }
         kulloAssert(bytesReadTotal == blob.size());
     }
@@ -341,6 +346,10 @@ void AttachmentDao::setContent(std::istream &input)
                 }
                 blob.write(buffer, input.gcount(), bytesWritten);
                 bytesWritten += input.gcount();
+            }
+            if (input.bad())
+            {
+                throw Util::FilesystemError("Failed to read attachment from stream");
             }
             if (bytesWritten < size_)
             {

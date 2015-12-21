@@ -2,9 +2,10 @@
 #include "kulloclient/api_impl/clientaddressexistsworker.h"
 
 #include "kulloclient/api_impl/exception_conversion.h"
+#include "kulloclient/protocol/exceptions.h"
 #include "kulloclient/util/kulloaddress.h"
 #include "kulloclient/util/librarylogger.h"
-#include "kulloclient/protocol/exceptions.h"
+#include "kulloclient/util/misc.h"
 
 namespace Kullo {
 namespace ApiImpl {
@@ -28,19 +29,19 @@ void ClientAddressExistsWorker::work()
                     Util::KulloAddress(address_->toString()),
                     Protocol::PublicKeysClient::LATEST_ENCRYPTION_PUBKEY);
 
-        std::lock_guard<std::mutex> lock(mutex_); (void)lock;
+        std::lock_guard<std::mutex> lock(mutex_); K_RAII(lock);
         if (listener_) listener_->finished(address_, true);
     }
     catch (Protocol::NotFound)
     {
-        std::lock_guard<std::mutex> lock(mutex_); (void)lock;
+        std::lock_guard<std::mutex> lock(mutex_); K_RAII(lock);
         if (listener_) listener_->finished(address_, false);
     }
     catch (std::exception &ex)
     {
         Log.e() << "ClientAddressExistsWorker failed: " << Util::formatException(ex);
 
-        std::lock_guard<std::mutex> lock(mutex_); (void)lock;
+        std::lock_guard<std::mutex> lock(mutex_); K_RAII(lock);
         if (listener_)
         {
             listener_->error(
@@ -55,7 +56,7 @@ void ClientAddressExistsWorker::cancel()
     // thread-safe, can be called without locking
     keysClient_.cancel();
 
-    std::lock_guard<std::mutex> lock(mutex_); (void)lock;
+    std::lock_guard<std::mutex> lock(mutex_); K_RAII(lock);
     listener_.reset();
 }
 

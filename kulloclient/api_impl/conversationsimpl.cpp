@@ -54,6 +54,13 @@ int64_t ConversationsImpl::add(
 {
     kulloAssert(participants.size());
 
+    // Ensure that user is not sending message to himself
+    const auto currentUserAddress = sessionData_->userSettings_->address();
+    for (const auto &participant : participants)
+    {
+        kulloAssert(!participant->isEqualTo(currentUserAddress));
+    }
+
     auto partString = participantsToString(participants);
     auto convId = get(partString);
     if (convId == -1)

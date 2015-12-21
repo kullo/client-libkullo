@@ -35,9 +35,6 @@ private:
     void setupEvents();
     void sendEvent(const std::shared_ptr<Api::InternalEvent> &event);
 
-    // not synchronized, non-threadsafe stuff is only used from work()
-    std::shared_ptr<SessionData> sessionData_;
-
     // all uses must be synchronized
     std::shared_ptr<Api::SessionListener> sessionListener_;
     std::shared_ptr<Api::SyncerListener> listener_;
