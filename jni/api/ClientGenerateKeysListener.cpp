@@ -11,7 +11,7 @@ ClientGenerateKeysListener::ClientGenerateKeysListener() : ::djinni::JniInterfac
 
 ClientGenerateKeysListener::~ClientGenerateKeysListener() = default;
 
-ClientGenerateKeysListener::JavaProxy::JavaProxy(JniType j) : JavaProxyCacheEntry(j) { }
+ClientGenerateKeysListener::JavaProxy::JavaProxy(JniType j) : Handle(::djinni::jniGetThreadEnv(), j) { }
 
 ClientGenerateKeysListener::JavaProxy::~JavaProxy() = default;
 
@@ -19,7 +19,7 @@ void ClientGenerateKeysListener::JavaProxy::progress(int8_t c_progress) {
     auto jniEnv = ::djinni::jniGetThreadEnv();
     ::djinni::JniLocalScope jscope(jniEnv, 10);
     const auto& data = ::djinni::JniClass<::JNI::Kullo::Api::ClientGenerateKeysListener>::get();
-    jniEnv->CallVoidMethod(getGlobalRef(), data.method_progress,
+    jniEnv->CallVoidMethod(Handle::get().get(), data.method_progress,
                            ::djinni::get(::djinni::I8::fromCpp(jniEnv, c_progress)));
     ::djinni::jniExceptionCheck(jniEnv);
 }
@@ -27,7 +27,7 @@ void ClientGenerateKeysListener::JavaProxy::finished(const std::shared_ptr<::Kul
     auto jniEnv = ::djinni::jniGetThreadEnv();
     ::djinni::JniLocalScope jscope(jniEnv, 10);
     const auto& data = ::djinni::JniClass<::JNI::Kullo::Api::ClientGenerateKeysListener>::get();
-    jniEnv->CallVoidMethod(getGlobalRef(), data.method_finished,
+    jniEnv->CallVoidMethod(Handle::get().get(), data.method_finished,
                            ::djinni::get(::JNI::Kullo::Api::Registration::fromCpp(jniEnv, c_registration)));
     ::djinni::jniExceptionCheck(jniEnv);
 }

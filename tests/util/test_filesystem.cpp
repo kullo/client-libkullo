@@ -1,4 +1,4 @@
-/* Copyright 2013–2015 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
 #include <kulloclient/util/binary.h>
 #include <kulloclient/util/filesystem.h>
 
@@ -149,6 +149,28 @@ K_TEST_F(Filesystem, writeUtf8FilenameRelativeMultibyte)
     }
     {
         auto path = TestUtil::tempPath() + "/filesystem-ß.txt";
+        Util::Filesystem::putContent(path, data);
+        EXPECT_THAT(Util::Filesystem::getContent(path), Eq(data));
+    }
+}
+
+K_TEST_F(Filesystem, writeReadLatin1Filenames)
+{
+    // lower half of latin 1 table minus NBSP and SHY
+    const auto latin1_chars = std::vector<std::string> {
+            "_", "¡", "¢", "£", "¤", "¥", "¦", "§", "¨", "©", "ª", "«", "¬", "®", "_", "¯",
+            "°", "±", "²", "³", "´", "µ", "¶", "·", "¸", "¹", "º", "»", "¼", "½", "¾", "¿",
+            "À", "Á", "Â", "Ã", "Ä", "Å", "Æ", "Ç", "È", "É", "Ê", "Ë", "Ì", "Í", "Î", "Ï",
+            "Ð", "Ñ", "Ò", "Ó", "Ô", "Õ", "Ö", "×", "Ø", "Ù", "Ú", "Û", "Ü", "Ý", "Þ", "ß",
+            "à", "á", "â", "ã", "ä", "å", "æ", "ç", "è", "é", "ê", "ë", "ì", "í", "î", "ï",
+            "ð", "ñ", "ò", "ó", "ô", "õ", "ö", "÷", "ø", "ù", "ú", "û", "ü", "ý", "þ", "ÿ"
+            };
+
+    const auto data = Util::to_vector("foo2");
+
+    for (const auto c : latin1_chars)
+    {
+        auto path = TestUtil::tempPath() + "/filesystem-" + c + ".txt";
         Util::Filesystem::putContent(path, data);
         EXPECT_THAT(Util::Filesystem::getContent(path), Eq(data));
     }

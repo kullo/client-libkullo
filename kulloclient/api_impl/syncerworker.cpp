@@ -1,8 +1,9 @@
-/* Copyright 2013–2015 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
 #include "kulloclient/api_impl/syncerworker.h"
 
 #include <exception>
 
+#include "kulloclient/api/SyncProgress.h"
 #include "kulloclient/api_impl/exception_conversion.h"
 #include "kulloclient/event/conversationaddedevent.h"
 #include "kulloclient/event/conversationmodifiedevent.h"
@@ -40,6 +41,12 @@ void SyncerWorker::work()
 
     try
     {
+        std::unique_lock<std::mutex> lock(mutex_);
+        if (auto listener = listener_)
+        {
+            lock.unlock();
+            listener->started();
+        }
         doWork();
     }
     catch (Sync::SyncCanceled &)

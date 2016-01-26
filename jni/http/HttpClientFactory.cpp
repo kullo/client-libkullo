@@ -11,7 +11,7 @@ HttpClientFactory::HttpClientFactory() : ::djinni::JniInterface<::Kullo::Http::H
 
 HttpClientFactory::~HttpClientFactory() = default;
 
-HttpClientFactory::JavaProxy::JavaProxy(JniType j) : JavaProxyCacheEntry(j) { }
+HttpClientFactory::JavaProxy::JavaProxy(JniType j) : Handle(::djinni::jniGetThreadEnv(), j) { }
 
 HttpClientFactory::JavaProxy::~JavaProxy() = default;
 
@@ -19,7 +19,7 @@ std::shared_ptr<::Kullo::Http::HttpClient> HttpClientFactory::JavaProxy::createH
     auto jniEnv = ::djinni::jniGetThreadEnv();
     ::djinni::JniLocalScope jscope(jniEnv, 10);
     const auto& data = ::djinni::JniClass<::JNI::Kullo::Http::HttpClientFactory>::get();
-    auto jret = jniEnv->CallObjectMethod(getGlobalRef(), data.method_createHttpClient);
+    auto jret = jniEnv->CallObjectMethod(Handle::get().get(), data.method_createHttpClient);
     ::djinni::jniExceptionCheck(jniEnv);
     return ::JNI::Kullo::Http::HttpClient::toCpp(jniEnv, jret);
 }
@@ -27,7 +27,7 @@ std::unordered_map<std::string, std::string> HttpClientFactory::JavaProxy::versi
     auto jniEnv = ::djinni::jniGetThreadEnv();
     ::djinni::JniLocalScope jscope(jniEnv, 10);
     const auto& data = ::djinni::JniClass<::JNI::Kullo::Http::HttpClientFactory>::get();
-    auto jret = jniEnv->CallObjectMethod(getGlobalRef(), data.method_versions);
+    auto jret = jniEnv->CallObjectMethod(Handle::get().get(), data.method_versions);
     ::djinni::jniExceptionCheck(jniEnv);
     return ::djinni::Map<::djinni::String, ::djinni::String>::toCpp(jniEnv, jret);
 }

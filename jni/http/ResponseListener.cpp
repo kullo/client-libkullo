@@ -24,7 +24,7 @@ CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_http_ResponseListener_00024Cp
 {
     try {
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
-        const auto& ref = ::djinni::CppProxyHandle<::Kullo::Http::ResponseListener>::get(nativeRef);
+        const auto& ref = ::djinni::objectFromHandleAddress<::Kullo::Http::ResponseListener>(nativeRef);
         auto r = ref->progress(::djinni::I64::toCpp(jniEnv, j_uploadTransferred),
                                ::djinni::I64::toCpp(jniEnv, j_uploadTotal),
                                ::djinni::I64::toCpp(jniEnv, j_downloadTransferred),
@@ -37,7 +37,7 @@ CJNIEXPORT void JNICALL Java_net_kullo_libkullo_http_ResponseListener_00024CppPr
 {
     try {
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
-        const auto& ref = ::djinni::CppProxyHandle<::Kullo::Http::ResponseListener>::get(nativeRef);
+        const auto& ref = ::djinni::objectFromHandleAddress<::Kullo::Http::ResponseListener>(nativeRef);
         ref->dataReceived(::djinni::Binary::toCpp(jniEnv, j_data));
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, )
 }

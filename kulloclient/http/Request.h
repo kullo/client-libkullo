@@ -16,12 +16,12 @@ struct Request final {
     std::string url;
     std::vector<HttpHeader> headers;
 
-    Request(HttpMethod method,
-            std::string url,
-            std::vector<HttpHeader> headers)
-    : method(std::move(method))
-    , url(std::move(url))
-    , headers(std::move(headers))
+    Request(HttpMethod method_,
+            std::string url_,
+            std::vector<HttpHeader> headers_)
+    : method(std::move(method_))
+    , url(std::move(url_))
+    , headers(std::move(headers_))
     {}
 };
 

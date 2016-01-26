@@ -1,5 +1,5 @@
 /*
-* Botan 1.11.25 Amalgamation
+* Botan 1.11.26 Amalgamation
 * (C) 1999-2013,2014,2015 Jack Lloyd and others
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -3063,7 +3063,7 @@ std::string SCAN_Name::all_arguments() const
 std::string SCAN_Name::arg(size_t i) const
    {
    if(i >= arg_count())
-      throw std::range_error("SCAN_Name::arg " + std::to_string(i) +
+      throw Invalid_Argument("SCAN_Name::arg " + std::to_string(i) +
                              " out of range for '" + as_string() + "'");
    return args[i];
    }
@@ -3142,7 +3142,7 @@ namespace Botan {
 OctetString::OctetString(RandomNumberGenerator& rng,
                          size_t length)
    {
-   bits = rng.random_vec(length);
+   m_data = rng.random_vec(length);
    }
 
 /*
@@ -3150,8 +3150,8 @@ OctetString::OctetString(RandomNumberGenerator& rng,
 */
 OctetString::OctetString(const std::string& hex_string)
    {
-   bits.resize(1 + hex_string.length() / 2);
-   bits.resize(hex_decode(bits.data(), hex_string));
+   m_data.resize(1 + hex_string.length() / 2);
+   m_data.resize(hex_decode(m_data.data(), hex_string));
    }
 
 /*
@@ -3159,7 +3159,7 @@ OctetString::OctetString(const std::string& hex_string)
 */
 OctetString::OctetString(const byte in[], size_t n)
    {
-   bits.assign(in, in + n);
+   m_data.assign(in, in + n);
    }
 
 /*
@@ -3191,8 +3191,8 @@ void OctetString::set_odd_parity()
       0xF1, 0xF1, 0xF2, 0xF2, 0xF4, 0xF4, 0xF7, 0xF7, 0xF8, 0xF8, 0xFB, 0xFB,
       0xFD, 0xFD, 0xFE, 0xFE };
 
-   for(size_t j = 0; j != bits.size(); ++j)
-      bits[j] = ODD_PARITY[bits[j]];
+   for(size_t j = 0; j != m_data.size(); ++j)
+      m_data[j] = ODD_PARITY[m_data[j]];
    }
 
 /*
@@ -3200,7 +3200,7 @@ void OctetString::set_odd_parity()
 */
 std::string OctetString::as_string() const
    {
-   return hex_encode(bits.data(), bits.size());
+   return hex_encode(m_data.data(), m_data.size());
    }
 
 /*
@@ -3208,8 +3208,8 @@ std::string OctetString::as_string() const
 */
 OctetString& OctetString::operator^=(const OctetString& k)
    {
-   if(&k == this) { zeroise(bits); return (*this); }
-   xor_buf(bits.data(), k.begin(), std::min(length(), k.length()));
+   if(&k == this) { zeroise(m_data); return (*this); }
+   xor_buf(m_data.data(), k.begin(), std::min(length(), k.length()));
    return (*this);
    }
 
@@ -3245,11 +3245,11 @@ OctetString operator+(const OctetString& k1, const OctetString& k2)
 */
 OctetString operator^(const OctetString& k1, const OctetString& k2)
    {
-   secure_vector<byte> ret(std::max(k1.length(), k2.length()));
+   secure_vector<byte> out(std::max(k1.length(), k2.length()));
 
-   copy_mem(ret.data(), k1.begin(), k1.length());
-   xor_buf(ret.data(), k2.begin(), k2.length());
-   return OctetString(ret);
+   copy_mem(out.data(), k1.begin(), k1.length());
+   xor_buf(out.data(), k2.begin(), k2.length());
+   return OctetString(out);
    }
 
 }
@@ -3431,7 +3431,7 @@ size_t base64_decode(byte output[],
          else if(bad_char == "\r")
            bad_char = "\\r";
 
-         throw std::invalid_argument(
+         throw Invalid_Argument(
            std::string("base64_decode: invalid base64 character '") +
            bad_char + "'");
          }
@@ -3483,7 +3483,7 @@ size_t base64_decode(byte output[],
                                   consumed, true, ignore_ws);
 
    if(consumed != input_length)
-      throw std::invalid_argument("base64_decode: input did not have full bytes");
+      throw Invalid_Argument("base64_decode: input did not have full bytes");
 
    return written;
    }
@@ -3690,7 +3690,7 @@ std::ostream& operator<<(std::ostream& stream, const BigInt& n)
    if(stream.flags() & std::ios::hex)
       base = BigInt::Hexadecimal;
    else if(stream.flags() & std::ios::oct)
-      throw std::runtime_error("Octal output of BigInt not supported");
+      throw Exception("Octal output of BigInt not supported");
 
    if(n == 0)
       stream.write("0", 1);
@@ -4909,7 +4909,7 @@ CBC_Mode::CBC_Mode(BlockCipher* cipher, BlockCipherModePaddingMethod* padding) :
    m_state(m_cipher->block_size())
    {
    if(m_padding && !m_padding->valid_blocksize(cipher->block_size()))
-      throw std::invalid_argument("Padding " + m_padding->name() +
+      throw Invalid_Argument("Padding " + m_padding->name() +
                                   " cannot be used with " +
                                   cipher->name() + "/CBC");
    }
@@ -5019,7 +5019,7 @@ void CBC_Encryption::finish(secure_vector<byte>& buffer, size_t offset)
    padding().add_padding(buffer, bytes_in_final_block, BS);
 
    if((buffer.size()-offset) % BS)
-      throw std::runtime_error("Did not pad to full block size in " + name());
+      throw Exception("Did not pad to full block size in " + name());
 
    update(buffer, offset);
    }
@@ -5366,7 +5366,7 @@ void Base64_Decoder::end_msg()
    position = 0;
 
    if(not_full_bytes)
-      throw std::invalid_argument("Base64_Decoder: Input not full bytes");
+      throw Invalid_Argument("Base64_Decoder: Input not full bytes");
    }
 
 }
@@ -5532,7 +5532,7 @@ void Hex_Decoder::end_msg()
    position = 0;
 
    if(not_full_bytes)
-      throw std::invalid_argument("Hex_Decoder: Input not full bytes");
+      throw Invalid_Argument("Hex_Decoder: Input not full bytes");
    }
 
 }
@@ -5563,7 +5563,7 @@ void Compression_Alloc_Info::do_free(void* ptr)
       auto i = m_current_allocs.find(ptr);
 
       if(i == m_current_allocs.end())
-         throw std::runtime_error("Compression_Alloc_Info::free got pointer not allocated by us");
+         throw Exception("Compression_Alloc_Info::free got pointer not allocated by us");
 
       zero_mem(ptr, i->second);
       std::free(ptr);
@@ -5599,7 +5599,7 @@ Compressor_Transform* do_make_compressor(const std::string& type, const std::str
 
    Compressor_Transform* r = dynamic_cast<Compressor_Transform*>(t.get());
    if(!r)
-      throw std::runtime_error("Bad cast of compression object " + t_name);
+      throw Exception("Bad cast of compression object " + t_name);
 
    t.release();
    return r;
@@ -5763,7 +5763,7 @@ void Stream_Decompression::finish(secure_vector<byte>& buf, size_t offset)
       process(buf, offset, m_stream->finish_flag());
 
    if(m_stream.get())
-      throw std::runtime_error(name() + " finished but not at stream end");
+      throw Exception(name() + " finished but not at stream end");
    }
 
 }
@@ -6281,7 +6281,7 @@ BigInt DL_Group::make_dsa_generator(const BigInt& p, const BigInt& q)
    const BigInt e = (p - 1) / q;
 
    if(e == 0 || (p - 1) % q > 0)
-      throw std::invalid_argument("make_dsa_generator q does not divide p-1");
+      throw Invalid_Argument("make_dsa_generator q does not divide p-1");
 
    for(size_t i = 0; i != PRIME_TABLE_SIZE; ++i)
       {
@@ -6963,6 +6963,9 @@ PSSR::PSSR(HashFunction* h, size_t salt_size) :
 #if defined(BOTAN_HAS_ENTROPY_SRC_RDRAND)
 #endif
 
+#if defined(BOTAN_HAS_ENTROPY_SRC_RDSEED)
+#endif
+
 #if defined(BOTAN_HAS_ENTROPY_SRC_DEV_RANDOM)
 #endif
 
@@ -7002,6 +7005,13 @@ std::unique_ptr<Entropy_Source> Entropy_Source::create(const std::string& name)
       {
 #if defined(BOTAN_HAS_ENTROPY_SRC_RDRAND)
       return std::unique_ptr<Entropy_Source>(new Intel_Rdrand);
+#endif
+      }
+      
+   if(name == "rdseed")
+      {
+#if defined(BOTAN_HAS_ENTROPY_SRC_RDSEED)
+      return std::unique_ptr<Entropy_Source>(new Intel_Rdseed);
 #endif
       }
 
@@ -7313,10 +7323,10 @@ Buffered_Filter::Buffered_Filter(size_t b, size_t f) :
    main_block_mod(b), final_minimum(f)
    {
    if(main_block_mod == 0)
-      throw std::invalid_argument("main_block_mod == 0");
+      throw Invalid_Argument("main_block_mod == 0");
 
    if(final_minimum > main_block_mod)
-      throw std::invalid_argument("final_minimum > main_block_mod");
+      throw Invalid_Argument("final_minimum > main_block_mod");
 
    buffer.resize(2 * main_block_mod);
    buffer_pos = 0;
@@ -7376,7 +7386,7 @@ void Buffered_Filter::write(const byte input[], size_t input_size)
 void Buffered_Filter::end_msg()
    {
    if(buffer_pos < final_minimum)
-      throw std::runtime_error("Buffered filter end_msg without enough input");
+      throw Exception("Buffered filter end_msg without enough input");
 
    size_t spare_blocks = (buffer_pos - final_minimum) / main_block_mod;
 
@@ -7421,12 +7431,12 @@ Compression_Decompression_Filter::Compression_Decompression_Filter(Transform* tr
    {
    if (!transform)
       {
-         throw std::invalid_argument("Transform is null");
+         throw Invalid_Argument("Transform is null");
       }
    m_transform.reset(dynamic_cast<Compressor_Transform*>(transform));
    if(!m_transform)
       {
-      throw std::invalid_argument("Transform " + transform->name() + " is not a compressor");
+      throw Invalid_Argument("Transform " + transform->name() + " is not a compressor");
       }
    }
 
@@ -8779,7 +8789,7 @@ void Transform_Filter::set_key(const SymmetricKey& key)
    if(Keyed_Transform* keyed = dynamic_cast<Keyed_Transform*>(m_transform.get()))
       keyed->set_key(key);
    else if(key.length() != 0)
-      throw std::runtime_error("Transform " + name() + " does not accept keys");
+      throw Exception("Transform " + name() + " does not accept keys");
    }
 
 Key_Length_Specification Transform_Filter::key_spec() const
@@ -8992,7 +9002,7 @@ GCM_Mode::GCM_Mode(BlockCipher* cipher, size_t tag_size) :
    m_cipher_name(cipher->name())
    {
    if(cipher->block_size() != BS)
-      throw std::invalid_argument("GCM requires a 128 bit cipher so cannot be used with " +
+      throw Invalid_Argument("GCM requires a 128 bit cipher so cannot be used with " +
                                   cipher->name());
 
    m_ghash.reset(new GHASH);
@@ -9414,7 +9424,7 @@ size_t hex_decode(byte output[],
          else if(bad_char == "\n")
            bad_char = "\\n";
 
-         throw std::invalid_argument(
+         throw Invalid_Argument(
            std::string("hex_decode: invalid hex character '") +
            bad_char + "'");
          }
@@ -9452,7 +9462,7 @@ size_t hex_decode(byte output[],
                                consumed, ignore_ws);
 
    if(consumed != input_length)
-      throw std::invalid_argument("hex_decode: input did not have full bytes");
+      throw Invalid_Argument("hex_decode: input did not have full bytes");
 
    return written;
    }
@@ -10700,7 +10710,7 @@ Cipher_Mode* get_cipher_mode(const std::string& algo_spec, Cipher_Dir direction)
 
 }
 /*
-* Lowest Level MPI Algorithms
+* MPI Add, Subtract, Word Multiply
 * (C) 1999-2010 Jack Lloyd
 *     2006 Luca Piccarreta
 *
@@ -10881,7 +10891,8 @@ void bigint_linmul3(word z[], const word x[], size_t x_size, word y)
 }
 /*
 * Comba Multiplication and Squaring
-* (C) 1999-2007,2011,2014 Jack Lloyd
+*
+* This file was automatically generated by ./src/scripts/comba.py on 2016-01-01
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -10896,14 +10907,14 @@ void bigint_comba_sqr4(word z[8], const word x[4])
    {
    word w2 = 0, w1 = 0, w0 = 0;
 
-   word3_muladd(&w2, &w1, &w0, x[ 0], x[ 0]);
+   word3_muladd  (&w2, &w1, &w0, x[ 0], x[ 0]);
    z[ 0] = w0; w0 = 0;
 
    word3_muladd_2(&w0, &w2, &w1, x[ 0], x[ 1]);
    z[ 1] = w1; w1 = 0;
 
    word3_muladd_2(&w1, &w0, &w2, x[ 0], x[ 2]);
-   word3_muladd(&w1, &w0, &w2, x[ 1], x[ 1]);
+   word3_muladd  (&w1, &w0, &w2, x[ 1], x[ 1]);
    z[ 2] = w2; w2 = 0;
 
    word3_muladd_2(&w2, &w1, &w0, x[ 0], x[ 3]);
@@ -10911,13 +10922,13 @@ void bigint_comba_sqr4(word z[8], const word x[4])
    z[ 3] = w0; w0 = 0;
 
    word3_muladd_2(&w0, &w2, &w1, x[ 1], x[ 3]);
-   word3_muladd(&w0, &w2, &w1, x[ 2], x[ 2]);
+   word3_muladd  (&w0, &w2, &w1, x[ 2], x[ 2]);
    z[ 4] = w1; w1 = 0;
 
    word3_muladd_2(&w1, &w0, &w2, x[ 2], x[ 3]);
    z[ 5] = w2; w2 = 0;
 
-   word3_muladd(&w2, &w1, &w0, x[ 3], x[ 3]);
+   word3_muladd  (&w2, &w1, &w0, x[ 3], x[ 3]);
    z[ 6] = w0;
    z[ 7] = w1;
    }
@@ -10968,14 +10979,14 @@ void bigint_comba_sqr6(word z[12], const word x[6])
    {
    word w2 = 0, w1 = 0, w0 = 0;
 
-   word3_muladd(&w2, &w1, &w0, x[ 0], x[ 0]);
+   word3_muladd  (&w2, &w1, &w0, x[ 0], x[ 0]);
    z[ 0] = w0; w0 = 0;
 
    word3_muladd_2(&w0, &w2, &w1, x[ 0], x[ 1]);
    z[ 1] = w1; w1 = 0;
 
    word3_muladd_2(&w1, &w0, &w2, x[ 0], x[ 2]);
-   word3_muladd(&w1, &w0, &w2, x[ 1], x[ 1]);
+   word3_muladd  (&w1, &w0, &w2, x[ 1], x[ 1]);
    z[ 2] = w2; w2 = 0;
 
    word3_muladd_2(&w2, &w1, &w0, x[ 0], x[ 3]);
@@ -10984,7 +10995,7 @@ void bigint_comba_sqr6(word z[12], const word x[6])
 
    word3_muladd_2(&w0, &w2, &w1, x[ 0], x[ 4]);
    word3_muladd_2(&w0, &w2, &w1, x[ 1], x[ 3]);
-   word3_muladd(&w0, &w2, &w1, x[ 2], x[ 2]);
+   word3_muladd  (&w0, &w2, &w1, x[ 2], x[ 2]);
    z[ 4] = w1; w1 = 0;
 
    word3_muladd_2(&w1, &w0, &w2, x[ 0], x[ 5]);
@@ -10994,7 +11005,7 @@ void bigint_comba_sqr6(word z[12], const word x[6])
 
    word3_muladd_2(&w2, &w1, &w0, x[ 1], x[ 5]);
    word3_muladd_2(&w2, &w1, &w0, x[ 2], x[ 4]);
-   word3_muladd(&w2, &w1, &w0, x[ 3], x[ 3]);
+   word3_muladd  (&w2, &w1, &w0, x[ 3], x[ 3]);
    z[ 6] = w0; w0 = 0;
 
    word3_muladd_2(&w0, &w2, &w1, x[ 2], x[ 5]);
@@ -11002,13 +11013,13 @@ void bigint_comba_sqr6(word z[12], const word x[6])
    z[ 7] = w1; w1 = 0;
 
    word3_muladd_2(&w1, &w0, &w2, x[ 3], x[ 5]);
-   word3_muladd(&w1, &w0, &w2, x[ 4], x[ 4]);
+   word3_muladd  (&w1, &w0, &w2, x[ 4], x[ 4]);
    z[ 8] = w2; w2 = 0;
 
    word3_muladd_2(&w2, &w1, &w0, x[ 4], x[ 5]);
    z[ 9] = w0; w0 = 0;
 
-   word3_muladd(&w0, &w2, &w1, x[ 5], x[ 5]);
+   word3_muladd  (&w0, &w2, &w1, x[ 5], x[ 5]);
    z[10] = w1;
    z[11] = w2;
    }
@@ -11087,14 +11098,14 @@ void bigint_comba_sqr8(word z[16], const word x[8])
    {
    word w2 = 0, w1 = 0, w0 = 0;
 
-   word3_muladd(&w2, &w1, &w0, x[ 0], x[ 0]);
+   word3_muladd  (&w2, &w1, &w0, x[ 0], x[ 0]);
    z[ 0] = w0; w0 = 0;
 
    word3_muladd_2(&w0, &w2, &w1, x[ 0], x[ 1]);
    z[ 1] = w1; w1 = 0;
 
    word3_muladd_2(&w1, &w0, &w2, x[ 0], x[ 2]);
-   word3_muladd(&w1, &w0, &w2, x[ 1], x[ 1]);
+   word3_muladd  (&w1, &w0, &w2, x[ 1], x[ 1]);
    z[ 2] = w2; w2 = 0;
 
    word3_muladd_2(&w2, &w1, &w0, x[ 0], x[ 3]);
@@ -11103,7 +11114,7 @@ void bigint_comba_sqr8(word z[16], const word x[8])
 
    word3_muladd_2(&w0, &w2, &w1, x[ 0], x[ 4]);
    word3_muladd_2(&w0, &w2, &w1, x[ 1], x[ 3]);
-   word3_muladd(&w0, &w2, &w1, x[ 2], x[ 2]);
+   word3_muladd  (&w0, &w2, &w1, x[ 2], x[ 2]);
    z[ 4] = w1; w1 = 0;
 
    word3_muladd_2(&w1, &w0, &w2, x[ 0], x[ 5]);
@@ -11114,7 +11125,7 @@ void bigint_comba_sqr8(word z[16], const word x[8])
    word3_muladd_2(&w2, &w1, &w0, x[ 0], x[ 6]);
    word3_muladd_2(&w2, &w1, &w0, x[ 1], x[ 5]);
    word3_muladd_2(&w2, &w1, &w0, x[ 2], x[ 4]);
-   word3_muladd(&w2, &w1, &w0, x[ 3], x[ 3]);
+   word3_muladd  (&w2, &w1, &w0, x[ 3], x[ 3]);
    z[ 6] = w0; w0 = 0;
 
    word3_muladd_2(&w0, &w2, &w1, x[ 0], x[ 7]);
@@ -11126,7 +11137,7 @@ void bigint_comba_sqr8(word z[16], const word x[8])
    word3_muladd_2(&w1, &w0, &w2, x[ 1], x[ 7]);
    word3_muladd_2(&w1, &w0, &w2, x[ 2], x[ 6]);
    word3_muladd_2(&w1, &w0, &w2, x[ 3], x[ 5]);
-   word3_muladd(&w1, &w0, &w2, x[ 4], x[ 4]);
+   word3_muladd  (&w1, &w0, &w2, x[ 4], x[ 4]);
    z[ 8] = w2; w2 = 0;
 
    word3_muladd_2(&w2, &w1, &w0, x[ 2], x[ 7]);
@@ -11136,7 +11147,7 @@ void bigint_comba_sqr8(word z[16], const word x[8])
 
    word3_muladd_2(&w0, &w2, &w1, x[ 3], x[ 7]);
    word3_muladd_2(&w0, &w2, &w1, x[ 4], x[ 6]);
-   word3_muladd(&w0, &w2, &w1, x[ 5], x[ 5]);
+   word3_muladd  (&w0, &w2, &w1, x[ 5], x[ 5]);
    z[10] = w1; w1 = 0;
 
    word3_muladd_2(&w1, &w0, &w2, x[ 4], x[ 7]);
@@ -11144,13 +11155,13 @@ void bigint_comba_sqr8(word z[16], const word x[8])
    z[11] = w2; w2 = 0;
 
    word3_muladd_2(&w2, &w1, &w0, x[ 5], x[ 7]);
-   word3_muladd(&w2, &w1, &w0, x[ 6], x[ 6]);
+   word3_muladd  (&w2, &w1, &w0, x[ 6], x[ 6]);
    z[12] = w0; w0 = 0;
 
    word3_muladd_2(&w0, &w2, &w1, x[ 6], x[ 7]);
    z[13] = w1; w1 = 0;
 
-   word3_muladd(&w1, &w0, &w2, x[ 7], x[ 7]);
+   word3_muladd  (&w1, &w0, &w2, x[ 7], x[ 7]);
    z[14] = w2;
    z[15] = w0;
    }
@@ -11265,14 +11276,14 @@ void bigint_comba_sqr9(word z[18], const word x[9])
    {
    word w2 = 0, w1 = 0, w0 = 0;
 
-   word3_muladd(&w2, &w1, &w0, x[ 0], x[ 0]);
+   word3_muladd  (&w2, &w1, &w0, x[ 0], x[ 0]);
    z[ 0] = w0; w0 = 0;
 
    word3_muladd_2(&w0, &w2, &w1, x[ 0], x[ 1]);
    z[ 1] = w1; w1 = 0;
 
    word3_muladd_2(&w1, &w0, &w2, x[ 0], x[ 2]);
-   word3_muladd(&w1, &w0, &w2, x[ 1], x[ 1]);
+   word3_muladd  (&w1, &w0, &w2, x[ 1], x[ 1]);
    z[ 2] = w2; w2 = 0;
 
    word3_muladd_2(&w2, &w1, &w0, x[ 0], x[ 3]);
@@ -11281,7 +11292,7 @@ void bigint_comba_sqr9(word z[18], const word x[9])
 
    word3_muladd_2(&w0, &w2, &w1, x[ 0], x[ 4]);
    word3_muladd_2(&w0, &w2, &w1, x[ 1], x[ 3]);
-   word3_muladd(&w0, &w2, &w1, x[ 2], x[ 2]);
+   word3_muladd  (&w0, &w2, &w1, x[ 2], x[ 2]);
    z[ 4] = w1; w1 = 0;
 
    word3_muladd_2(&w1, &w0, &w2, x[ 0], x[ 5]);
@@ -11292,7 +11303,7 @@ void bigint_comba_sqr9(word z[18], const word x[9])
    word3_muladd_2(&w2, &w1, &w0, x[ 0], x[ 6]);
    word3_muladd_2(&w2, &w1, &w0, x[ 1], x[ 5]);
    word3_muladd_2(&w2, &w1, &w0, x[ 2], x[ 4]);
-   word3_muladd(&w2, &w1, &w0, x[ 3], x[ 3]);
+   word3_muladd  (&w2, &w1, &w0, x[ 3], x[ 3]);
    z[ 6] = w0; w0 = 0;
 
    word3_muladd_2(&w0, &w2, &w1, x[ 0], x[ 7]);
@@ -11305,7 +11316,7 @@ void bigint_comba_sqr9(word z[18], const word x[9])
    word3_muladd_2(&w1, &w0, &w2, x[ 1], x[ 7]);
    word3_muladd_2(&w1, &w0, &w2, x[ 2], x[ 6]);
    word3_muladd_2(&w1, &w0, &w2, x[ 3], x[ 5]);
-   word3_muladd(&w1, &w0, &w2, x[ 4], x[ 4]);
+   word3_muladd  (&w1, &w0, &w2, x[ 4], x[ 4]);
    z[ 8] = w2; w2 = 0;
 
    word3_muladd_2(&w2, &w1, &w0, x[ 1], x[ 8]);
@@ -11317,7 +11328,7 @@ void bigint_comba_sqr9(word z[18], const word x[9])
    word3_muladd_2(&w0, &w2, &w1, x[ 2], x[ 8]);
    word3_muladd_2(&w0, &w2, &w1, x[ 3], x[ 7]);
    word3_muladd_2(&w0, &w2, &w1, x[ 4], x[ 6]);
-   word3_muladd(&w0, &w2, &w1, x[ 5], x[ 5]);
+   word3_muladd  (&w0, &w2, &w1, x[ 5], x[ 5]);
    z[10] = w1; w1 = 0;
 
    word3_muladd_2(&w1, &w0, &w2, x[ 3], x[ 8]);
@@ -11327,7 +11338,7 @@ void bigint_comba_sqr9(word z[18], const word x[9])
 
    word3_muladd_2(&w2, &w1, &w0, x[ 4], x[ 8]);
    word3_muladd_2(&w2, &w1, &w0, x[ 5], x[ 7]);
-   word3_muladd(&w2, &w1, &w0, x[ 6], x[ 6]);
+   word3_muladd  (&w2, &w1, &w0, x[ 6], x[ 6]);
    z[12] = w0; w0 = 0;
 
    word3_muladd_2(&w0, &w2, &w1, x[ 5], x[ 8]);
@@ -11335,13 +11346,13 @@ void bigint_comba_sqr9(word z[18], const word x[9])
    z[13] = w1; w1 = 0;
 
    word3_muladd_2(&w1, &w0, &w2, x[ 6], x[ 8]);
-   word3_muladd(&w1, &w0, &w2, x[ 7], x[ 7]);
+   word3_muladd  (&w1, &w0, &w2, x[ 7], x[ 7]);
    z[14] = w2; w2 = 0;
 
    word3_muladd_2(&w2, &w1, &w0, x[ 7], x[ 8]);
    z[15] = w0; w0 = 0;
 
-   word3_muladd(&w0, &w2, &w1, x[ 8], x[ 8]);
+   word3_muladd  (&w0, &w2, &w1, x[ 8], x[ 8]);
    z[16] = w1;
    z[17] = w2;
    }
@@ -11477,14 +11488,14 @@ void bigint_comba_sqr16(word z[32], const word x[16])
    {
    word w2 = 0, w1 = 0, w0 = 0;
 
-   word3_muladd(&w2, &w1, &w0, x[ 0], x[ 0]);
+   word3_muladd  (&w2, &w1, &w0, x[ 0], x[ 0]);
    z[ 0] = w0; w0 = 0;
 
    word3_muladd_2(&w0, &w2, &w1, x[ 0], x[ 1]);
    z[ 1] = w1; w1 = 0;
 
    word3_muladd_2(&w1, &w0, &w2, x[ 0], x[ 2]);
-   word3_muladd(&w1, &w0, &w2, x[ 1], x[ 1]);
+   word3_muladd  (&w1, &w0, &w2, x[ 1], x[ 1]);
    z[ 2] = w2; w2 = 0;
 
    word3_muladd_2(&w2, &w1, &w0, x[ 0], x[ 3]);
@@ -11493,7 +11504,7 @@ void bigint_comba_sqr16(word z[32], const word x[16])
 
    word3_muladd_2(&w0, &w2, &w1, x[ 0], x[ 4]);
    word3_muladd_2(&w0, &w2, &w1, x[ 1], x[ 3]);
-   word3_muladd(&w0, &w2, &w1, x[ 2], x[ 2]);
+   word3_muladd  (&w0, &w2, &w1, x[ 2], x[ 2]);
    z[ 4] = w1; w1 = 0;
 
    word3_muladd_2(&w1, &w0, &w2, x[ 0], x[ 5]);
@@ -11504,7 +11515,7 @@ void bigint_comba_sqr16(word z[32], const word x[16])
    word3_muladd_2(&w2, &w1, &w0, x[ 0], x[ 6]);
    word3_muladd_2(&w2, &w1, &w0, x[ 1], x[ 5]);
    word3_muladd_2(&w2, &w1, &w0, x[ 2], x[ 4]);
-   word3_muladd(&w2, &w1, &w0, x[ 3], x[ 3]);
+   word3_muladd  (&w2, &w1, &w0, x[ 3], x[ 3]);
    z[ 6] = w0; w0 = 0;
 
    word3_muladd_2(&w0, &w2, &w1, x[ 0], x[ 7]);
@@ -11517,7 +11528,7 @@ void bigint_comba_sqr16(word z[32], const word x[16])
    word3_muladd_2(&w1, &w0, &w2, x[ 1], x[ 7]);
    word3_muladd_2(&w1, &w0, &w2, x[ 2], x[ 6]);
    word3_muladd_2(&w1, &w0, &w2, x[ 3], x[ 5]);
-   word3_muladd(&w1, &w0, &w2, x[ 4], x[ 4]);
+   word3_muladd  (&w1, &w0, &w2, x[ 4], x[ 4]);
    z[ 8] = w2; w2 = 0;
 
    word3_muladd_2(&w2, &w1, &w0, x[ 0], x[ 9]);
@@ -11532,7 +11543,7 @@ void bigint_comba_sqr16(word z[32], const word x[16])
    word3_muladd_2(&w0, &w2, &w1, x[ 2], x[ 8]);
    word3_muladd_2(&w0, &w2, &w1, x[ 3], x[ 7]);
    word3_muladd_2(&w0, &w2, &w1, x[ 4], x[ 6]);
-   word3_muladd(&w0, &w2, &w1, x[ 5], x[ 5]);
+   word3_muladd  (&w0, &w2, &w1, x[ 5], x[ 5]);
    z[10] = w1; w1 = 0;
 
    word3_muladd_2(&w1, &w0, &w2, x[ 0], x[11]);
@@ -11549,7 +11560,7 @@ void bigint_comba_sqr16(word z[32], const word x[16])
    word3_muladd_2(&w2, &w1, &w0, x[ 3], x[ 9]);
    word3_muladd_2(&w2, &w1, &w0, x[ 4], x[ 8]);
    word3_muladd_2(&w2, &w1, &w0, x[ 5], x[ 7]);
-   word3_muladd(&w2, &w1, &w0, x[ 6], x[ 6]);
+   word3_muladd  (&w2, &w1, &w0, x[ 6], x[ 6]);
    z[12] = w0; w0 = 0;
 
    word3_muladd_2(&w0, &w2, &w1, x[ 0], x[13]);
@@ -11568,7 +11579,7 @@ void bigint_comba_sqr16(word z[32], const word x[16])
    word3_muladd_2(&w1, &w0, &w2, x[ 4], x[10]);
    word3_muladd_2(&w1, &w0, &w2, x[ 5], x[ 9]);
    word3_muladd_2(&w1, &w0, &w2, x[ 6], x[ 8]);
-   word3_muladd(&w1, &w0, &w2, x[ 7], x[ 7]);
+   word3_muladd  (&w1, &w0, &w2, x[ 7], x[ 7]);
    z[14] = w2; w2 = 0;
 
    word3_muladd_2(&w2, &w1, &w0, x[ 0], x[15]);
@@ -11588,7 +11599,7 @@ void bigint_comba_sqr16(word z[32], const word x[16])
    word3_muladd_2(&w0, &w2, &w1, x[ 5], x[11]);
    word3_muladd_2(&w0, &w2, &w1, x[ 6], x[10]);
    word3_muladd_2(&w0, &w2, &w1, x[ 7], x[ 9]);
-   word3_muladd(&w0, &w2, &w1, x[ 8], x[ 8]);
+   word3_muladd  (&w0, &w2, &w1, x[ 8], x[ 8]);
    z[16] = w1; w1 = 0;
 
    word3_muladd_2(&w1, &w0, &w2, x[ 2], x[15]);
@@ -11606,7 +11617,7 @@ void bigint_comba_sqr16(word z[32], const word x[16])
    word3_muladd_2(&w2, &w1, &w0, x[ 6], x[12]);
    word3_muladd_2(&w2, &w1, &w0, x[ 7], x[11]);
    word3_muladd_2(&w2, &w1, &w0, x[ 8], x[10]);
-   word3_muladd(&w2, &w1, &w0, x[ 9], x[ 9]);
+   word3_muladd  (&w2, &w1, &w0, x[ 9], x[ 9]);
    z[18] = w0; w0 = 0;
 
    word3_muladd_2(&w0, &w2, &w1, x[ 4], x[15]);
@@ -11622,7 +11633,7 @@ void bigint_comba_sqr16(word z[32], const word x[16])
    word3_muladd_2(&w1, &w0, &w2, x[ 7], x[13]);
    word3_muladd_2(&w1, &w0, &w2, x[ 8], x[12]);
    word3_muladd_2(&w1, &w0, &w2, x[ 9], x[11]);
-   word3_muladd(&w1, &w0, &w2, x[10], x[10]);
+   word3_muladd  (&w1, &w0, &w2, x[10], x[10]);
    z[20] = w2; w2 = 0;
 
    word3_muladd_2(&w2, &w1, &w0, x[ 6], x[15]);
@@ -11636,7 +11647,7 @@ void bigint_comba_sqr16(word z[32], const word x[16])
    word3_muladd_2(&w0, &w2, &w1, x[ 8], x[14]);
    word3_muladd_2(&w0, &w2, &w1, x[ 9], x[13]);
    word3_muladd_2(&w0, &w2, &w1, x[10], x[12]);
-   word3_muladd(&w0, &w2, &w1, x[11], x[11]);
+   word3_muladd  (&w0, &w2, &w1, x[11], x[11]);
    z[22] = w1; w1 = 0;
 
    word3_muladd_2(&w1, &w0, &w2, x[ 8], x[15]);
@@ -11648,7 +11659,7 @@ void bigint_comba_sqr16(word z[32], const word x[16])
    word3_muladd_2(&w2, &w1, &w0, x[ 9], x[15]);
    word3_muladd_2(&w2, &w1, &w0, x[10], x[14]);
    word3_muladd_2(&w2, &w1, &w0, x[11], x[13]);
-   word3_muladd(&w2, &w1, &w0, x[12], x[12]);
+   word3_muladd  (&w2, &w1, &w0, x[12], x[12]);
    z[24] = w0; w0 = 0;
 
    word3_muladd_2(&w0, &w2, &w1, x[10], x[15]);
@@ -11658,7 +11669,7 @@ void bigint_comba_sqr16(word z[32], const word x[16])
 
    word3_muladd_2(&w1, &w0, &w2, x[11], x[15]);
    word3_muladd_2(&w1, &w0, &w2, x[12], x[14]);
-   word3_muladd(&w1, &w0, &w2, x[13], x[13]);
+   word3_muladd  (&w1, &w0, &w2, x[13], x[13]);
    z[26] = w2; w2 = 0;
 
    word3_muladd_2(&w2, &w1, &w0, x[12], x[15]);
@@ -11666,13 +11677,13 @@ void bigint_comba_sqr16(word z[32], const word x[16])
    z[27] = w0; w0 = 0;
 
    word3_muladd_2(&w0, &w2, &w1, x[13], x[15]);
-   word3_muladd(&w0, &w2, &w1, x[14], x[14]);
+   word3_muladd  (&w0, &w2, &w1, x[14], x[14]);
    z[28] = w1; w1 = 0;
 
    word3_muladd_2(&w1, &w0, &w2, x[14], x[15]);
    z[29] = w2; w2 = 0;
 
-   word3_muladd(&w2, &w1, &w0, x[15], x[15]);
+   word3_muladd  (&w2, &w1, &w0, x[15], x[15]);
    z[30] = w0;
    z[31] = w1;
    }
@@ -12006,7 +12017,7 @@ void bigint_comba_mul16(word z[32], const word x[16], const word y[16])
 
 }
 /*
-* Karatsuba Multiplication/Squaring
+* Multiplication and Squaring
 * (C) 1999-2010 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -12019,6 +12030,37 @@ namespace {
 
 const size_t KARATSUBA_MULTIPLY_THRESHOLD = 32;
 const size_t KARATSUBA_SQUARE_THRESHOLD = 32;
+
+namespace {
+
+/*
+* Simple O(N^2) Multiplication
+*/
+void basecase_mul(word z[],
+                  const word x[], size_t x_size,
+                  const word y[], size_t y_size)
+   {
+   const size_t x_size_8 = x_size - (x_size % 8);
+
+   clear_mem(z, x_size + y_size);
+
+   for(size_t i = 0; i != y_size; ++i)
+      {
+      const word y_i = y[i];
+
+      word carry = 0;
+
+      for(size_t j = 0; j != x_size_8; j += 8)
+         carry = word8_madd3(z + i + j, x + j, y_i, carry);
+
+      for(size_t j = x_size_8; j != x_size; ++j)
+         z[i+j] = word_madd3(x[j], y_i, z[i+j], &carry);
+
+      z[x_size+i] = carry;
+      }
+   }
+
+}
 
 /*
 * Karatsuba Multiplication Operation
@@ -12035,7 +12077,7 @@ void karatsuba_mul(word z[], const word x[], const word y[], size_t N,
       else if(N == 16)
          return bigint_comba_mul16(z, x, y);
       else
-         return bigint_simple_mul(z, x, N, y, N);
+         return basecase_mul(z, x, N, y, N);
       }
 
    const size_t N2 = N / 2;
@@ -12105,7 +12147,7 @@ void karatsuba_sqr(word z[], const word x[], size_t N, word workspace[])
       else if(N == 16)
          return bigint_comba_sqr16(z, x);
       else
-         return bigint_simple_sqr(z, x, N);
+         return basecase_mul(z, x, N, x, N);
       }
 
    const size_t N2 = N / 2;
@@ -12266,7 +12308,7 @@ void bigint_mul(word z[], size_t z_size, word workspace[],
            y_sw < KARATSUBA_MULTIPLY_THRESHOLD ||
            !workspace)
       {
-      bigint_simple_mul(z, x, x_sw, y, y_sw);
+      basecase_mul(z, x, x_sw, y, y_sw);
       }
    else
       {
@@ -12275,7 +12317,7 @@ void bigint_mul(word z[], size_t z_size, word workspace[],
       if(N)
          karatsuba_mul(z, x, y, N, workspace);
       else
-         bigint_simple_mul(z, x, x_sw, y, y_sw);
+         basecase_mul(z, x, x_sw, y, y_sw);
       }
    }
 
@@ -12311,7 +12353,7 @@ void bigint_sqr(word z[], size_t z_size, word workspace[],
       }
    else if(x_size < KARATSUBA_SQUARE_THRESHOLD || !workspace)
       {
-      bigint_simple_sqr(z, x, x_sw);
+      basecase_mul(z, x, x_sw, x, x_sw);
       }
    else
       {
@@ -12320,7 +12362,7 @@ void bigint_sqr(word z[], size_t z_size, word workspace[],
       if(N)
          karatsuba_sqr(z, x, N, workspace);
       else
-         bigint_simple_sqr(z, x, x_sw);
+         basecase_mul(z, x, x_sw, x, x_sw);
       }
    }
 
@@ -12367,7 +12409,7 @@ s32bit bigint_cmp(const word x[], size_t x_size,
 word bigint_divop(word n1, word n0, word d)
    {
    if(d == 0)
-      throw std::runtime_error("bigint_divop divide by zero");
+      throw Invalid_Argument("bigint_divop divide by zero");
 
    word high = n1 % d, quotient = 0;
 
@@ -12516,75 +12558,6 @@ void bigint_monty_sqr(word z[], size_t z_size,
    bigint_monty_redc(&z[0],
                      &p[0], p_size, p_dash,
                      &ws[0]);
-   }
-
-}
-/*
-* Simple O(N^2) Multiplication and Squaring
-* (C) 1999-2008 Jack Lloyd
-*
-* Botan is released under the Simplified BSD License (see license.txt)
-*/
-
-
-namespace Botan {
-
-/*
-* Simple O(N^2) Multiplication
-*/
-void bigint_simple_mul(word z[], const word x[], size_t x_size,
-                                 const word y[], size_t y_size)
-   {
-   const size_t x_size_8 = x_size - (x_size % 8);
-
-   clear_mem(z, x_size + y_size);
-
-   for(size_t i = 0; i != y_size; ++i)
-      {
-      const word y_i = y[i];
-
-      word carry = 0;
-
-      for(size_t j = 0; j != x_size_8; j += 8)
-         carry = word8_madd3(z + i + j, x + j, y_i, carry);
-
-      for(size_t j = x_size_8; j != x_size; ++j)
-         z[i+j] = word_madd3(x[j], y_i, z[i+j], &carry);
-
-      z[x_size+i] = carry;
-      }
-   }
-
-/*
-* Simple O(N^2) Squaring
-*
-* This is exactly the same algorithm as bigint_simple_mul, however
-* because C/C++ compilers suck at alias analysis it is good to have
-* the version where the compiler knows that x == y
-*
-* There is an O(n^1.5) squaring algorithm specified in Handbook of
-* Applied Cryptography, chapter 14
-*
-*/
-void bigint_simple_sqr(word z[], const word x[], size_t x_size)
-   {
-   const size_t x_size_8 = x_size - (x_size % 8);
-
-   clear_mem(z, 2*x_size);
-
-   for(size_t i = 0; i != x_size; ++i)
-      {
-      const word x_i = x[i];
-      word carry = 0;
-
-      for(size_t j = 0; j != x_size_8; j += 8)
-         carry = word8_madd3(z + i + j, x + j, x_i, carry);
-
-      for(size_t j = x_size_8; j != x_size; ++j)
-         z[i+j] = word_madd3(x[j], x_i, z[i+j], &carry);
-
-      z[x_size+i] = carry;
-      }
    }
 
 }
@@ -13268,7 +13241,7 @@ BigInt inverse_mod(const BigInt& n, const BigInt& mod)
 word monty_inverse(word input)
    {
    if(input == 0)
-      throw std::runtime_error("monty_inverse: divide by zero");
+      throw Exception("monty_inverse: divide by zero");
 
    word b = input;
    word x2 = 1, x1 = 0, y2 = 0, y1 = 1;
@@ -14943,7 +14916,7 @@ void OID_Map::read_cfg(std::istream& cfg, const std::string& source)
       auto eq = s.find("=");
 
       if(eq == std::string::npos || eq == 0 || eq == s.size() - 1)
-         throw std::runtime_error("Bad config line '" + s + "' in " + source + " line " + std::to_string(line));
+         throw Exception("Bad config line '" + s + "' in " + source + " line " + std::to_string(line));
 
       const std::string oid = clean_ws(s.substr(0, eq));
       const std::string name = clean_ws(s.substr(eq + 1, std::string::npos));
@@ -15219,7 +15192,7 @@ void PBKDF::pbkdf_iterations(byte out[], size_t out_len,
                              size_t iterations) const
    {
    if(iterations == 0)
-      throw std::invalid_argument(name() + ": Invalid iteration count");
+      throw Invalid_Argument(name() + ": Invalid iteration count");
 
    const size_t iterations_run = pbkdf(out, out_len, passphrase,
                                        salt, salt_len, iterations,
@@ -15290,7 +15263,7 @@ pbkdf2(MessageAuthenticationCode& prf,
       }
    catch(Invalid_Key_Length)
       {
-      throw std::runtime_error("PBKDF2 with " + prf.name() +
+      throw Exception("PBKDF2 with " + prf.name() +
                                " cannot accept passphrases of length " +
                                std::to_string(passphrase.size()));
       }
@@ -15743,7 +15716,7 @@ BigInt Blinder::blinding_nonce() const
 BigInt Blinder::blind(const BigInt& i) const
    {
    if(!m_reducer.initialized())
-      throw std::runtime_error("Blinder not initialized, cannot blind");
+      throw Exception("Blinder not initialized, cannot blind");
 
    ++m_counter;
 
@@ -15765,7 +15738,7 @@ BigInt Blinder::blind(const BigInt& i) const
 BigInt Blinder::unblind(const BigInt& i) const
    {
    if(!m_reducer.initialized())
-      throw std::runtime_error("Blinder not initialized, cannot unblind");
+      throw Exception("Blinder not initialized, cannot unblind");
 
    return m_reducer.multiply(i, m_d);
    }
@@ -16030,7 +16003,7 @@ secure_vector<byte> PK_Ops::Encryption_with_EME::encrypt(const byte msg[], size_
    const std::vector<byte> encoded = unlock(m_eme->encode(msg, msg_len, max_raw, rng));
 
    if(8*(encoded.size() - 1) + high_bit(encoded[0]) > max_raw)
-      throw std::runtime_error("Input is too large to encrypt with this key");
+      throw Exception("Input is too large to encrypt with this key");
 
    return raw_encrypt(encoded.data(), encoded.size(), rng);
    }
@@ -16124,6 +16097,49 @@ bool PK_Ops::Verification_with_EMSA::is_valid_signature(const byte sig[], size_t
       }
    }
 
+void PK_Ops::KEM_Encryption_with_KDF::kem_encrypt(secure_vector<byte>& out_encapsulated_key,
+                                                  secure_vector<byte>& out_shared_key,
+                                                  size_t desired_shared_key_len,
+                                                  Botan::RandomNumberGenerator& rng,
+                                                  const uint8_t salt[],
+                                                  size_t salt_len)
+   {
+   secure_vector<byte> raw_shared;
+   this->raw_kem_encrypt(out_encapsulated_key, raw_shared, rng);
+
+   out_shared_key = m_kdf->derive_key(desired_shared_key_len,
+                                      raw_shared.data(), raw_shared.size(),
+                                      salt, salt_len);
+   }
+
+PK_Ops::KEM_Encryption_with_KDF::KEM_Encryption_with_KDF(const std::string& kdf)
+   {
+   m_kdf.reset(get_kdf(kdf));
+   }
+
+PK_Ops::KEM_Encryption_with_KDF::~KEM_Encryption_with_KDF() {}
+
+secure_vector<byte>
+PK_Ops::KEM_Decryption_with_KDF::kem_decrypt(const byte encap_key[],
+                                             size_t len,
+                                             size_t desired_shared_key_len,
+                                             const uint8_t salt[],
+                                             size_t salt_len)
+   {
+   secure_vector<byte> raw_shared = this->raw_kem_decrypt(encap_key, len);
+
+   return m_kdf->derive_key(desired_shared_key_len,
+                            raw_shared.data(), raw_shared.size(),
+                            salt, salt_len);
+   }
+
+PK_Ops::KEM_Decryption_with_KDF::KEM_Decryption_with_KDF(const std::string& kdf)
+   {
+   m_kdf.reset(get_kdf(kdf));
+   }
+
+PK_Ops::KEM_Decryption_with_KDF::~KEM_Decryption_with_KDF() {}
+
 }
 /*
 * PKCS #8
@@ -16162,19 +16178,39 @@ secure_vector<byte> PKCS8_extract(DataSource& source,
 secure_vector<byte> PKCS8_decode(
    DataSource& source,
    std::function<std::string ()> get_passphrase,
-   AlgorithmIdentifier& pk_alg_id)
+   AlgorithmIdentifier& pk_alg_id,
+   bool is_encrypted)
    {
    AlgorithmIdentifier pbe_alg_id;
    secure_vector<byte> key_data, key;
-   bool is_encrypted = true;
 
    try {
       if(ASN1::maybe_BER(source) && !PEM_Code::matches(source))
-         key_data = PKCS8_extract(source, pbe_alg_id);
+         {
+         if ( is_encrypted )
+            {
+            key_data = PKCS8_extract(source, pbe_alg_id);
+            }
+         else
+            {
+            // todo read more efficiently
+            while ( !source.end_of_data() )
+               {
+               byte b;
+               size_t read = source.read_byte( b );
+               if ( read )
+                  {
+                  key_data.push_back( b );
+                  }
+               }
+            }
+         }
       else
          {
          std::string label;
          key_data = PEM_Code::decode(source, label);
+
+         // todo remove autodetect for pem as well?
          if(label == "PRIVATE KEY")
             is_encrypted = false;
          else if(label == "ENCRYPTED PRIVATE KEY")
@@ -16199,7 +16235,7 @@ secure_vector<byte> PKCS8_decode(
       if(is_encrypted)
          {
          if(OIDS::lookup(pbe_alg_id.oid) != "PBE-PKCS5v20")
-            throw std::runtime_error("Unknown PBE type " + pbe_alg_id.oid.as_string());
+            throw Exception("Unknown PBE type " + pbe_alg_id.oid.as_string());
          key = pbes2_decrypt(key_data, get_passphrase(), pbe_alg_id.parameters);
          }
       else
@@ -16262,7 +16298,7 @@ choose_pbe_params(const std::string& pbe_algo, const std::string& key_algo)
 
    SCAN_Name request(pbe_algo);
    if(request.algo_name() != "PBE-PKCS5v20" || request.arg_count() != 2)
-      throw std::runtime_error("Unsupported PBE " + pbe_algo);
+      throw Exception("Unsupported PBE " + pbe_algo);
    return std::make_pair(request.arg(1), request.arg(0));
    }
 
@@ -16307,15 +16343,18 @@ std::string PEM_encode(const Private_Key& key,
                            "ENCRYPTED PRIVATE KEY");
    }
 
+namespace {
+
 /*
-* Extract a private key and return it
+* Extract a private key (encrypted/unencrypted) and return it
 */
 Private_Key* load_key(DataSource& source,
                       RandomNumberGenerator& rng,
-                      std::function<std::string ()> get_pass)
+                      std::function<std::string ()> get_pass,
+                      bool is_encrypted)
    {
    AlgorithmIdentifier alg_id;
-   secure_vector<byte> pkcs8_key = PKCS8_decode(source, get_pass, alg_id);
+   secure_vector<byte> pkcs8_key = PKCS8_decode(source, get_pass, alg_id, is_encrypted);
 
    const std::string alg_name = OIDS::lookup(alg_id.oid);
    if(alg_name == "" || alg_name == alg_id.oid.as_string())
@@ -16325,35 +16364,68 @@ Private_Key* load_key(DataSource& source,
    return make_private_key(alg_id, pkcs8_key, rng);
    }
 
+}
+
 /*
-* Extract a private key and return it
+* Extract an encrypted private key and return it
+*/
+Private_Key* load_key(DataSource& source,
+                      RandomNumberGenerator& rng,
+                      std::function<std::string ()> get_pass)
+   {
+   return load_key(source, rng, get_pass, true);
+   }
+
+/*
+* Extract an encrypted private key and return it
+*/
+Private_Key* load_key(DataSource& source,
+                      RandomNumberGenerator& rng,
+                      const std::string& pass)
+   {
+   return load_key(source, rng, [pass]() { return pass; }, true);
+   }
+
+/*
+* Extract an unencrypted private key and return it
+*/
+Private_Key* load_key(DataSource& source,
+                      RandomNumberGenerator& rng)
+   {
+   return load_key(source, rng, []() -> std::string {
+      throw PKCS8_Exception( "Internal error: Attempt to read password for unencrypted key" );}, false);
+   }
+
+/*
+* Extract an encrypted private key and return it
 */
 Private_Key* load_key(const std::string& fsname,
                       RandomNumberGenerator& rng,
                       std::function<std::string ()> get_pass)
    {
    DataSource_Stream source(fsname, true);
-   return PKCS8::load_key(source, rng, get_pass);
+   return load_key(source, rng, get_pass, true);
    }
 
 /*
-* Extract a private key and return it
-*/
-Private_Key* load_key(DataSource& source,
-                      RandomNumberGenerator& rng,
-                      const std::string& pass)
-   {
-   return PKCS8::load_key(source, rng, [pass]() { return pass; });
-   }
-
-/*
-* Extract a private key and return it
+* Extract an encrypted private key and return it
 */
 Private_Key* load_key(const std::string& fsname,
                       RandomNumberGenerator& rng,
                       const std::string& pass)
    {
    return PKCS8::load_key(fsname, rng, [pass]() { return pass; });
+   }
+
+/*
+* Extract an unencrypted private key and return it
+*/
+Private_Key* load_key(const std::string& fsname,
+                      RandomNumberGenerator& rng)
+   {
+   DataSource_Stream source(fsname, true);
+   return load_key(source, rng, []() -> std::string {
+      throw PKCS8_Exception( "Internal error: Attempt to read password for unencrypted key" );}, false);
    }
 
 /*
@@ -16425,9 +16497,51 @@ secure_vector<byte> PK_Decryptor_EME::dec(const byte msg[], size_t length) const
    return m_op->decrypt(msg, length);
    }
 
-PK_Key_Agreement::PK_Key_Agreement(const Private_Key& key, const std::string& kdf)
+PK_KEM_Encryptor::PK_KEM_Encryptor(const Public_Key& key,
+                                   const std::string& param,
+                                   const std::string& provider)
    {
-   m_op.reset(get_pk_op<PK_Ops::Key_Agreement>("Key agreement", key, kdf));
+   m_op.reset(get_pk_op<PK_Ops::KEM_Encryption>("KEM", key, param, provider));
+   }
+
+void PK_KEM_Encryptor::encrypt(secure_vector<byte>& out_encapsulated_key,
+                               secure_vector<byte>& out_shared_key,
+                               size_t desired_shared_key_len,
+                               Botan::RandomNumberGenerator& rng,
+                               const uint8_t salt[],
+                               size_t salt_len)
+   {
+   m_op->kem_encrypt(out_encapsulated_key,
+                     out_shared_key,
+                     desired_shared_key_len,
+                     rng,
+                     salt,
+                     salt_len);
+   }
+
+PK_KEM_Decryptor::PK_KEM_Decryptor(const Private_Key& key,
+                                   const std::string& param,
+                                   const std::string& provider)
+   {
+   m_op.reset(get_pk_op<PK_Ops::KEM_Decryption>("KEM", key, param, provider));
+   }
+
+secure_vector<byte> PK_KEM_Decryptor::decrypt(const byte encap_key[],
+                                              size_t encap_key_len,
+                                              size_t desired_shared_key_len,
+                                              const uint8_t salt[],
+                                              size_t salt_len)
+   {
+   return m_op->kem_decrypt(encap_key, encap_key_len,
+                            desired_shared_key_len,
+                            salt, salt_len);
+   }
+
+PK_Key_Agreement::PK_Key_Agreement(const Private_Key& key,
+                                   const std::string& kdf,
+                                   const std::string& provider)
+   {
+   m_op.reset(get_pk_op<PK_Ops::Key_Agreement>("Key agreement", key, kdf, provider));
    }
 
 SymmetricKey PK_Key_Agreement::derive_key(size_t key_len,
@@ -16758,285 +16872,8 @@ RandomNumberGenerator* RandomNumberGenerator::make_rng()
 
 }
 /*
-* RSA operations provided by OpenSSL
-* (C) 2015 Jack Lloyd
-*
-* Botan is released under the Simplified BSD License (see license.txt)
-*/
-
-
-#if defined(BOTAN_HAS_OPENSSL)
-
-
-#include <openssl/rsa.h>
-#include <openssl/x509.h>
-#include <openssl/err.h>
-
-namespace Botan {
-
-namespace {
-
-std::pair<int, size_t> get_openssl_enc_pad(const std::string& eme)
-   {
-   ERR_load_crypto_strings();
-   if(eme == "Raw")
-      return std::make_pair(RSA_NO_PADDING, 0);
-   else if(eme == "EME-PKCS1-v1_5")
-      return std::make_pair(RSA_PKCS1_PADDING, 11);
-   else if(eme == "OAEP(SHA-1)")
-      return std::make_pair(RSA_PKCS1_OAEP_PADDING, 41);
-   else
-      throw Lookup_Error("OpenSSL RSA does not support EME " + eme);
-   }
-
-class OpenSSL_RSA_Encryption_Operation : public PK_Ops::Encryption
-   {
-   public:
-      typedef RSA_PublicKey Key_Type;
-
-      static OpenSSL_RSA_Encryption_Operation* make(const Spec& spec)
-         {
-         try
-            {
-            if(auto* key = dynamic_cast<const RSA_PublicKey*>(&spec.key()))
-               {
-               auto pad_info = get_openssl_enc_pad(spec.padding());
-               return new OpenSSL_RSA_Encryption_Operation(*key, pad_info.first, pad_info.second);
-               }
-            }
-         catch(...) {}
-
-         return nullptr;
-         }
-
-      OpenSSL_RSA_Encryption_Operation(const RSA_PublicKey& rsa, int pad, size_t pad_overhead) :
-         m_openssl_rsa(nullptr, ::RSA_free), m_padding(pad)
-         {
-         const std::vector<byte> der = rsa.x509_subject_public_key();
-         const byte* der_ptr = der.data();
-         m_openssl_rsa.reset(::d2i_RSAPublicKey(nullptr, &der_ptr, der.size()));
-         if(!m_openssl_rsa)
-            throw OpenSSL_Error("d2i_RSAPublicKey");
-
-         m_bits = 8 * (n_size() - pad_overhead) - 1;
-         }
-
-      size_t max_input_bits() const override { return m_bits; };
-
-      secure_vector<byte> encrypt(const byte msg[], size_t msg_len,
-                                  RandomNumberGenerator&) override
-         {
-         const size_t mod_sz = n_size();
-
-         if(msg_len > mod_sz)
-            throw Invalid_Argument("Input too large for RSA key");
-
-         secure_vector<byte> outbuf(mod_sz);
-
-         secure_vector<byte> inbuf;
-
-         if(m_padding == RSA_NO_PADDING)
-            {
-            inbuf.resize(mod_sz);
-            copy_mem(&inbuf[mod_sz - msg_len], msg, msg_len);
-            }
-         else
-            {
-            inbuf.assign(msg, msg + msg_len);
-            }
-
-         int rc = ::RSA_public_encrypt(inbuf.size(), inbuf.data(), outbuf.data(),
-                                       m_openssl_rsa.get(), m_padding);
-         if(rc < 0)
-            throw OpenSSL_Error("RSA_public_encrypt");
-
-         return outbuf;
-         }
-
-   private:
-      size_t n_size() const { return ::RSA_size(m_openssl_rsa.get()); }
-      std::unique_ptr<RSA, std::function<void (RSA*)>> m_openssl_rsa;
-      size_t m_bits = 0;
-      int m_padding = 0;
-   };
-
-class OpenSSL_RSA_Decryption_Operation : public PK_Ops::Decryption
-   {
-   public:
-      typedef RSA_PrivateKey Key_Type;
-
-      static OpenSSL_RSA_Decryption_Operation* make(const Spec& spec)
-         {
-         try
-            {
-            if(auto* key = dynamic_cast<const RSA_PrivateKey*>(&spec.key()))
-               {
-               auto pad_info = get_openssl_enc_pad(spec.padding());
-               return new OpenSSL_RSA_Decryption_Operation(*key, pad_info.first);
-               }
-            }
-         catch(...) {}
-
-         return nullptr;
-         }
-
-      OpenSSL_RSA_Decryption_Operation(const RSA_PrivateKey& rsa, int pad) :
-         m_openssl_rsa(nullptr, ::RSA_free), m_padding(pad)
-         {
-         const secure_vector<byte> der = rsa.pkcs8_private_key();
-         const byte* der_ptr = der.data();
-         m_openssl_rsa.reset(d2i_RSAPrivateKey(nullptr, &der_ptr, der.size()));
-         if(!m_openssl_rsa)
-            throw OpenSSL_Error("d2i_RSAPrivateKey");
-         }
-
-      size_t max_input_bits() const override { return ::BN_num_bits(m_openssl_rsa->n) - 1; }
-
-      secure_vector<byte> decrypt(const byte msg[], size_t msg_len) override
-         {
-         secure_vector<byte> buf(::RSA_size(m_openssl_rsa.get()));
-         int rc = ::RSA_private_decrypt(msg_len, msg, buf.data(), m_openssl_rsa.get(), m_padding);
-         if(rc < 0 || static_cast<size_t>(rc) > buf.size())
-            throw OpenSSL_Error("RSA_private_decrypt");
-         buf.resize(rc);
-
-         if(m_padding == RSA_NO_PADDING)
-            {
-            return CT::strip_leading_zeros(buf);
-            }
-
-         return buf;
-         }
-
-   private:
-      std::unique_ptr<RSA, std::function<void (RSA*)>> m_openssl_rsa;
-      int m_padding = 0;
-   };
-
-class OpenSSL_RSA_Verification_Operation : public PK_Ops::Verification_with_EMSA
-   {
-   public:
-      typedef RSA_PublicKey Key_Type;
-
-      static OpenSSL_RSA_Verification_Operation* make(const Spec& spec)
-         {
-         if(const RSA_PublicKey* rsa = dynamic_cast<const RSA_PublicKey*>(&spec.key()))
-            {
-            return new OpenSSL_RSA_Verification_Operation(*rsa, spec.padding());
-            }
-
-         return nullptr;
-         }
-
-      OpenSSL_RSA_Verification_Operation(const RSA_PublicKey& rsa, const std::string& emsa) :
-         PK_Ops::Verification_with_EMSA(emsa),
-         m_openssl_rsa(nullptr, ::RSA_free)
-         {
-         const std::vector<byte> der = rsa.x509_subject_public_key();
-         const byte* der_ptr = der.data();
-         m_openssl_rsa.reset(::d2i_RSAPublicKey(nullptr, &der_ptr, der.size()));
-         }
-
-      size_t max_input_bits() const override { return ::BN_num_bits(m_openssl_rsa->n) - 1; }
-
-      bool with_recovery() const override { return true; }
-
-      secure_vector<byte> verify_mr(const byte msg[], size_t msg_len) override
-         {
-         const size_t mod_sz = ::RSA_size(m_openssl_rsa.get());
-
-         if(msg_len > mod_sz)
-            throw Invalid_Argument("OpenSSL RSA verify input too large");
-
-         secure_vector<byte> inbuf(mod_sz);
-         copy_mem(&inbuf[mod_sz - msg_len], msg, msg_len);
-
-         secure_vector<byte> outbuf(mod_sz);
-
-         int rc = ::RSA_public_decrypt(inbuf.size(), inbuf.data(), outbuf.data(),
-                                       m_openssl_rsa.get(), RSA_NO_PADDING);
-         if(rc < 0)
-            throw Invalid_Argument("RSA_public_decrypt");
-
-         return CT::strip_leading_zeros(outbuf);
-         }
-   private:
-      std::unique_ptr<RSA, std::function<void (RSA*)>> m_openssl_rsa;
-   };
-
-class OpenSSL_RSA_Signing_Operation : public PK_Ops::Signature_with_EMSA
-   {
-   public:
-      typedef RSA_PrivateKey Key_Type;
-
-      static OpenSSL_RSA_Signing_Operation* make(const Spec& spec)
-         {
-         if(const RSA_PrivateKey* rsa = dynamic_cast<const RSA_PrivateKey*>(&spec.key()))
-            {
-            return new OpenSSL_RSA_Signing_Operation(*rsa, spec.padding());
-            }
-
-         return nullptr;
-         }
-
-      OpenSSL_RSA_Signing_Operation(const RSA_PrivateKey& rsa, const std::string& emsa) :
-         PK_Ops::Signature_with_EMSA(emsa),
-         m_openssl_rsa(nullptr, ::RSA_free)
-         {
-         const secure_vector<byte> der = rsa.pkcs8_private_key();
-         const byte* der_ptr = der.data();
-         m_openssl_rsa.reset(d2i_RSAPrivateKey(nullptr, &der_ptr, der.size()));
-         if(!m_openssl_rsa)
-            throw OpenSSL_Error("d2i_RSAPrivateKey");
-         }
-
-      secure_vector<byte> raw_sign(const byte msg[], size_t msg_len,
-                                   RandomNumberGenerator&) override
-         {
-         const size_t mod_sz = ::RSA_size(m_openssl_rsa.get());
-
-         if(msg_len > mod_sz)
-            throw Invalid_Argument("OpenSSL RSA sign input too large");
-
-         secure_vector<byte> inbuf(mod_sz);
-         copy_mem(&inbuf[mod_sz - msg_len], msg, msg_len);
-
-         secure_vector<byte> outbuf(mod_sz);
-
-         int rc = ::RSA_private_encrypt(inbuf.size(), inbuf.data(), outbuf.data(),
-                                        m_openssl_rsa.get(), RSA_NO_PADDING);
-         if(rc < 0)
-            throw OpenSSL_Error("RSA_private_encrypt");
-
-         return outbuf;
-         }
-
-      size_t max_input_bits() const override { return ::BN_num_bits(m_openssl_rsa->n) - 1; }
-
-   private:
-      std::unique_ptr<RSA, std::function<void (RSA*)>> m_openssl_rsa;
-   };
-
-BOTAN_REGISTER_TYPE(PK_Ops::Verification, OpenSSL_RSA_Verification_Operation, "RSA",
-                    OpenSSL_RSA_Verification_Operation::make, "openssl", BOTAN_OPENSSL_RSA_PRIO);
-
-BOTAN_REGISTER_TYPE(PK_Ops::Signature, OpenSSL_RSA_Signing_Operation, "RSA",
-                    OpenSSL_RSA_Signing_Operation::make, "openssl", BOTAN_OPENSSL_RSA_PRIO);
-
-BOTAN_REGISTER_TYPE(PK_Ops::Encryption, OpenSSL_RSA_Encryption_Operation, "RSA",
-                    OpenSSL_RSA_Encryption_Operation::make, "openssl", BOTAN_OPENSSL_RSA_PRIO);
-
-BOTAN_REGISTER_TYPE(PK_Ops::Decryption, OpenSSL_RSA_Decryption_Operation, "RSA",
-                    OpenSSL_RSA_Decryption_Operation::make, "openssl", BOTAN_OPENSSL_RSA_PRIO);
-
-}
-
-}
-
-#endif // BOTAN_HAS_OPENSSL
-/*
 * RSA
-* (C) 1999-2010 Jack Lloyd
+* (C) 1999-2010,2015 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -17186,8 +17023,31 @@ class RSA_Decryption_Operation : public PK_Ops::Decryption_with_EME,
          const BigInt m(msg, msg_len);
          const BigInt x = blinded_private_op(m);
          const BigInt c = m_powermod_e_n(x);
-         BOTAN_ASSERT(m == c, "RSA sign consistency check");
+         BOTAN_ASSERT(m == c, "RSA decrypt consistency check");
          return BigInt::encode_locked(x);
+         }
+   };
+
+class RSA_KEM_Decryption_Operation : public PK_Ops::KEM_Decryption_with_KDF,
+                                     private RSA_Private_Operation
+   {
+   public:
+      typedef RSA_PrivateKey Key_Type;
+
+      RSA_KEM_Decryption_Operation(const RSA_PrivateKey& key,
+                                   const std::string& kdf) :
+         PK_Ops::KEM_Decryption_with_KDF(kdf),
+         RSA_Private_Operation(key)
+         {}
+
+      secure_vector<byte>
+      raw_kem_decrypt(const byte encap_key[], size_t len) override
+         {
+         const BigInt m(encap_key, len);
+         const BigInt x = blinded_private_op(m);
+         const BigInt c = m_powermod_e_n(x);
+         BOTAN_ASSERT(m == c, "RSA KEM consistency check");
+         return BigInt::encode_1363(x, n.bytes());
          }
    };
 
@@ -17210,6 +17070,8 @@ class RSA_Public_Operation
             throw Invalid_Argument("RSA public op - input is too large");
          return powermod_e_n(m);
          }
+
+      const BigInt& get_n() const { return n; }
 
       const BigInt& n;
       Fixed_Exponent_Power_Mod powermod_e_n;
@@ -17260,10 +17122,39 @@ class RSA_Verify_Operation : public PK_Ops::Verification_with_EMSA,
          }
    };
 
+class RSA_KEM_Encryption_Operation : public PK_Ops::KEM_Encryption_with_KDF,
+                                     private RSA_Public_Operation
+   {
+   public:
+      typedef RSA_PublicKey Key_Type;
+
+      RSA_KEM_Encryption_Operation(const RSA_PublicKey& key,
+                                   const std::string& kdf) :
+         PK_Ops::KEM_Encryption_with_KDF(kdf),
+         RSA_Public_Operation(key) {}
+
+   private:
+      void raw_kem_encrypt(secure_vector<byte>& out_encapsulated_key,
+                           secure_vector<byte>& raw_shared_key,
+                           Botan::RandomNumberGenerator& rng) override
+         {
+         const BigInt r = BigInt::random_integer(rng, 1, get_n());
+         const BigInt c = public_op(r);
+
+         out_encapsulated_key = BigInt::encode_locked(c);
+         raw_shared_key = BigInt::encode_locked(r);
+         }
+   };
+
+
 BOTAN_REGISTER_PK_ENCRYPTION_OP("RSA", RSA_Encryption_Operation);
 BOTAN_REGISTER_PK_DECRYPTION_OP("RSA", RSA_Decryption_Operation);
+
 BOTAN_REGISTER_PK_SIGNATURE_OP("RSA", RSA_Signature_Operation);
 BOTAN_REGISTER_PK_VERIFY_OP("RSA", RSA_Verify_Operation);
+
+BOTAN_REGISTER_PK_KEM_ENCRYPTION_OP("RSA", RSA_KEM_Encryption_Operation);
+BOTAN_REGISTER_PK_KEM_DECRYPTION_OP("RSA", RSA_KEM_Decryption_Operation);
 
 }
 
@@ -17958,7 +17849,7 @@ std::string srp6_group_identifier(const BigInt& N, const BigInt& g)
       if(group.get_p() == N && group.get_g() == g)
          return group_name;
 
-      throw std::runtime_error("Unknown SRP params");
+      throw Exception("Unknown SRP params");
       }
    catch(...)
       {
@@ -17982,7 +17873,7 @@ srp6_client_agree(const std::string& identifier,
    const size_t p_bytes = group.get_p().bytes();
 
    if(B <= 0 || B >= p)
-      throw std::runtime_error("Invalid SRP parameter from server");
+      throw Exception("Invalid SRP parameter from server");
 
    BigInt k = hash_seq(hash_id, p_bytes, p, g);
 
@@ -18038,7 +17929,7 @@ BigInt SRP6_Server_Session::step1(const BigInt& v,
 SymmetricKey SRP6_Server_Session::step2(const BigInt& A)
    {
    if(A <= 0 || A >= m_p)
-      throw std::runtime_error("Invalid SRP parameter from client");
+      throw Exception("Invalid SRP parameter from client");
 
    const BigInt u = hash_seq(m_hash_id, m_p_bytes, A, m_B);
 
@@ -18244,7 +18135,7 @@ System_RNG_Impl::System_RNG_Impl()
 #if defined(BOTAN_TARGET_OS_HAS_CRYPTGENRANDOM)
 
    if(!CryptAcquireContext(&m_prov, 0, 0, BOTAN_SYSTEM_RNG_CRYPTOAPI_PROV_TYPE, CRYPT_VERIFYCONTEXT))
-      throw std::runtime_error("System_RNG failed to acquire crypto provider");
+      throw Exception("System_RNG failed to acquire crypto provider");
 
 #else
 
@@ -18254,7 +18145,7 @@ System_RNG_Impl::System_RNG_Impl()
 
    m_fd = ::open(BOTAN_SYSTEM_RNG_DEVICE, O_RDONLY | O_NOCTTY);
    if(m_fd < 0)
-      throw std::runtime_error("System_RNG failed to open RNG device");
+      throw Exception("System_RNG failed to open RNG device");
 #endif
    }
 
@@ -18281,10 +18172,10 @@ void System_RNG_Impl::randomize(byte buf[], size_t len)
          {
          if(errno == EINTR)
             continue;
-         throw std::runtime_error("System_RNG read failed error " + std::to_string(errno));
+         throw Exception("System_RNG read failed error " + std::to_string(errno));
          }
       if(got == 0)
-         throw std::runtime_error("System_RNG EOF on device"); // ?!?
+         throw Exception("System_RNG EOF on device"); // ?!?
 
       buf += got;
       len -= got;
@@ -18331,7 +18222,7 @@ void assertion_failure(const char* expr_str,
 
    format << "@" << file << ":" << line;
 
-   throw std::runtime_error(format.str());
+   throw Exception(format.str());
    }
 
 }
@@ -19004,6 +18895,7 @@ size_t DataSource::discard_next(size_t n)
       {
       const size_t got = this->read(buf, std::min(n, sizeof(buf)));
       discarded += got;
+      n -= got;
 
       if(got == 0)
          break;
@@ -19461,7 +19353,7 @@ u32bit to_u32bit(const std::string& str)
       auto message = std::string("Could not read '" + str + "' as decimal string");
       auto exceptionMessage = std::string(e.what());
       if (!exceptionMessage.empty()) message += ": " + exceptionMessage;
-      throw std::runtime_error(message);
+      throw Exception(message);
       }
    }
 
@@ -19820,7 +19712,7 @@ std::map<std::string, std::string> read_cfg(std::istream& is)
       auto eq = s.find("=");
 
       if(eq == std::string::npos || eq == 0 || eq == s.size() - 1)
-         throw std::runtime_error("Bad read_cfg input '" + s + "' on line " + std::to_string(line));
+         throw Exception("Bad read_cfg input '" + s + "' on line " + std::to_string(line));
 
       const std::string key = clean_ws(s.substr(0, eq));
       const std::string val = clean_ws(s.substr(eq + 1, std::string::npos));
@@ -19874,7 +19766,7 @@ void Semaphore::acquire()
 }
 /*
 * Version Information
-* (C) 1999-2013 Jack Lloyd
+* (C) 1999-2013,2015 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -19928,6 +19820,27 @@ u32bit version_datestamp() { return BOTAN_VERSION_DATESTAMP; }
 u32bit version_major() { return BOTAN_VERSION_MAJOR; }
 u32bit version_minor() { return BOTAN_VERSION_MINOR; }
 u32bit version_patch() { return BOTAN_VERSION_PATCH; }
+
+std::string runtime_version_check(u32bit major,
+                                  u32bit minor,
+                                  u32bit patch)
+   {
+   std::ostringstream oss;
+
+   if(major != version_major() ||
+      minor != version_minor() ||
+      patch != version_patch())
+      {
+      oss << "Warning: linked version ("
+          << Botan::version_major() << '.'
+          << Botan::version_minor() << '.'
+          << Botan::version_patch()
+          << ") does not match version built against ("
+          << major << '.' << minor << '.' << patch << ")\n";
+      }
+
+   return oss.str();
+   }
 
 }
  /*
@@ -20128,7 +20041,7 @@ class Zlib_Compression_Stream : public Zlib_Stream
          int rc = deflateInit2(streamp(), level, Z_DEFLATED, wbits,
                                8, Z_DEFAULT_STRATEGY);
          if(rc != Z_OK)
-            throw std::runtime_error("zlib deflate initialization failed");
+            throw Exception("zlib deflate initialization failed");
          }
 
       ~Zlib_Compression_Stream()
@@ -20141,9 +20054,9 @@ class Zlib_Compression_Stream : public Zlib_Stream
          int rc = deflate(streamp(), flags);
 
          if(rc == Z_MEM_ERROR)
-            throw std::bad_alloc();
+            throw Exception("zlib memory allocation failure");
          else if(rc != Z_OK && rc != Z_STREAM_END && rc != Z_BUF_ERROR)
-            throw std::runtime_error("zlib deflate error " + std::to_string(rc));
+            throw Exception("zlib deflate error " + std::to_string(rc));
 
          return (rc == Z_STREAM_END);
          }
@@ -20157,9 +20070,9 @@ class Zlib_Decompression_Stream : public Zlib_Stream
          int rc = inflateInit2(streamp(), compute_window_bits(wbits, wbits_offset));
 
          if(rc == Z_MEM_ERROR)
-            throw std::bad_alloc();
+            throw Exception("zlib memory allocation failure");
          else if(rc != Z_OK)
-            throw std::runtime_error("zlib inflate initialization failed");
+            throw Exception("zlib inflate initialization failed");
          }
 
       ~Zlib_Decompression_Stream()
@@ -20172,9 +20085,9 @@ class Zlib_Decompression_Stream : public Zlib_Stream
          int rc = inflate(streamp(), flags);
 
          if(rc == Z_MEM_ERROR)
-            throw std::bad_alloc();
+            throw Exception("zlib memory allocation failure");
          else if(rc != Z_OK && rc != Z_STREAM_END && rc != Z_BUF_ERROR)
-            throw std::runtime_error("zlib inflate error " + std::to_string(rc));
+            throw Exception("zlib inflate error " + std::to_string(rc));
 
          return (rc == Z_STREAM_END);
          }
@@ -20205,7 +20118,7 @@ class Gzip_Compression_Stream : public Zlib_Compression_Stream
 
          int rc = deflateSetHeader(streamp(), &m_header);
          if(rc != Z_OK)
-            throw std::runtime_error("setting gzip header failed");
+            throw Exception("setting gzip header failed");
          }
 
    private:

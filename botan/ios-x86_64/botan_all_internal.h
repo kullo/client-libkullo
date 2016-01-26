@@ -9,7 +9,7 @@
 #include <map>
 #include <memory>
 #include <mutex>
-#include <stdexcept>
+#include <set>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -20,7 +20,7 @@
    #define BOTAN_WORKAROUND_GH_321
    #define NOMINMAX 1
    #define WIN32_LEAN_AND_MEAN 1
-   #include <Windows.h>
+   #include <windows.h>
 
 #endif
 
@@ -31,28 +31,28 @@ namespace Botan {
 class WinCS_Mutex
    {
    public:
-       WinCS_Mutex()
-          {
-          InitializeCriticalSection(&m_cs);
-          }
-          
-       ~WinCS_Mutex()
-          {
-          DeleteCriticalSection(&m_cs);
-          }
+      WinCS_Mutex()
+         {
+         ::InitializeCriticalSection(&m_cs);
+         }
 
-       void lock()
-          {
-          EnterCriticalSection(&m_cs);
-          }
+      ~WinCS_Mutex()
+         {
+         ::DeleteCriticalSection(&m_cs);
+         }
 
-       void unlock()
-          {
-          LeaveCriticalSection(&m_cs);
-          }
+      void lock()
+         {
+         ::EnterCriticalSection(&m_cs);
+         }
 
-    private:
-        CRITICAL_SECTION   m_cs;
+      void unlock()
+         {
+         ::LeaveCriticalSection(&m_cs);
+         }
+
+   private:
+      CRITICAL_SECTION m_cs;
    };
 
 #endif
@@ -75,7 +75,7 @@ class Algo_Registry
          {
          std::lock_guard<mutex> lock(m_mutex);
          if(!m_algo_info[name].add_provider(provider, fn, pref))
-            throw std::runtime_error("Duplicated registration of " + name + "/" + provider);
+            throw Exception("Duplicated registration of " + name + "/" + provider);
          }
 
       std::vector<std::string> providers_of(const Spec& spec)
@@ -109,7 +109,7 @@ class Algo_Registry
             }
          catch(std::exception& e)
             {
-            throw std::runtime_error("Creating '" + spec.as_string() + "' failed: " + e.what());
+            throw Lookup_Error("Creating '" + spec.as_string() + "' failed: " + e.what());
             }
 
          return nullptr;
@@ -256,7 +256,7 @@ make_new_T_1X(const typename Algo_Registry<T>::Spec& spec)
    {
    std::unique_ptr<X> x(Algo_Registry<X>::global_registry().make(spec.arg(0)));
    if(!x)
-      throw std::runtime_error(spec.arg(0));
+      throw Exception(spec.arg(0));
    return new T(x.release());
    }
 
@@ -489,23 +489,36 @@ class Zlib_Style_Stream : public Compression_Stream
 }
 
 
-#if defined(BOTAN_USE_CTGRIND)
-
-// These are external symbols from libctgrind.so
-extern "C" void ct_poison(const void* address, size_t length);
-extern "C" void ct_unpoison(const void* address, size_t length);
-
+#if defined(BOTAN_HAS_VALGRIND)
+  #include <valgrind/memcheck.h>
 #endif
 
 namespace Botan {
 
 namespace CT {
 
+/**
+* Use valgrind to mark the contents of memory as being undefined.
+* Valgrind will accept operations which manipulate undefined values,
+* but will warn if an undefined value is used to decided a conditional
+* jump or a load/store address. So if we poison all of our inputs we
+* can confirm that the operations in question are truly const time
+* when compiled by whatever compiler is in use.
+*
+* Even better, the VALGRIND_MAKE_MEM_* macros work even when the
+* program is not run under valgrind (though with a few cycles of
+* overhead, which is unfortunate in final binaries as these
+* annotations tend to be used in fairly important loops).
+*
+* This approach was first used in ctgrind (https://github.com/agl/ctgrind)
+* but calling the valgrind mecheck API directly works just as well and
+* doesn't require a custom patched valgrind.
+*/
 template<typename T>
-inline void poison(T* p, size_t n)
+inline void poison(const T* p, size_t n)
    {
-#if defined(BOTAN_USE_CTGRIND)
-   ct_poison(p, sizeof(T)*n);
+#if defined(BOTAN_HAS_VALGRIND)
+   VALGRIND_MAKE_MEM_UNDEFINED(p, n * sizeof(T));
 #else
    BOTAN_UNUSED(p);
    BOTAN_UNUSED(n);
@@ -513,10 +526,10 @@ inline void poison(T* p, size_t n)
    }
 
 template<typename T>
-inline void unpoison(T* p, size_t n)
+inline void unpoison(const T* p, size_t n)
    {
-#if defined(BOTAN_USE_CTGRIND)
-   ct_unpoison(p, sizeof(T)*n);
+#if defined(BOTAN_HAS_VALGRIND)
+   VALGRIND_MAKE_MEM_DEFINED(p, n * sizeof(T));
 #else
    BOTAN_UNUSED(p);
    BOTAN_UNUSED(n);
@@ -1288,15 +1301,6 @@ void bigint_shr2(word y[], const word x[], size_t x_size,
                  size_t word_shift, size_t bit_shift);
 
 /*
-* Simple O(N^2) Multiplication and Squaring
-*/
-void bigint_simple_mul(word z[],
-                       const word x[], size_t x_size,
-                       const word y[], size_t y_size);
-
-void bigint_simple_sqr(word z[], const word x[], size_t x_size);
-
-/*
 * Linear Multiply
 */
 void bigint_linmul2(word x[], size_t x_size, word y);
@@ -1578,6 +1582,46 @@ class Key_Agreement_with_KDF : public Key_Agreement
       std::unique_ptr<KDF> m_kdf;
    };
 
+class KEM_Encryption_with_KDF : public KEM_Encryption
+   {
+   public:
+      void kem_encrypt(secure_vector<byte>& out_encapsulated_key,
+                       secure_vector<byte>& out_shared_key,
+                       size_t desired_shared_key_len,
+                       Botan::RandomNumberGenerator& rng,
+                       const uint8_t salt[],
+                       size_t salt_len) override;
+
+   protected:
+      virtual void raw_kem_encrypt(secure_vector<byte>& out_encapsulated_key,
+                                   secure_vector<byte>& raw_shared_key,
+                                   Botan::RandomNumberGenerator& rng) = 0;
+
+      KEM_Encryption_with_KDF(const std::string& kdf);
+      ~KEM_Encryption_with_KDF();
+   private:
+      std::unique_ptr<KDF> m_kdf;
+   };
+
+class KEM_Decryption_with_KDF : public KEM_Decryption
+   {
+   public:
+      secure_vector<byte> kem_decrypt(const byte encap_key[],
+                                      size_t len,
+                                      size_t desired_shared_key_len,
+                                      const uint8_t salt[],
+                                      size_t salt_len);
+
+   protected:
+      virtual secure_vector<byte>
+      raw_kem_decrypt(const byte encap_key[], size_t len) = 0;
+
+      KEM_Decryption_with_KDF(const std::string& kdf);
+      ~KEM_Decryption_with_KDF();
+   private:
+      std::unique_ptr<KDF> m_kdf;
+   };
+
 }
 
 }
@@ -1600,6 +1644,9 @@ OP* make_pk_op(const typename T::Spec& spec)
 #define BOTAN_REGISTER_PK_SIGNATURE_OP(NAME, TYPE) BOTAN_REGISTER_PK_OP(PK_Ops::Signature, NAME, TYPE)
 #define BOTAN_REGISTER_PK_VERIFY_OP(NAME, TYPE) BOTAN_REGISTER_PK_OP(PK_Ops::Verification, NAME, TYPE)
 #define BOTAN_REGISTER_PK_KEY_AGREE_OP(NAME, TYPE) BOTAN_REGISTER_PK_OP(PK_Ops::Key_Agreement, NAME, TYPE)
+
+#define BOTAN_REGISTER_PK_KEM_ENCRYPTION_OP(NAME, TYPE) BOTAN_REGISTER_PK_OP(PK_Ops::KEM_Encryption, NAME, TYPE)
+#define BOTAN_REGISTER_PK_KEM_DECRYPTION_OP(NAME, TYPE) BOTAN_REGISTER_PK_OP(PK_Ops::KEM_Decryption, NAME, TYPE)
 
 }
 
@@ -1662,6 +1709,20 @@ inline std::vector<byte> to_byte_vector(const std::string& s)
 inline std::string to_string(const secure_vector<byte> &bytes)
    {
    return std::string(bytes.cbegin(), bytes.cend());
+   }
+
+/**
+* Return the keys of a map as a std::set
+*/
+template<typename K, typename V>
+std::set<K> map_keys_as_set(const std::map<K, V>& kv)
+   {
+   std::set<K> s;
+   for(auto&& i : kv)
+      {
+      s.insert(i.first);
+      }
+   return s;
    }
 
 /*

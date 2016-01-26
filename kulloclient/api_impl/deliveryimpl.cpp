@@ -1,6 +1,9 @@
-/* Copyright 2013–2015 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
 #include "kulloclient/api_impl/deliveryimpl.h"
 
+#include "kulloclient/api/DateTime.h"
+#include "kulloclient/api/DeliveryState.h"
+#include "kulloclient/api/DeliveryReason.h"
 #include "kulloclient/api_impl/addressimpl.h"
 #include "kulloclient/util/assert.h"
 

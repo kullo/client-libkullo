@@ -1,4 +1,4 @@
-/* Copyright 2013–2015 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
 #include "kulloclient/util/datetime.h"
 
 #include <boost/date_time/posix_time/posix_time_types.hpp>

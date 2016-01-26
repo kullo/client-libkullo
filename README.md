@@ -70,6 +70,12 @@ Tips and Tricks
 Changelog
 ---------
 
+### v41 (2016-01-26)
+
+ * Implement push notifications
+ * Update Djinni
+ * Update Botan 1.11.26
+
 ### v40 (2015-12-22)
 
  * Bugfix: Continue sync when handling a message with sender in recipients list

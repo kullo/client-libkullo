@@ -1,4 +1,4 @@
-/* Copyright 2013–2015 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
 #pragma once
 
 #include <chrono>
@@ -11,7 +11,8 @@ namespace ApiImpl {
 class Worker
 {
 public:
-    Worker();
+    Worker() = default;
+    virtual ~Worker() = default;
 
     virtual void work() = 0;
     virtual void cancel() = 0;

@@ -1,4 +1,4 @@
-/* Copyright 2013–2015 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
 #pragma once
 
 #include <atomic>
@@ -52,6 +52,7 @@ private:
         SyncerSyncerListener(SyncerImpl &parent);
 
         // Api::SyncerListener implementation
+        void started() override;
         void draftAttachmentsTooBig(int64_t convId) override;
         void progressed(const Api::SyncProgress & progress) override;
         void finished() override;

@@ -3,13 +3,13 @@
 
 #pragma once
 
-#include "kulloclient/api/LocalError.h"
 #include <memory>
 
 namespace Kullo { namespace Api {
 
 class Address;
 class Session;
+enum class LocalError;
 
 /** Listener used in Client.createSessionAsync() */
 class ClientCreateSessionListener {

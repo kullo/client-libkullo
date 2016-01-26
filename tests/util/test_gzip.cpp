@@ -1,4 +1,4 @@
-/* Copyright 2013–2015 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
 #include <vector>
 #include <kulloclient/util/binary.h>
 #include <kulloclient/util/gzip.h>

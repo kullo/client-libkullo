@@ -42,7 +42,7 @@ CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_Client_00024CppProxy_nati
 {
     try {
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
-        const auto& ref = ::djinni::CppProxyHandle<::Kullo::Api::Client>::get(nativeRef);
+        const auto& ref = ::djinni::objectFromHandleAddress<::Kullo::Api::Client>(nativeRef);
         auto r = ref->createSessionAsync(::JNI::Kullo::Api::UserSettings::toCpp(jniEnv, j_settings),
                                          ::djinni::String::toCpp(jniEnv, j_dbFilePath),
                                          ::JNI::Kullo::Api::SessionListener::toCpp(jniEnv, j_sessionListener),
@@ -55,7 +55,7 @@ CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_Client_00024CppProxy_nati
 {
     try {
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
-        const auto& ref = ::djinni::CppProxyHandle<::Kullo::Api::Client>::get(nativeRef);
+        const auto& ref = ::djinni::objectFromHandleAddress<::Kullo::Api::Client>(nativeRef);
         auto r = ref->addressExistsAsync(::JNI::Kullo::Api::Address::toCpp(jniEnv, j_address),
                                          ::JNI::Kullo::Api::ClientAddressExistsListener::toCpp(jniEnv, j_listener));
         return ::djinni::release(::JNI::Kullo::Api::AsyncTask::fromCpp(jniEnv, r));
@@ -66,7 +66,7 @@ CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_Client_00024CppProxy_nati
 {
     try {
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
-        const auto& ref = ::djinni::CppProxyHandle<::Kullo::Api::Client>::get(nativeRef);
+        const auto& ref = ::djinni::objectFromHandleAddress<::Kullo::Api::Client>(nativeRef);
         auto r = ref->checkLoginAsync(::JNI::Kullo::Api::Address::toCpp(jniEnv, j_address),
                                       ::JNI::Kullo::Api::MasterKey::toCpp(jniEnv, j_masterKey),
                                       ::JNI::Kullo::Api::ClientCheckLoginListener::toCpp(jniEnv, j_listener));
@@ -78,7 +78,7 @@ CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_Client_00024CppProxy_nati
 {
     try {
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
-        const auto& ref = ::djinni::CppProxyHandle<::Kullo::Api::Client>::get(nativeRef);
+        const auto& ref = ::djinni::objectFromHandleAddress<::Kullo::Api::Client>(nativeRef);
         auto r = ref->generateKeysAsync(::JNI::Kullo::Api::ClientGenerateKeysListener::toCpp(jniEnv, j_listener));
         return ::djinni::release(::JNI::Kullo::Api::AsyncTask::fromCpp(jniEnv, r));
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, 0 /* value doesn't matter */)
@@ -88,7 +88,7 @@ CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_Client_00024CppProxy_nati
 {
     try {
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
-        const auto& ref = ::djinni::CppProxyHandle<::Kullo::Api::Client>::get(nativeRef);
+        const auto& ref = ::djinni::objectFromHandleAddress<::Kullo::Api::Client>(nativeRef);
         auto r = ref->versions();
         return ::djinni::release(::djinni::Map<::djinni::String, ::djinni::String>::fromCpp(jniEnv, r));
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, 0 /* value doesn't matter */)

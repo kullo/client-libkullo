@@ -1,9 +1,10 @@
-/* Copyright 2013–2015 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
 #include "kulloclient/api_impl/messagesimpl.h"
 
 #include <algorithm>
 
 #include "kulloclient/api/Address.h"
+#include "kulloclient/api/DateTime.h"
 #include "kulloclient/api_impl/deliveryimpl.h"
 #include "kulloclient/dao/deliverydao.h"
 #include "kulloclient/db/exceptions.h"

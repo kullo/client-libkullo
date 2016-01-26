@@ -12,7 +12,7 @@ ClientCreateSessionListener::ClientCreateSessionListener() : ::djinni::JniInterf
 
 ClientCreateSessionListener::~ClientCreateSessionListener() = default;
 
-ClientCreateSessionListener::JavaProxy::JavaProxy(JniType j) : JavaProxyCacheEntry(j) { }
+ClientCreateSessionListener::JavaProxy::JavaProxy(JniType j) : Handle(::djinni::jniGetThreadEnv(), j) { }
 
 ClientCreateSessionListener::JavaProxy::~JavaProxy() = default;
 
@@ -20,7 +20,7 @@ void ClientCreateSessionListener::JavaProxy::finished(const std::shared_ptr<::Ku
     auto jniEnv = ::djinni::jniGetThreadEnv();
     ::djinni::JniLocalScope jscope(jniEnv, 10);
     const auto& data = ::djinni::JniClass<::JNI::Kullo::Api::ClientCreateSessionListener>::get();
-    jniEnv->CallVoidMethod(getGlobalRef(), data.method_finished,
+    jniEnv->CallVoidMethod(Handle::get().get(), data.method_finished,
                            ::djinni::get(::JNI::Kullo::Api::Session::fromCpp(jniEnv, c_session)));
     ::djinni::jniExceptionCheck(jniEnv);
 }
@@ -28,7 +28,7 @@ void ClientCreateSessionListener::JavaProxy::error(const std::shared_ptr<::Kullo
     auto jniEnv = ::djinni::jniGetThreadEnv();
     ::djinni::JniLocalScope jscope(jniEnv, 10);
     const auto& data = ::djinni::JniClass<::JNI::Kullo::Api::ClientCreateSessionListener>::get();
-    jniEnv->CallVoidMethod(getGlobalRef(), data.method_error,
+    jniEnv->CallVoidMethod(Handle::get().get(), data.method_error,
                            ::djinni::get(::JNI::Kullo::Api::Address::fromCpp(jniEnv, c_address)),
                            ::djinni::get(::JNI::Kullo::Api::LocalError::fromCpp(jniEnv, c_error)));
     ::djinni::jniExceptionCheck(jniEnv);

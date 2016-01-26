@@ -3,12 +3,12 @@
 
 #pragma once
 
-#include "kulloclient/api/NetworkError.h"
 #include <memory>
 
 namespace Kullo { namespace Api {
 
 class Address;
+enum class NetworkError;
 
 /** Listener used in Client.addressExistsAsync() */
 class ClientAddressExistsListener {

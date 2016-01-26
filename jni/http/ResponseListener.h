@@ -11,6 +11,7 @@ namespace JNI { namespace Kullo { namespace Http {
 class ResponseListener final : ::djinni::JniInterface<::Kullo::Http::ResponseListener, ResponseListener> {
 public:
     using CppType = std::shared_ptr<::Kullo::Http::ResponseListener>;
+    using CppOptType = std::shared_ptr<::Kullo::Http::ResponseListener>;
     using JniType = jobject;
 
     using Boxed = ResponseListener;
@@ -18,7 +19,8 @@ public:
     ~ResponseListener();
 
     static CppType toCpp(JNIEnv* jniEnv, JniType j) { return ::djinni::JniClass<ResponseListener>::get()._fromJava(jniEnv, j); }
-    static ::djinni::LocalRef<JniType> fromCpp(JNIEnv* jniEnv, const CppType& c) { return {jniEnv, ::djinni::JniClass<ResponseListener>::get()._toJava(jniEnv, c)}; }
+    static ::djinni::LocalRef<JniType> fromCppOpt(JNIEnv* jniEnv, const CppOptType& c) { return {jniEnv, ::djinni::JniClass<ResponseListener>::get()._toJava(jniEnv, c)}; }
+    static ::djinni::LocalRef<JniType> fromCpp(JNIEnv* jniEnv, const CppType& c) { return fromCppOpt(jniEnv, c); }
 
 private:
     ResponseListener();

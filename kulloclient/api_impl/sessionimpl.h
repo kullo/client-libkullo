@@ -1,4 +1,4 @@
-/* Copyright 2013–2015 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
 #pragma once
 
 #include "kulloclient/api/Session.h"
@@ -38,6 +38,10 @@ public:
     std::shared_ptr<Api::Syncer> syncer() override;
     std::shared_ptr<Api::AsyncTask> accountInfoAsync(
             const std::shared_ptr<Api::SessionAccountInfoListener> &listener) override;
+    std::shared_ptr<Api::AsyncTask> registerPushToken(
+            const std::string &registrationToken) override;
+    std::shared_ptr<Api::AsyncTask> unregisterPushToken(
+            const std::string &registrationToken) override;
     std::vector<Api::Event> notify(
             const std::shared_ptr<Api::InternalEvent> &internalEvent) override;
 

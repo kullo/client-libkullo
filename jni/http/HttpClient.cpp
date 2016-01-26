@@ -14,7 +14,7 @@ HttpClient::HttpClient() : ::djinni::JniInterface<::Kullo::Http::HttpClient, Htt
 
 HttpClient::~HttpClient() = default;
 
-HttpClient::JavaProxy::JavaProxy(JniType j) : JavaProxyCacheEntry(j) { }
+HttpClient::JavaProxy::JavaProxy(JniType j) : Handle(::djinni::jniGetThreadEnv(), j) { }
 
 HttpClient::JavaProxy::~JavaProxy() = default;
 
@@ -22,7 +22,7 @@ HttpClient::JavaProxy::~JavaProxy() = default;
     auto jniEnv = ::djinni::jniGetThreadEnv();
     ::djinni::JniLocalScope jscope(jniEnv, 10);
     const auto& data = ::djinni::JniClass<::JNI::Kullo::Http::HttpClient>::get();
-    auto jret = jniEnv->CallObjectMethod(getGlobalRef(), data.method_sendRequest,
+    auto jret = jniEnv->CallObjectMethod(Handle::get().get(), data.method_sendRequest,
                                          ::djinni::get(::JNI::Kullo::Http::Request::fromCpp(jniEnv, c_request)),
                                          ::djinni::get(::djinni::I64::fromCpp(jniEnv, c_timeout)),
                                          ::djinni::get(::JNI::Kullo::Http::RequestListener::fromCpp(jniEnv, c_requestListener)),

@@ -1,5 +1,7 @@
-/* Copyright 2013–2015 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
 #include "kulloclient/api_impl/logfunctionwrapper.h"
+
+#include "kulloclient/api/LogType.h"
 
 namespace Kullo {
 namespace ApiImpl {

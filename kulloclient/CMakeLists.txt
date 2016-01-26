@@ -44,6 +44,7 @@ kullo_add_simple_library(
     api_impl/removaleventdispatcher.cpp
     api_impl/sendersimpl.cpp
     api_impl/sessionaccountinfoworker.cpp
+    api_impl/sessionregisterpushtokenworker.cpp
     api_impl/sessionimpl.cpp
     api_impl/syncerdownloadattachmentsformessageworker.cpp
     api_impl/syncerimpl.cpp
@@ -89,10 +90,12 @@ kullo_add_simple_library(
     protocol/accountclient.cpp
     protocol/accountsclient.cpp
     protocol/baseclient.cpp
+    protocol/debug.cpp
     protocol/keysclient.cpp
     protocol/httpstructs.cpp
     protocol/messagesclient.cpp
     protocol/publickeysclient.cpp
+    protocol/pushclient.cpp
     protocol/requestlistener.cpp
     protocol/responselistener.cpp
     sync/attachmentsyncer.cpp
@@ -123,6 +126,7 @@ kullo_add_simple_library(
     util/scopedbenchmark.cpp
     util/stacktrace.cpp
     util/stltaskrunner.cpp
+    util/urlencoding.cpp
     util/usersettings.cpp
     util/version.cpp
 )

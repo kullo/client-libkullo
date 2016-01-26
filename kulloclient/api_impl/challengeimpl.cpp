@@ -1,5 +1,7 @@
-/* Copyright 2013–2015 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
 #include "kulloclient/api_impl/challengeimpl.h"
+
+#include "kulloclient/api/ChallengeType.h"
 #include "kulloclient/protocol/exceptions.h"
 #include "kulloclient/util/assert.h"
 

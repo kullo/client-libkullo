@@ -12,10 +12,10 @@ struct HttpHeader final {
     std::string key;
     std::string value;
 
-    HttpHeader(std::string key,
-               std::string value)
-    : key(std::move(key))
-    , value(std::move(value))
+    HttpHeader(std::string key_,
+               std::string value_)
+    : key(std::move(key_))
+    , value(std::move(value_))
     {}
 };
 

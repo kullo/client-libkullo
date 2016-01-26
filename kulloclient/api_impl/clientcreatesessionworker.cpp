@@ -1,4 +1,4 @@
-/* Copyright 2013–2015 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
 #include "kulloclient/api_impl/clientcreatesessionworker.h"
 
 #if defined __ANDROID__
@@ -8,6 +8,7 @@
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
 
+#include "kulloclient/api/LocalError.h"
 #include "kulloclient/api_impl/sessionimpl.h"
 #include "kulloclient/db/dbsession.h"
 #include "kulloclient/util/assert.h"

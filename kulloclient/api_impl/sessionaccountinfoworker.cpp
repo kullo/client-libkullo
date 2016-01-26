@@ -1,6 +1,7 @@
-/* Copyright 2013–2015 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
 #include "kulloclient/api_impl/sessionaccountinfoworker.h"
 
+#include "kulloclient/api/AccountInfo.h"
 #include "kulloclient/api_impl/exception_conversion.h"
 #include "kulloclient/util/exceptions.h"
 #include "kulloclient/util/librarylogger.h"

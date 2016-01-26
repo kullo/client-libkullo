@@ -17,12 +17,12 @@ struct Response final {
     int32_t statusCode;
     std::vector<HttpHeader> headers;
 
-    Response(boost::optional<ResponseError> error,
-             int32_t statusCode,
-             std::vector<HttpHeader> headers)
-    : error(std::move(error))
-    , statusCode(std::move(statusCode))
-    , headers(std::move(headers))
+    Response(boost::optional<ResponseError> error_,
+             int32_t statusCode_,
+             std::vector<HttpHeader> headers_)
+    : error(std::move(error_))
+    , statusCode(std::move(statusCode_))
+    , headers(std::move(headers_))
     {}
 };
 

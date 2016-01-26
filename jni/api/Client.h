@@ -11,6 +11,7 @@ namespace JNI { namespace Kullo { namespace Api {
 class Client final : ::djinni::JniInterface<::Kullo::Api::Client, Client> {
 public:
     using CppType = std::shared_ptr<::Kullo::Api::Client>;
+    using CppOptType = std::shared_ptr<::Kullo::Api::Client>;
     using JniType = jobject;
 
     using Boxed = Client;
@@ -18,7 +19,8 @@ public:
     ~Client();
 
     static CppType toCpp(JNIEnv* jniEnv, JniType j) { return ::djinni::JniClass<Client>::get()._fromJava(jniEnv, j); }
-    static ::djinni::LocalRef<JniType> fromCpp(JNIEnv* jniEnv, const CppType& c) { return {jniEnv, ::djinni::JniClass<Client>::get()._toJava(jniEnv, c)}; }
+    static ::djinni::LocalRef<JniType> fromCppOpt(JNIEnv* jniEnv, const CppOptType& c) { return {jniEnv, ::djinni::JniClass<Client>::get()._toJava(jniEnv, c)}; }
+    static ::djinni::LocalRef<JniType> fromCpp(JNIEnv* jniEnv, const CppType& c) { return fromCppOpt(jniEnv, c); }
 
 private:
     Client();

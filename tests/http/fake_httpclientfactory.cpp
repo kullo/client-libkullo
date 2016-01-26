@@ -1,9 +1,12 @@
-/* Copyright 2013–2015 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
 #include "tests/http/fake_httpclientfactory.h"
 
 #include <jsoncpp/jsoncpp.h>
 
+#include <kulloclient/http/HttpHeader.h>
+#include <kulloclient/http/Request.h>
 #include <kulloclient/http/RequestListener.h>
+#include <kulloclient/http/Response.h>
 #include <kulloclient/http/ResponseListener.h>
 #include <kulloclient/crypto/symmetrickeygenerator.h>
 #include <kulloclient/util/assert.h>
@@ -133,14 +136,9 @@ Http::Response FakeHttpClient::sendRequest(
                  "https://kullo.example.com/v1/exists%23example.com/messages"
                  ) == 0)
     {
-        auto authCode = validateAuth(request.headers);
-        if (authCode != 200)
+        statusCode = validateAuth(request.headers);
+        if (statusCode == 200)
         {
-            statusCode = authCode;
-        }
-        else
-        {
-            statusCode = 200;
             responseBody = Util::to_vector(
                         R"({"resultsTotal": 0, "resultsReturned": 0, )"
                         R"("data": []})");
@@ -152,17 +150,24 @@ Http::Response FakeHttpClient::sendRequest(
              request.url ==
              "https://kullo.example.com/v1/exists%23example.com/account/info")
     {
-        auto authCode = validateAuth(request.headers);
-        if (authCode != 200)
+        statusCode = validateAuth(request.headers);
+        if (statusCode == 200)
         {
-            statusCode = authCode;
-        }
-        else
-        {
-            statusCode = 200;
             responseBody = Util::to_vector(
                         R"({"settingsLocation": )"
                         R"("https://accounts.example.com/foo/bar"})");
+        }
+    }
+
+    // GCM registration token
+    else if (request.method == Http::HttpMethod::Post &&
+             request.url ==
+             "https://kullo.example.com/v1/exists%23example.com/push/gcm")
+    {
+        statusCode = validateAuth(request.headers);
+        if (statusCode == 200)
+        {
+            responseBody = Util::to_vector("{}");
         }
     }
 
@@ -228,11 +233,8 @@ Http::Response FakeHttpClient::sendRequest(
             const uint64_t TIMESTAMP = 1433768060000000ull;
             const std::string TEXT = "foofoofoo";
             const std::string AUTH = "deadbeef";
-            const std::string ANSWER = "42";
 
-            auto jsonChallenge = json["challenge"];
-
-            // "blocked" challenge cannot be colved => always send challenge
+            // "blocked" challenge cannot be solved => always send challenge
             statusCode = 403;
             responseBody = Util::to_vector(
                         R"({"challenge": {)"

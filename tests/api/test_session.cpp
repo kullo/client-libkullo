@@ -1,8 +1,9 @@
-/* Copyright 2013–2015 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
 #include "tests/api/apimodeltest.h"
 
 #include <boost/optional.hpp>
 #include <kulloclient/registry.h>
+#include <kulloclient/api/AccountInfo.h>
 #include <kulloclient/api/Address.h>
 #include <kulloclient/api/AsyncTask.h>
 #include <kulloclient/api/MasterKey.h>
@@ -119,6 +120,25 @@ K_TEST_F(ApiSession, accountInfoAsyncWorks)
                 Eq(TestUtil::OK));
     EXPECT_THAT(listener->accountInfo_->settingsUrl,
                 StrEq("https://accounts.example.com/foo/bar"));
+}
+
+K_TEST_F(ApiSession, registerPushTokenFailsOnEmpty)
+{
+    EXPECT_THROW(uut->registerPushToken(""), Util::AssertionFailed);
+}
+
+K_TEST_F(ApiSession, registerPushTokenCanBeCanceled)
+{
+    auto task = uut->registerPushToken("token_123_token");
+    ASSERT_THAT(task, Not(IsNull()));
+    EXPECT_NO_THROW(task->cancel());
+}
+
+K_TEST_F(ApiSession, registerPushTokenWorks)
+{
+    auto task = uut->registerPushToken("token_123_token");
+    task->waitUntilDone();
+
 }
 
 K_TEST_F(ApiSession, notifyWorks)

@@ -11,6 +11,7 @@ namespace JNI { namespace Kullo { namespace Http {
 class HttpClientFactory final : ::djinni::JniInterface<::Kullo::Http::HttpClientFactory, HttpClientFactory> {
 public:
     using CppType = std::shared_ptr<::Kullo::Http::HttpClientFactory>;
+    using CppOptType = std::shared_ptr<::Kullo::Http::HttpClientFactory>;
     using JniType = jobject;
 
     using Boxed = HttpClientFactory;
@@ -18,14 +19,15 @@ public:
     ~HttpClientFactory();
 
     static CppType toCpp(JNIEnv* jniEnv, JniType j) { return ::djinni::JniClass<HttpClientFactory>::get()._fromJava(jniEnv, j); }
-    static ::djinni::LocalRef<JniType> fromCpp(JNIEnv* jniEnv, const CppType& c) { return {jniEnv, ::djinni::JniClass<HttpClientFactory>::get()._toJava(jniEnv, c)}; }
+    static ::djinni::LocalRef<JniType> fromCppOpt(JNIEnv* jniEnv, const CppOptType& c) { return {jniEnv, ::djinni::JniClass<HttpClientFactory>::get()._toJava(jniEnv, c)}; }
+    static ::djinni::LocalRef<JniType> fromCpp(JNIEnv* jniEnv, const CppType& c) { return fromCppOpt(jniEnv, c); }
 
 private:
     HttpClientFactory();
     friend ::djinni::JniClass<HttpClientFactory>;
     friend ::djinni::JniInterface<::Kullo::Http::HttpClientFactory, HttpClientFactory>;
 
-    class JavaProxy final : ::djinni::JavaProxyCacheEntry, public ::Kullo::Http::HttpClientFactory
+    class JavaProxy final : ::djinni::JavaProxyHandle<JavaProxy>, public ::Kullo::Http::HttpClientFactory
     {
     public:
         JavaProxy(JniType j);
@@ -35,9 +37,7 @@ private:
         std::unordered_map<std::string, std::string> versions() override;
 
     private:
-        using ::djinni::JavaProxyCacheEntry::getGlobalRef;
         friend ::djinni::JniInterface<::Kullo::Http::HttpClientFactory, ::JNI::Kullo::Http::HttpClientFactory>;
-        friend ::djinni::JavaProxyCache<JavaProxy>;
     };
 
     const ::djinni::GlobalRef<jclass> clazz { ::djinni::jniFindClass("net/kullo/libkullo/http/HttpClientFactory") };

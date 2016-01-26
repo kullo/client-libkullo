@@ -1,5 +1,5 @@
 /*
-* Botan 1.11.25 Amalgamation
+* Botan 1.11.26 Amalgamation
 * (C) 1999-2013,2014,2015 Jack Lloyd and others
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -23,14 +23,13 @@
 #include <memory>
 #include <mutex>
 #include <set>
-#include <stdexcept>
 #include <string>
 #include <thread>
 #include <vector>
 
 /*
-* This file was automatically generated Tue Dec  8 11:04:14 2015 UTC by
-* daniel@twentyone running '/tmp/update-botan/1.11.25/Botan-1.11.25/configure.py --via-amalgamation --no-autoload --disable-shared --with-boost --with-zlib --enable-modules=aes,sha1,sha2_32,sha2_64,auto_rng,codec_filt,eme_oaep,emsa_pssr,gcm,hres_timer,rsa,srp6,system_rng,darwin_secrandom --os=darwin --cpu=x86_32 --cc=clang'
+* This file was automatically generated Tue Jan 26 13:43:17 2016 UTC by
+* simon@laptitude running '/tmp/update-botan/1.11.26/Botan-1.11.26/configure.py --via-amalgamation --no-autoload --disable-shared --with-boost --with-zlib --enable-modules=aes,sha1,sha2_32,sha2_64,auto_rng,codec_filt,eme_oaep,emsa_pssr,gcm,hres_timer,rsa,srp6,system_rng,darwin_secrandom --os=darwin --cpu=x86_32 --cc=clang'
 *
 * Target
 *  - Compiler: clang++  -pthread -std=c++11 -D_REENTRANT -fstack-protector -O3
@@ -40,16 +39,16 @@
 
 #define BOTAN_VERSION_MAJOR 1
 #define BOTAN_VERSION_MINOR 11
-#define BOTAN_VERSION_PATCH 25
-#define BOTAN_VERSION_DATESTAMP 20151207
+#define BOTAN_VERSION_PATCH 26
+#define BOTAN_VERSION_DATESTAMP 20160104
 
 #define BOTAN_VERSION_RELEASE_TYPE "released"
 
-#define BOTAN_VERSION_VC_REVISION "git:91c194957a12b174f4a51f41319b0d9604450d87"
+#define BOTAN_VERSION_VC_REVISION "git:9d3ad9a0f44a9321185ed9f221c828dac81b9f0c"
 
 #define BOTAN_DISTRIBUTION_INFO "unspecified"
 
-#define BOTAN_INSTALL_PREFIX "/usr/local"
+#define BOTAN_INSTALL_PREFIX R"(/usr/local)"
 #define BOTAN_INSTALL_HEADER_DIR "include/botan-1.11"
 #define BOTAN_INSTALL_LIB_DIR "lib"
 #define BOTAN_LIB_LINK "-lboost_filesystem -lboost_system -lz -framework Security"
@@ -125,10 +124,10 @@
 #define BOTAN_PRIVATE_KEY_STRONG_CHECKS_ON_GENERATE 1
 
 /*
-* Define BOTAN_USE_CTGRIND to enable checking constant time
-* annotations using ctgrind https://github.com/agl/ctgrind
+* Define BOTAN_HAS_VALGRIND to enable checking constant time annotations
+* TODO: expose as configure.py flag --with-valgrind
 */
-//#define BOTAN_USE_CTGRIND
+//#define BOTAN_HAS_VALGRIND
 
 /*
 * RNGs will automatically poll the system for additional seed material
@@ -147,7 +146,7 @@
 * seriously broken system RNG.
 */
 #define BOTAN_ENTROPY_DEFAULT_SOURCES \
-   { "timestamp", "rdrand", "proc_info", \
+   { "timestamp", "rdseed", "rdrand", "proc_info", \
    "darwin_secrandom", "dev_random", "win32_cryptoapi", "egd", \
    "proc_walk", "system_stats", "unix_procs" }
 
@@ -192,8 +191,21 @@
 // Human readable text which has entropy
 #define BOTAN_ENTROPY_ESTIMATE_SYSTEM_TEXT (1.0 / 64)
 
+/*
+The output of a hardware RNG such as RDRAND / RDSEED
+
+By default such RNGs are used but not trusted, so that the standard
+softare-based entropy polling is still used.
+*/
+#define BOTAN_ENTROPY_ESTIMATE_HARDWARE_RNG 0.0
+
 // The output of a PRNG we are trusting to be strong
 #define BOTAN_ENTROPY_ESTIMATE_STRONG_RNG 7.0
+
+
+/*
+* Compiler and target specific flags
+*/
 
 /* Should we use GCC-style inline assembler? */
 #if !defined(BOTAN_USE_GCC_INLINE_ASM) && defined(__GNUG__)
@@ -209,11 +221,13 @@
 
 /* Target identification and feature test macros */
 #define BOTAN_TARGET_OS_IS_DARWIN
+#define BOTAN_TARGET_OS_TYPE_IS_UNIX
 #define BOTAN_TARGET_OS_HAS_DLOPEN
 #define BOTAN_TARGET_OS_HAS_GETTIMEOFDAY
 #define BOTAN_TARGET_OS_HAS_GMTIME_R
 #define BOTAN_TARGET_OS_HAS_MEMSET_S
 #define BOTAN_TARGET_OS_HAS_READDIR
+#define BOTAN_TARGET_OS_HAS_SOCKETS
 #define BOTAN_TARGET_OS_HAS_TIMEGM
 
 #define BOTAN_TARGET_ARCH_IS_X86_32
@@ -221,6 +235,7 @@
 #define BOTAN_TARGET_SUPPORTS_AVX2
 #define BOTAN_TARGET_SUPPORTS_BMI2
 #define BOTAN_TARGET_SUPPORTS_RDRAND
+#define BOTAN_TARGET_SUPPORTS_RDSEED
 #define BOTAN_TARGET_SUPPORTS_SHA
 #define BOTAN_TARGET_SUPPORTS_SSE2
 #define BOTAN_TARGET_SUPPORTS_SSE41
@@ -306,7 +321,7 @@
 #define BOTAN_HAS_AUTO_SEEDING_RNG 20131128
 #define BOTAN_HAS_BASE64_CODEC 20131128
 #define BOTAN_HAS_BIGINT 20131128
-#define BOTAN_HAS_BIGINT_MP 20131128
+#define BOTAN_HAS_BIGINT_MP 20151225
 #define BOTAN_HAS_BLOCK_CIPHER 20131128
 #define BOTAN_HAS_BOOST_ASIO 20131228
 #define BOTAN_HAS_BOOST_DATETIME 20150720
@@ -472,7 +487,10 @@ BOTAN_DLL void zero_mem(void* ptr, size_t n);
 */
 template<typename T> inline void clear_mem(T* ptr, size_t n)
    {
-   std::memset(ptr, 0, sizeof(T)*n);
+   if(n > 0)
+      {
+      std::memset(ptr, 0, sizeof(T)*n);
+      }
    }
 
 /**
@@ -483,7 +501,10 @@ template<typename T> inline void clear_mem(T* ptr, size_t n)
 */
 template<typename T> inline void copy_mem(T* out, const T* in, size_t n)
    {
-   std::memmove(out, in, sizeof(T)*n);
+   if(n > 0)
+      {
+      std::memmove(out, in, sizeof(T)*n);
+      }
    }
 
 /**
@@ -495,7 +516,10 @@ template<typename T> inline void copy_mem(T* out, const T* in, size_t n)
 template<typename T>
 inline void set_mem(T* ptr, size_t n, byte val)
    {
-   std::memset(ptr, val, sizeof(T)*n);
+   if(n > 0)
+      {
+      std::memset(ptr, val, sizeof(T)*n);
+      }
    }
 
 /**
@@ -516,7 +540,7 @@ template<typename T> inline bool same_mem(const T* p1, const T* p2, size_t n)
    }
 
 /**
-* XOR arrays. Postcondition out[i] = in[i] ^ out[i] forall i = 0...length
+* XOR_ arrays. Postcondition out[i] = in[i] ^ out[i] forall i = 0...length
 * @param out the input/output buffer
 * @param in the read-only input buffer
 * @param length the length of the buffers
@@ -524,18 +548,10 @@ template<typename T> inline bool same_mem(const T* p1, const T* p2, size_t n)
 template<typename T>
 void xor_buf(T out[], const T in[], size_t length)
    {
-   while(length >= 8)
-      {
-      out[0] ^= in[0]; out[1] ^= in[1];
-      out[2] ^= in[2]; out[3] ^= in[3];
-      out[4] ^= in[4]; out[5] ^= in[5];
-      out[6] ^= in[6]; out[7] ^= in[7];
-
-      out += 8; in += 8; length -= 8;
-      }
-
    for(size_t i = 0; i != length; ++i)
+      {
       out[i] ^= in[i];
+      }
    }
 
 /**
@@ -550,59 +566,11 @@ template<typename T> void xor_buf(T out[],
                                   const T in2[],
                                   size_t length)
    {
-   while(length >= 8)
-      {
-      out[0] = in[0] ^ in2[0];
-      out[1] = in[1] ^ in2[1];
-      out[2] = in[2] ^ in2[2];
-      out[3] = in[3] ^ in2[3];
-      out[4] = in[4] ^ in2[4];
-      out[5] = in[5] ^ in2[5];
-      out[6] = in[6] ^ in2[6];
-      out[7] = in[7] ^ in2[7];
-
-      in += 8; in2 += 8; out += 8; length -= 8;
-      }
-
    for(size_t i = 0; i != length; ++i)
+      {
       out[i] = in[i] ^ in2[i];
-   }
-
-#if BOTAN_TARGET_UNALIGNED_MEMORY_ACCESS_OK
-
-template<>
-inline void xor_buf<byte>(byte out[], const byte in[], size_t length)
-   {
-   while(length >= 8)
-      {
-      *reinterpret_cast<u64bit*>(out) ^= *reinterpret_cast<const u64bit*>(in);
-      out += 8; in += 8; length -= 8;
       }
-
-   for(size_t i = 0; i != length; ++i)
-      out[i] ^= in[i];
    }
-
-template<>
-inline void xor_buf<byte>(byte out[],
-                          const byte in[],
-                          const byte in2[],
-                          size_t length)
-   {
-   while(length >= 8)
-      {
-      *reinterpret_cast<u64bit*>(out) =
-         *reinterpret_cast<const u64bit*>(in) ^
-         *reinterpret_cast<const u64bit*>(in2);
-
-      in += 8; in2 += 8; out += 8; length -= 8;
-      }
-
-   for(size_t i = 0; i != length; ++i)
-      out[i] = in[i] ^ in2[i];
-   }
-
-#endif
 
 template<typename Alloc, typename Alloc2>
 void xor_buf(std::vector<byte, Alloc>& out,
@@ -1036,8 +1004,29 @@ bool BOTAN_DLL host_wildcard_match(const std::string& wildcard, const std::strin
 
 namespace Botan {
 
-typedef std::runtime_error Exception;
-typedef std::invalid_argument Invalid_Argument;
+/**
+* Base class for all exceptions thrown by the library
+*/
+class BOTAN_DLL Exception : public std::exception
+   {
+   public:
+      Exception(const std::string& what) : m_what(what) {}
+      Exception(const char* prefix, const std::string& what) : m_what(std::string(prefix) + " " + what) {}
+      //const char* what() const override BOTAN_NOEXCEPT { return m_what.c_str(); }
+      const char* what() const BOTAN_NOEXCEPT override { return m_what.c_str(); }
+   private:
+      std::string m_what;
+   };
+
+/**
+* An invalid argument which caused
+*/
+class BOTAN_DLL Invalid_Argument : public Exception
+   {
+   public:
+      Invalid_Argument(const std::string& what) :
+         Exception("Invalid argument",  what) {}
+   };
 
 /**
 * Unsupported_Argument Exception
@@ -1216,15 +1205,6 @@ struct BOTAN_DLL Self_Test_Failure : public Internal_Error
       {}
    };
 
-/**
-* Memory Allocation Exception
-*/
-struct BOTAN_DLL Memory_Exhaustion : public std::bad_alloc
-   {
-   const char* what() const BOTAN_NOEXCEPT override
-      { return "Ran out of memory, allocation failed"; }
-   };
-
 }
 
 
@@ -1239,23 +1219,23 @@ class BOTAN_DLL OctetString
       /**
       * @return size of this octet string in bytes
       */
-      size_t length() const { return bits.size(); }
-      size_t size() const { return bits.size(); }
+      size_t length() const { return m_data.size(); }
+      size_t size() const { return m_data.size(); }
 
       /**
       * @return this object as a secure_vector<byte>
       */
-      secure_vector<byte> bits_of() const { return bits; }
+      secure_vector<byte> bits_of() const { return m_data; }
 
       /**
       * @return start of this string
       */
-      const byte* begin() const { return bits.data(); }
+      const byte* begin() const { return m_data.data(); }
 
       /**
       * @return end of this string
       */
-      const byte* end() const   { return begin() + bits.size(); }
+      const byte* end() const   { return begin() + m_data.size(); }
 
       /**
       * @return this encoded as hex
@@ -1298,15 +1278,16 @@ class BOTAN_DLL OctetString
       * Create a new OctetString
       * @param in a bytestring
       */
-      OctetString(const secure_vector<byte>& in) : bits(in) {}
+      OctetString(const secure_vector<byte>& in) : m_data(in) {}
 
       /**
       * Create a new OctetString
       * @param in a bytestring
       */
-      OctetString(const std::vector<byte>& in) : bits(in.begin(), in.end()) {}
+      OctetString(const std::vector<byte>& in) : m_data(in.begin(), in.end()) {}
+
    private:
-      secure_vector<byte> bits;
+      secure_vector<byte> m_data;
    };
 
 /**
@@ -1349,12 +1330,12 @@ BOTAN_DLL OctetString operator^(const OctetString& x,
 /**
 * Alternate name for octet string showing intent to use as a key
 */
-typedef OctetString SymmetricKey;
+using SymmetricKey = OctetString;
 
 /**
 * Alternate name for octet string showing intent to use as an IV
 */
-typedef OctetString InitializationVector;
+using InitializationVector = OctetString;
 
 }
 
@@ -2523,18 +2504,6 @@ class BOTAN_DLL RandomNumberGenerator
          T r;
          this->randomize(reinterpret_cast<byte*>(&r), sizeof(r));
          return r;
-         }
-
-      /**
-      * Return a value in range [0,2^bits)
-      */
-      u64bit gen_mask(size_t bits)
-         {
-         if(bits == 0 || bits > 64)
-            throw std::invalid_argument("RandomNumberGenerator::gen_mask invalid argument");
-
-         const u64bit mask = ((1 << bits) - 1);
-         return this->get_random<u64bit>() & mask;
          }
 
       /**
@@ -3902,10 +3871,13 @@ inline T load_le(const byte in[], size_t off)
 template<>
 inline u16bit load_be<u16bit>(const byte in[], size_t off)
    {
-#if BOTAN_TARGET_UNALIGNED_MEMORY_ACCESS_OK
-   return BOTAN_ENDIAN_N2B(*(reinterpret_cast<const u16bit*>(in) + off));
-#else
    in += off * sizeof(u16bit);
+
+#if BOTAN_TARGET_UNALIGNED_MEMORY_ACCESS_OK
+   u16bit x;
+   std::memcpy(&x, in, sizeof(x));
+   return BOTAN_ENDIAN_N2B(x);
+#else
    return make_u16bit(in[0], in[1]);
 #endif
    }
@@ -3919,10 +3891,13 @@ inline u16bit load_be<u16bit>(const byte in[], size_t off)
 template<>
 inline u16bit load_le<u16bit>(const byte in[], size_t off)
    {
-#if BOTAN_TARGET_UNALIGNED_MEMORY_ACCESS_OK
-   return BOTAN_ENDIAN_N2L(*(reinterpret_cast<const u16bit*>(in) + off));
-#else
    in += off * sizeof(u16bit);
+
+#if BOTAN_TARGET_UNALIGNED_MEMORY_ACCESS_OK
+   u16bit x;
+   std::memcpy(&x, in, sizeof(x));
+   return BOTAN_ENDIAN_N2L(x);
+#else
    return make_u16bit(in[1], in[0]);
 #endif
    }
@@ -3936,10 +3911,12 @@ inline u16bit load_le<u16bit>(const byte in[], size_t off)
 template<>
 inline u32bit load_be<u32bit>(const byte in[], size_t off)
    {
-#if BOTAN_TARGET_UNALIGNED_MEMORY_ACCESS_OK
-   return BOTAN_ENDIAN_N2B(*(reinterpret_cast<const u32bit*>(in) + off));
-#else
    in += off * sizeof(u32bit);
+#if BOTAN_TARGET_UNALIGNED_MEMORY_ACCESS_OK
+   u32bit x;
+   std::memcpy(&x, in, sizeof(x));
+   return BOTAN_ENDIAN_N2B(x);
+#else
    return make_u32bit(in[0], in[1], in[2], in[3]);
 #endif
    }
@@ -3953,10 +3930,12 @@ inline u32bit load_be<u32bit>(const byte in[], size_t off)
 template<>
 inline u32bit load_le<u32bit>(const byte in[], size_t off)
    {
-#if BOTAN_TARGET_UNALIGNED_MEMORY_ACCESS_OK
-   return BOTAN_ENDIAN_N2L(*(reinterpret_cast<const u32bit*>(in) + off));
-#else
    in += off * sizeof(u32bit);
+#if BOTAN_TARGET_UNALIGNED_MEMORY_ACCESS_OK
+   u32bit x;
+   std::memcpy(&x, in, sizeof(x));
+   return BOTAN_ENDIAN_N2L(x);
+#else
    return make_u32bit(in[3], in[2], in[1], in[0]);
 #endif
    }
@@ -3970,10 +3949,12 @@ inline u32bit load_le<u32bit>(const byte in[], size_t off)
 template<>
 inline u64bit load_be<u64bit>(const byte in[], size_t off)
    {
-#if BOTAN_TARGET_UNALIGNED_MEMORY_ACCESS_OK
-   return BOTAN_ENDIAN_N2B(*(reinterpret_cast<const u64bit*>(in) + off));
-#else
    in += off * sizeof(u64bit);
+#if BOTAN_TARGET_UNALIGNED_MEMORY_ACCESS_OK
+   u64bit x;
+   std::memcpy(&x, in, sizeof(x));
+   return BOTAN_ENDIAN_N2B(x);
+#else
    return make_u64bit(in[0], in[1], in[2], in[3],
                       in[4], in[5], in[6], in[7]);
 #endif
@@ -3988,10 +3969,12 @@ inline u64bit load_be<u64bit>(const byte in[], size_t off)
 template<>
 inline u64bit load_le<u64bit>(const byte in[], size_t off)
    {
-#if BOTAN_TARGET_UNALIGNED_MEMORY_ACCESS_OK
-   return BOTAN_ENDIAN_N2L(*(reinterpret_cast<const u64bit*>(in) + off));
-#else
    in += off * sizeof(u64bit);
+#if BOTAN_TARGET_UNALIGNED_MEMORY_ACCESS_OK
+   u64bit x;
+   std::memcpy(&x, in, sizeof(x));
+   return BOTAN_ENDIAN_N2L(x);
+#else
    return make_u64bit(in[7], in[6], in[5], in[4],
                       in[3], in[2], in[1], in[0]);
 #endif
@@ -4066,24 +4049,27 @@ inline void load_le(T out[],
                     const byte in[],
                     size_t count)
    {
+   if(count > 0)
+      {
 #if defined(BOTAN_TARGET_CPU_HAS_KNOWN_ENDIANNESS)
-   std::memcpy(out, in, sizeof(T)*count);
+      std::memcpy(out, in, sizeof(T)*count);
 
 #if defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
-   const size_t blocks = count - (count % 4);
-   const size_t left = count - blocks;
+      const size_t blocks = count - (count % 4);
+      const size_t left = count - blocks;
 
-   for(size_t i = 0; i != blocks; i += 4)
-      bswap_4(out + i);
+      for(size_t i = 0; i != blocks; i += 4)
+         bswap_4(out + i);
 
-   for(size_t i = 0; i != left; ++i)
-      out[blocks+i] = reverse_bytes(out[blocks+i]);
+      for(size_t i = 0; i != left; ++i)
+         out[blocks+i] = reverse_bytes(out[blocks+i]);
 #endif
 
 #else
-   for(size_t i = 0; i != count; ++i)
-      out[i] = load_le<T>(in, i);
+      for(size_t i = 0; i != count; ++i)
+         out[i] = load_le<T>(in, i);
 #endif
+      }
    }
 
 /**
@@ -4155,24 +4141,27 @@ inline void load_be(T out[],
                     const byte in[],
                     size_t count)
    {
+   if(count > 0)
+      {
 #if defined(BOTAN_TARGET_CPU_HAS_KNOWN_ENDIANNESS)
-   std::memcpy(out, in, sizeof(T)*count);
+      std::memcpy(out, in, sizeof(T)*count);
 
 #if defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
-   const size_t blocks = count - (count % 4);
-   const size_t left = count - blocks;
+      const size_t blocks = count - (count % 4);
+      const size_t left = count - blocks;
 
-   for(size_t i = 0; i != blocks; i += 4)
-      bswap_4(out + i);
+      for(size_t i = 0; i != blocks; i += 4)
+         bswap_4(out + i);
 
-   for(size_t i = 0; i != left; ++i)
-      out[blocks+i] = reverse_bytes(out[blocks+i]);
+      for(size_t i = 0; i != left; ++i)
+         out[blocks+i] = reverse_bytes(out[blocks+i]);
 #endif
 
 #else
-   for(size_t i = 0; i != count; ++i)
-      out[i] = load_be<T>(in, i);
+      for(size_t i = 0; i != count; ++i)
+         out[i] = load_be<T>(in, i);
 #endif
+      }
    }
 
 /**
@@ -4183,7 +4172,8 @@ inline void load_be(T out[],
 inline void store_be(u16bit in, byte out[2])
    {
 #if BOTAN_TARGET_UNALIGNED_MEMORY_ACCESS_OK
-   *reinterpret_cast<u16bit*>(out) = BOTAN_ENDIAN_B2N(in);
+   u16bit o = BOTAN_ENDIAN_N2B(in);
+   std::memcpy(out, &o, sizeof(o));
 #else
    out[0] = get_byte(0, in);
    out[1] = get_byte(1, in);
@@ -4198,7 +4188,8 @@ inline void store_be(u16bit in, byte out[2])
 inline void store_le(u16bit in, byte out[2])
    {
 #if BOTAN_TARGET_UNALIGNED_MEMORY_ACCESS_OK
-   *reinterpret_cast<u16bit*>(out) = BOTAN_ENDIAN_L2N(in);
+   u16bit o = BOTAN_ENDIAN_N2L(in);
+   std::memcpy(out, &o, sizeof(o));
 #else
    out[0] = get_byte(1, in);
    out[1] = get_byte(0, in);
@@ -4213,7 +4204,8 @@ inline void store_le(u16bit in, byte out[2])
 inline void store_be(u32bit in, byte out[4])
    {
 #if BOTAN_TARGET_UNALIGNED_MEMORY_ACCESS_OK
-   *reinterpret_cast<u32bit*>(out) = BOTAN_ENDIAN_B2N(in);
+   u32bit o = BOTAN_ENDIAN_B2N(in);
+   std::memcpy(out, &o, sizeof(o));
 #else
    out[0] = get_byte(0, in);
    out[1] = get_byte(1, in);
@@ -4230,7 +4222,8 @@ inline void store_be(u32bit in, byte out[4])
 inline void store_le(u32bit in, byte out[4])
    {
 #if BOTAN_TARGET_UNALIGNED_MEMORY_ACCESS_OK
-   *reinterpret_cast<u32bit*>(out) = BOTAN_ENDIAN_L2N(in);
+   u32bit o = BOTAN_ENDIAN_L2N(in);
+   std::memcpy(out, &o, sizeof(o));
 #else
    out[0] = get_byte(3, in);
    out[1] = get_byte(2, in);
@@ -4247,7 +4240,8 @@ inline void store_le(u32bit in, byte out[4])
 inline void store_be(u64bit in, byte out[8])
    {
 #if BOTAN_TARGET_UNALIGNED_MEMORY_ACCESS_OK
-   *reinterpret_cast<u64bit*>(out) = BOTAN_ENDIAN_B2N(in);
+   u64bit o = BOTAN_ENDIAN_B2N(in);
+   std::memcpy(out, &o, sizeof(o));
 #else
    out[0] = get_byte(0, in);
    out[1] = get_byte(1, in);
@@ -4268,7 +4262,8 @@ inline void store_be(u64bit in, byte out[8])
 inline void store_le(u64bit in, byte out[8])
    {
 #if BOTAN_TARGET_UNALIGNED_MEMORY_ACCESS_OK
-   *reinterpret_cast<u64bit*>(out) = BOTAN_ENDIAN_L2N(in);
+   u64bit o = BOTAN_ENDIAN_L2N(in);
+   std::memcpy(out, &o, sizeof(o));
 #else
    out[0] = get_byte(7, in);
    out[1] = get_byte(6, in);
@@ -5680,6 +5675,11 @@ class BOTAN_DLL MessageAuthenticationCode : public Buffered_Computation,
 namespace Botan {
 
 /*
+* As of 1.11.26 this header is deprecated. Instead use the calls T::create and
+* T::providers (as demonstrated in the implementation below).
+*/
+
+/*
 * Get an algorithm object
 *  NOTE: these functions create and return new objects, letting the
 * caller assume ownership of them
@@ -5691,12 +5691,14 @@ namespace Botan {
 * @param algo_spec the name of the desired block cipher
 * @return pointer to the block cipher object
 */
+BOTAN_DEPRECATED("Use BlockCipher::create")
 inline BlockCipher* get_block_cipher(const std::string& algo_spec,
                                      const std::string& provider = "")
    {
    return BlockCipher::create(algo_spec, provider).release();
    }
 
+BOTAN_DEPRECATED("Use BlockCipher::create")
 inline std::unique_ptr<BlockCipher> make_block_cipher(const std::string& algo_spec,
                                                       const std::string& provider = "")
    {
@@ -5706,6 +5708,7 @@ inline std::unique_ptr<BlockCipher> make_block_cipher(const std::string& algo_sp
    throw Algorithm_Not_Found(algo_spec);
    }
 
+BOTAN_DEPRECATED("Use BlockCipher::providers")
 inline std::vector<std::string> get_block_cipher_providers(const std::string& algo_spec)
    {
    return BlockCipher::providers(algo_spec);
@@ -5717,12 +5720,14 @@ inline std::vector<std::string> get_block_cipher_providers(const std::string& al
 * @param algo_spec the name of the desired stream cipher
 * @return pointer to the stream cipher object
 */
+BOTAN_DEPRECATED("Use StreamCipher::create")
 inline StreamCipher* get_stream_cipher(const std::string& algo_spec,
                                        const std::string& provider = "")
    {
    return StreamCipher::create(algo_spec, provider).release();
    }
 
+BOTAN_DEPRECATED("Use StreamCipher::create")
 inline std::unique_ptr<StreamCipher> make_stream_cipher(const std::string& algo_spec,
                                                         const std::string& provider = "")
    {
@@ -5732,6 +5737,7 @@ inline std::unique_ptr<StreamCipher> make_stream_cipher(const std::string& algo_
    throw Algorithm_Not_Found(algo_spec);
    }
 
+BOTAN_DEPRECATED("Use StreamCipher::providers")
 inline std::vector<std::string> get_stream_cipher_providers(const std::string& algo_spec)
    {
    return StreamCipher::providers(algo_spec);
@@ -5743,12 +5749,14 @@ inline std::vector<std::string> get_stream_cipher_providers(const std::string& a
 * @param algo_spec the name of the desired hash function
 * @return pointer to the hash function object
 */
+BOTAN_DEPRECATED("Use HashFunction::create")
 inline HashFunction* get_hash_function(const std::string& algo_spec,
                                        const std::string& provider = "")
    {
    return HashFunction::create(algo_spec, provider).release();
    }
 
+BOTAN_DEPRECATED("Use HashFunction::create")
 inline std::unique_ptr<HashFunction> make_hash_function(const std::string& algo_spec,
                                                         const std::string& provider = "")
    {
@@ -5758,12 +5766,14 @@ inline std::unique_ptr<HashFunction> make_hash_function(const std::string& algo_
    throw Algorithm_Not_Found(algo_spec);
    }
 
+BOTAN_DEPRECATED("Use HashFunction::create")
 inline HashFunction* get_hash(const std::string& algo_spec,
                               const std::string& provider = "")
    {
-   return get_hash_function(algo_spec, provider);
+   return HashFunction::create(algo_spec, provider).release();
    }
 
+BOTAN_DEPRECATED("Use HashFunction::providers")
 inline std::vector<std::string> get_hash_function_providers(const std::string& algo_spec)
    {
    return HashFunction::providers(algo_spec);
@@ -5775,12 +5785,14 @@ inline std::vector<std::string> get_hash_function_providers(const std::string& a
 * @param algo_spec the name of the desired MAC
 * @return pointer to the MAC object
 */
+BOTAN_DEPRECATED("MessageAuthenticationCode::create")
 inline MessageAuthenticationCode* get_mac(const std::string& algo_spec,
                                              const std::string& provider = "")
    {
    return MessageAuthenticationCode::create(algo_spec, provider).release();
    }
 
+BOTAN_DEPRECATED("MessageAuthenticationCode::create")
 inline std::unique_ptr<MessageAuthenticationCode> make_message_auth(const std::string& algo_spec,
                                                                        const std::string& provider = "")
    {
@@ -5790,6 +5802,7 @@ inline std::unique_ptr<MessageAuthenticationCode> make_message_auth(const std::s
    throw Algorithm_Not_Found(algo_spec);
    }
 
+BOTAN_DEPRECATED("MessageAuthenticationCode::providers")
 inline std::vector<std::string> get_mac_providers(const std::string& algo_spec)
    {
    return MessageAuthenticationCode::providers(algo_spec);
@@ -5840,6 +5853,17 @@ BOTAN_DLL u32bit version_minor();
 * @return patch number
 */
 BOTAN_DLL u32bit version_patch();
+
+/**
+* Usable for checking that the DLL version loaded at runtime exactly
+* matches the compile-time version. Call using BOTAN_VERSION_* macro
+* values. Returns the empty string if an exact match, otherwise an
+* appropriate message. @added 1.11.26
+*/
+BOTAN_DLL std::string
+runtime_version_check(u32bit major,
+                      u32bit minor,
+                      u32bit patch);
 
 /*
 * Macros for compile-time version checks
@@ -6335,7 +6359,7 @@ class BOTAN_DLL Compressor_Transform : public Transform
 
       size_t output_length(size_t) const override final
          {
-         throw std::runtime_error(name() + " output length indeterminate");
+         throw Exception(name() + " output length indeterminate");
          }
    };
 
@@ -6671,6 +6695,13 @@ namespace Botan {
 class BOTAN_DLL SQL_Database
    {
    public:
+
+      class BOTAN_DLL SQL_DB_Error : public Exception
+         {
+         public:
+            SQL_DB_Error(const std::string& what) : Exception("SQL database", what) {}
+         };
+
       class BOTAN_DLL Statement
          {
          public:
@@ -8860,9 +8891,9 @@ namespace Botan {
 /**
 * MGF1 from PKCS #1 v2.0
 */
-void mgf1_mask(HashFunction& hash,
-               const byte in[], size_t in_len,
-               byte out[], size_t out_len);
+void BOTAN_DLL mgf1_mask(HashFunction& hash,
+                         const byte in[], size_t in_len,
+                         byte out[], size_t out_len);
 
 }
 
@@ -9413,11 +9444,13 @@ typedef PK_Spec<Private_Key> PK_Spec_Private_Key;
 class BOTAN_DLL Encryption
    {
    public:
+      typedef PK_Spec_Public_Key Spec;
+
       virtual size_t max_input_bits() const = 0;
 
-      virtual secure_vector<byte> encrypt(const byte msg[], size_t msg_len, RandomNumberGenerator& rng) = 0;
-
-      typedef PK_Spec_Public_Key Spec;
+      virtual secure_vector<byte> encrypt(const byte msg[],
+                                          size_t msg_len,
+                                          RandomNumberGenerator& rng) = 0;
 
       virtual ~Encryption() {}
    };
@@ -9530,6 +9563,38 @@ class BOTAN_DLL Key_Agreement
       virtual ~Key_Agreement() {}
    };
 
+/**
+* KEM (key encapsulation)
+*/
+class BOTAN_DLL KEM_Encryption
+   {
+   public:
+      typedef PK_Spec_Public_Key Spec;
+
+      virtual void kem_encrypt(secure_vector<byte>& out_encapsulated_key,
+                               secure_vector<byte>& out_shared_key,
+                               size_t desired_shared_key_len,
+                               Botan::RandomNumberGenerator& rng,
+                               const uint8_t salt[],
+                               size_t salt_len) = 0;
+
+      virtual ~KEM_Encryption() {}
+   };
+
+class BOTAN_DLL KEM_Decryption
+   {
+   public:
+      typedef PK_Spec_Private_Key Spec;
+
+      virtual secure_vector<byte> kem_decrypt(const byte encap_key[],
+                                              size_t len,
+                                              size_t desired_shared_key_len,
+                                              const uint8_t salt[],
+                                              size_t salt_len) = 0;
+
+      virtual ~KEM_Decryption() {}
+   };
+
 }
 
 }
@@ -9603,50 +9668,62 @@ PEM_encode(const Private_Key& key,
            const std::string& pbe_algo = "");
 
 /**
-* Load a key from a data source.
+* Load an encrypted key from a data source.
 * @param source the data source providing the encoded key
 * @param rng the rng to use
 * @param get_passphrase a function that returns passphrases
-* @return loaded private key object
-*/
-BOTAN_DLL Private_Key* load_key(
-  DataSource& source,
-  RandomNumberGenerator& rng,
-  std::function<std::string ()> get_passphrase);
-
-/** Load a key from a data source.
-* @param source the data source providing the encoded key
-* @param rng the rng to use
-* @param pass the passphrase to decrypt the key. Provide an empty
-* string if the key is not encrypted
 * @return loaded private key object
 */
 BOTAN_DLL Private_Key* load_key(DataSource& source,
                                 RandomNumberGenerator& rng,
-                                const std::string& pass = "");
+                                std::function<std::string ()> get_passphrase);
+
+/** Load an encrypted key from a data source.
+* @param source the data source providing the encoded key
+* @param rng the rng to use
+* @param pass the passphrase to decrypt the key
+* @return loaded private key object
+*/
+BOTAN_DLL Private_Key* load_key(DataSource& source,
+                                RandomNumberGenerator& rng,
+                                const std::string& pass);
+
+/** Load an unencrypted key from a data source.
+* @param source the data source providing the encoded key
+* @param rng the rng to use
+* @return loaded private key object
+*/
+BOTAN_DLL Private_Key* load_key(DataSource& source,
+                                RandomNumberGenerator& rng);
 
 /**
-* Load a key from a file.
+* Load an encrypted key from a file.
 * @param filename the path to the file containing the encoded key
 * @param rng the rng to use
 * @param get_passphrase a function that returns passphrases
 * @return loaded private key object
 */
-BOTAN_DLL Private_Key* load_key(
-  const std::string& filename,
-  RandomNumberGenerator& rng,
-  std::function<std::string ()> get_passphrase);
+BOTAN_DLL Private_Key* load_key(const std::string& filename,
+                                RandomNumberGenerator& rng,
+                                std::function<std::string ()> get_passphrase);
 
-/** Load a key from a file.
+/** Load an encrypted key from a file.
 * @param filename the path to the file containing the encoded key
 * @param rng the rng to use
-* @param pass the passphrase to decrypt the key. Provide an empty
-* string if the key is not encrypted
+* @param pass the passphrase to decrypt the key
 * @return loaded private key object
 */
 BOTAN_DLL Private_Key* load_key(const std::string& filename,
                                 RandomNumberGenerator& rng,
-                                const std::string& pass = "");
+                                const std::string& pass);
+
+/** Load an unencrypted key from a file.
+* @param filename the path to the file containing the encoded key
+* @param rng the rng to use
+* @return loaded private key object
+*/
+BOTAN_DLL Private_Key* load_key(const std::string& filename,
+                                RandomNumberGenerator& rng);
 
 /**
 * Copy an existing encoded key object.
@@ -10012,8 +10089,11 @@ class BOTAN_DLL PK_Key_Agreement
       * Construct a PK Key Agreement.
       * @param key the key to use
       * @param kdf name of the KDF to use (or 'Raw' for no KDF)
+      * @param provider the algo provider to use (or empty for default)
       */
-      PK_Key_Agreement(const Private_Key& key, const std::string& kdf);
+      PK_Key_Agreement(const Private_Key& key,
+                       const std::string& kdf,
+                       const std::string& provider = "");
 
       /*
       * Perform Key Agreement Operation
@@ -10123,6 +10203,87 @@ class BOTAN_DLL PK_Decryptor_EME : public PK_Decryptor
       secure_vector<byte> dec(const byte[], size_t) const override;
 
       std::unique_ptr<PK_Ops::Decryption> m_op;
+   };
+
+class BOTAN_DLL PK_KEM_Encryptor
+   {
+   public:
+      PK_KEM_Encryptor(const Public_Key& key,
+                       const std::string& kem_param = "",
+                       const std::string& provider = "");
+
+      void encrypt(secure_vector<byte>& out_encapsulated_key,
+                   secure_vector<byte>& out_shared_key,
+                   size_t desired_shared_key_len,
+                   Botan::RandomNumberGenerator& rng,
+                   const uint8_t salt[],
+                   size_t salt_len);
+
+      template<typename Alloc>
+         void encrypt(secure_vector<byte>& out_encapsulated_key,
+                      secure_vector<byte>& out_shared_key,
+                      size_t desired_shared_key_len,
+                      Botan::RandomNumberGenerator& rng,
+                      const std::vector<uint8_t, Alloc>& salt)
+         {
+         this->encrypt(out_encapsulated_key,
+                       out_shared_key,
+                       desired_shared_key_len,
+                       rng,
+                       salt.data(), salt.size());
+         }
+
+      void encrypt(secure_vector<byte>& out_encapsulated_key,
+                   secure_vector<byte>& out_shared_key,
+                   size_t desired_shared_key_len,
+                   Botan::RandomNumberGenerator& rng)
+         {
+         this->encrypt(out_encapsulated_key,
+                       out_shared_key,
+                       desired_shared_key_len,
+                       rng,
+                       nullptr,
+                       0);
+         }
+
+   private:
+      std::unique_ptr<PK_Ops::KEM_Encryption> m_op;
+   };
+
+class BOTAN_DLL PK_KEM_Decryptor
+   {
+   public:
+      PK_KEM_Decryptor(const Private_Key& key,
+                       const std::string& kem_param = "",
+                       const std::string& provider = "");
+
+      secure_vector<byte> decrypt(const byte encap_key[],
+                                  size_t encap_key_len,
+                                  size_t desired_shared_key_len,
+                                  const uint8_t salt[],
+                                  size_t salt_len);
+
+      secure_vector<byte> decrypt(const byte encap_key[],
+                                  size_t encap_key_len,
+                                  size_t desired_shared_key_len)
+         {
+         return this->decrypt(encap_key, encap_key_len,
+                              desired_shared_key_len,
+                              nullptr, 0);
+         }
+
+      template<typename Alloc1, typename Alloc2>
+         secure_vector<byte> decrypt(const std::vector<byte, Alloc1>& encap_key,
+                                     size_t desired_shared_key_len,
+                                     const std::vector<byte, Alloc2>& salt)
+         {
+         return this->decrypt(encap_key.data(), encap_key.size(),
+                              desired_shared_key_len,
+                              salt.data(), salt.size());
+         }
+
+   private:
+      std::unique_ptr<PK_Ops::KEM_Decryption> m_op;
    };
 
 }

@@ -11,6 +11,7 @@ namespace JNI { namespace Kullo { namespace Api {
 class ClientGenerateKeysListener final : ::djinni::JniInterface<::Kullo::Api::ClientGenerateKeysListener, ClientGenerateKeysListener> {
 public:
     using CppType = std::shared_ptr<::Kullo::Api::ClientGenerateKeysListener>;
+    using CppOptType = std::shared_ptr<::Kullo::Api::ClientGenerateKeysListener>;
     using JniType = jobject;
 
     using Boxed = ClientGenerateKeysListener;
@@ -18,14 +19,15 @@ public:
     ~ClientGenerateKeysListener();
 
     static CppType toCpp(JNIEnv* jniEnv, JniType j) { return ::djinni::JniClass<ClientGenerateKeysListener>::get()._fromJava(jniEnv, j); }
-    static ::djinni::LocalRef<JniType> fromCpp(JNIEnv* jniEnv, const CppType& c) { return {jniEnv, ::djinni::JniClass<ClientGenerateKeysListener>::get()._toJava(jniEnv, c)}; }
+    static ::djinni::LocalRef<JniType> fromCppOpt(JNIEnv* jniEnv, const CppOptType& c) { return {jniEnv, ::djinni::JniClass<ClientGenerateKeysListener>::get()._toJava(jniEnv, c)}; }
+    static ::djinni::LocalRef<JniType> fromCpp(JNIEnv* jniEnv, const CppType& c) { return fromCppOpt(jniEnv, c); }
 
 private:
     ClientGenerateKeysListener();
     friend ::djinni::JniClass<ClientGenerateKeysListener>;
     friend ::djinni::JniInterface<::Kullo::Api::ClientGenerateKeysListener, ClientGenerateKeysListener>;
 
-    class JavaProxy final : ::djinni::JavaProxyCacheEntry, public ::Kullo::Api::ClientGenerateKeysListener
+    class JavaProxy final : ::djinni::JavaProxyHandle<JavaProxy>, public ::Kullo::Api::ClientGenerateKeysListener
     {
     public:
         JavaProxy(JniType j);
@@ -35,9 +37,7 @@ private:
         void finished(const std::shared_ptr<::Kullo::Api::Registration> & registration) override;
 
     private:
-        using ::djinni::JavaProxyCacheEntry::getGlobalRef;
         friend ::djinni::JniInterface<::Kullo::Api::ClientGenerateKeysListener, ::JNI::Kullo::Api::ClientGenerateKeysListener>;
-        friend ::djinni::JavaProxyCache<JavaProxy>;
     };
 
     const ::djinni::GlobalRef<jclass> clazz { ::djinni::jniFindClass("net/kullo/libkullo/api/ClientGenerateKeysListener") };

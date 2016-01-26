@@ -1,7 +1,8 @@
-/* Copyright 2013–2015 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
 #include "tests/api/apitest.h"
 
 #include <kulloclient/api/Address.h>
+#include <kulloclient/api/AddressNotAvailableReason.h>
 #include <kulloclient/api/AsyncTask.h>
 #include <kulloclient/api/ChallengeType.h>
 #include <kulloclient/api/Client.h>

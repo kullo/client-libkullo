@@ -1,4 +1,4 @@
-/* Copyright 2013–2015 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
 #include "kulloclient/util/version.h"
 
 #include <boost/version.hpp>
@@ -31,7 +31,7 @@ namespace Kullo {
 namespace Util {
 
 namespace {
-const std::string LIBKULLO_VERSION = "v40";
+const std::string LIBKULLO_VERSION = "v41";
 const std::string LIBKULLO_USER_AGENT = "libkulloclient/" + LIBKULLO_VERSION + " (" KULLO_OS ")";
 }
 

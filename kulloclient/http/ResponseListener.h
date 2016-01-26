@@ -3,11 +3,12 @@
 
 #pragma once
 
-#include "kulloclient/http/ProgressResult.h"
 #include <cstdint>
 #include <vector>
 
 namespace Kullo { namespace Http {
+
+enum class ProgressResult;
 
 class ResponseListener {
 public:

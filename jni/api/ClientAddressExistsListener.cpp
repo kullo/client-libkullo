@@ -12,7 +12,7 @@ ClientAddressExistsListener::ClientAddressExistsListener() : ::djinni::JniInterf
 
 ClientAddressExistsListener::~ClientAddressExistsListener() = default;
 
-ClientAddressExistsListener::JavaProxy::JavaProxy(JniType j) : JavaProxyCacheEntry(j) { }
+ClientAddressExistsListener::JavaProxy::JavaProxy(JniType j) : Handle(::djinni::jniGetThreadEnv(), j) { }
 
 ClientAddressExistsListener::JavaProxy::~JavaProxy() = default;
 
@@ -20,7 +20,7 @@ void ClientAddressExistsListener::JavaProxy::finished(const std::shared_ptr<::Ku
     auto jniEnv = ::djinni::jniGetThreadEnv();
     ::djinni::JniLocalScope jscope(jniEnv, 10);
     const auto& data = ::djinni::JniClass<::JNI::Kullo::Api::ClientAddressExistsListener>::get();
-    jniEnv->CallVoidMethod(getGlobalRef(), data.method_finished,
+    jniEnv->CallVoidMethod(Handle::get().get(), data.method_finished,
                            ::djinni::get(::JNI::Kullo::Api::Address::fromCpp(jniEnv, c_address)),
                            ::djinni::get(::djinni::Bool::fromCpp(jniEnv, c_exists)));
     ::djinni::jniExceptionCheck(jniEnv);
@@ -29,7 +29,7 @@ void ClientAddressExistsListener::JavaProxy::error(const std::shared_ptr<::Kullo
     auto jniEnv = ::djinni::jniGetThreadEnv();
     ::djinni::JniLocalScope jscope(jniEnv, 10);
     const auto& data = ::djinni::JniClass<::JNI::Kullo::Api::ClientAddressExistsListener>::get();
-    jniEnv->CallVoidMethod(getGlobalRef(), data.method_error,
+    jniEnv->CallVoidMethod(Handle::get().get(), data.method_error,
                            ::djinni::get(::JNI::Kullo::Api::Address::fromCpp(jniEnv, c_address)),
                            ::djinni::get(::JNI::Kullo::Api::NetworkError::fromCpp(jniEnv, c_error)));
     ::djinni::jniExceptionCheck(jniEnv);

@@ -11,6 +11,7 @@ namespace JNI { namespace Kullo { namespace Api {
 class ClientCheckLoginListener final : ::djinni::JniInterface<::Kullo::Api::ClientCheckLoginListener, ClientCheckLoginListener> {
 public:
     using CppType = std::shared_ptr<::Kullo::Api::ClientCheckLoginListener>;
+    using CppOptType = std::shared_ptr<::Kullo::Api::ClientCheckLoginListener>;
     using JniType = jobject;
 
     using Boxed = ClientCheckLoginListener;
@@ -18,14 +19,15 @@ public:
     ~ClientCheckLoginListener();
 
     static CppType toCpp(JNIEnv* jniEnv, JniType j) { return ::djinni::JniClass<ClientCheckLoginListener>::get()._fromJava(jniEnv, j); }
-    static ::djinni::LocalRef<JniType> fromCpp(JNIEnv* jniEnv, const CppType& c) { return {jniEnv, ::djinni::JniClass<ClientCheckLoginListener>::get()._toJava(jniEnv, c)}; }
+    static ::djinni::LocalRef<JniType> fromCppOpt(JNIEnv* jniEnv, const CppOptType& c) { return {jniEnv, ::djinni::JniClass<ClientCheckLoginListener>::get()._toJava(jniEnv, c)}; }
+    static ::djinni::LocalRef<JniType> fromCpp(JNIEnv* jniEnv, const CppType& c) { return fromCppOpt(jniEnv, c); }
 
 private:
     ClientCheckLoginListener();
     friend ::djinni::JniClass<ClientCheckLoginListener>;
     friend ::djinni::JniInterface<::Kullo::Api::ClientCheckLoginListener, ClientCheckLoginListener>;
 
-    class JavaProxy final : ::djinni::JavaProxyCacheEntry, public ::Kullo::Api::ClientCheckLoginListener
+    class JavaProxy final : ::djinni::JavaProxyHandle<JavaProxy>, public ::Kullo::Api::ClientCheckLoginListener
     {
     public:
         JavaProxy(JniType j);
@@ -35,9 +37,7 @@ private:
         void error(const std::shared_ptr<::Kullo::Api::Address> & address, ::Kullo::Api::NetworkError error) override;
 
     private:
-        using ::djinni::JavaProxyCacheEntry::getGlobalRef;
         friend ::djinni::JniInterface<::Kullo::Api::ClientCheckLoginListener, ::JNI::Kullo::Api::ClientCheckLoginListener>;
-        friend ::djinni::JavaProxyCache<JavaProxy>;
     };
 
     const ::djinni::GlobalRef<jclass> clazz { ::djinni::jniFindClass("net/kullo/libkullo/api/ClientCheckLoginListener") };

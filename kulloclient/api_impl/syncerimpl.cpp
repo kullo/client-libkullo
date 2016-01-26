@@ -1,4 +1,4 @@
-/* Copyright 2013–2015 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
 #include "kulloclient/api_impl/syncerimpl.h"
 
 #include <chrono>
@@ -206,6 +206,13 @@ void SyncerImpl::SyncerAsyncTask::setTask(
 SyncerImpl::SyncerSyncerListener::SyncerSyncerListener(SyncerImpl &parent)
     : parent_(parent)
 {}
+
+void SyncerImpl::SyncerSyncerListener::started()
+{
+    if (auto listener = parent_.listener_) {
+        listener->started();
+    }
+}
 
 void SyncerImpl::SyncerSyncerListener::draftAttachmentsTooBig(int64_t convId)
 {

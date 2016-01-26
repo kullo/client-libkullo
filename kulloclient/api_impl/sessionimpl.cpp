@@ -1,4 +1,4 @@
-/* Copyright 2013–2015 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
 #include "kulloclient/api_impl/sessionimpl.h"
 
 #include <algorithm>
@@ -15,6 +15,7 @@
 #include "kulloclient/api_impl/messageattachmentsimpl.h"
 #include "kulloclient/api_impl/sendersimpl.h"
 #include "kulloclient/api_impl/sessionaccountinfoworker.h"
+#include "kulloclient/api_impl/sessionregisterpushtokenworker.h"
 #include "kulloclient/api_impl/syncerimpl.h"
 #include "kulloclient/api_impl/usersettingsimpl.h"
 #include "kulloclient/event/event.h"
@@ -104,6 +105,36 @@ std::shared_ptr<Api::AsyncTask> SessionImpl::accountInfoAsync(
     return std::make_shared<AsyncTaskImpl>(
         std::make_shared<SessionAccountInfoWorker>(
                     address, masterKey, listener));
+}
+
+std::shared_ptr<Api::AsyncTask> SessionImpl::registerPushToken(
+        const std::string &registrationToken)
+{
+    kulloAssert(!registrationToken.empty());
+
+    auto &userSettings = sessionData_->userSettings_;
+    auto address = Util::KulloAddress(userSettings->address()->toString());
+    auto masterKey = Util::MasterKey(userSettings->masterKey()->dataBlocks());
+
+    return std::make_shared<AsyncTaskImpl>(
+        std::make_shared<SessionRegisterPushTokenWorker>(
+                    address, masterKey,
+                    SessionRegisterPushTokenWorker::Add, registrationToken));
+}
+
+std::shared_ptr<Api::AsyncTask> SessionImpl::unregisterPushToken(
+        const std::string &registrationToken)
+{
+    kulloAssert(!registrationToken.empty());
+
+    auto &userSettings = sessionData_->userSettings_;
+    auto address = Util::KulloAddress(userSettings->address()->toString());
+    auto masterKey = Util::MasterKey(userSettings->masterKey()->dataBlocks());
+
+    return std::make_shared<AsyncTaskImpl>(
+        std::make_shared<SessionRegisterPushTokenWorker>(
+                    address, masterKey,
+                    SessionRegisterPushTokenWorker::Remove, registrationToken));
 }
 
 std::vector<Api::Event> SessionImpl::notify(

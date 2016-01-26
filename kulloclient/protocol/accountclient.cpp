@@ -1,9 +1,11 @@
-/* Copyright 2013–2015 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
 #include "kulloclient/protocol/accountclient.h"
 
 #include <jsoncpp/jsoncpp.h>
 
 #include "kulloclient/http/HttpClient.h"
+#include "kulloclient/http/HttpMethod.h"
+#include "kulloclient/http/Request.h"
 #include "kulloclient/protocol/exceptions.h"
 #include "kulloclient/util/checkedconverter.h"
 

@@ -1,6 +1,7 @@
-/* Copyright 2013–2015 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
 #include "tests/api/apimodeltest.h"
 
+#include <kulloclient/api/DraftState.h>
 #include <kulloclient/api_impl/sessionimpl.h>
 #include <kulloclient/dao/draftdao.h>
 

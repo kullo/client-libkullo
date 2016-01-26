@@ -3,13 +3,13 @@
 
 #pragma once
 
-#include "kulloclient/api/NetworkError.h"
 #include <memory>
 
 namespace Kullo { namespace Api {
 
 class Address;
 class MasterKey;
+enum class NetworkError;
 
 /** Listener used in Client.checkLoginAsync() */
 class ClientCheckLoginListener {

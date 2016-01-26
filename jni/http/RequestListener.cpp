@@ -23,7 +23,7 @@ CJNIEXPORT jbyteArray JNICALL Java_net_kullo_libkullo_http_RequestListener_00024
 {
     try {
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
-        const auto& ref = ::djinni::CppProxyHandle<::Kullo::Http::RequestListener>::get(nativeRef);
+        const auto& ref = ::djinni::objectFromHandleAddress<::Kullo::Http::RequestListener>(nativeRef);
         auto r = ref->read(::djinni::I64::toCpp(jniEnv, j_maxSize));
         return ::djinni::release(::djinni::Binary::fromCpp(jniEnv, r));
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, 0 /* value doesn't matter */)

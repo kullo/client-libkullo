@@ -1,6 +1,7 @@
-/* Copyright 2013–2015 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
 #pragma once
 
+#include <vector>
 #include <jsoncpp/jsoncpp-forwards.h>
 
 #include <kulloclient/http/HttpClient.h>

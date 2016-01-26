@@ -11,6 +11,7 @@ namespace JNI { namespace Kullo { namespace Api {
 class ClientCreateSessionListener final : ::djinni::JniInterface<::Kullo::Api::ClientCreateSessionListener, ClientCreateSessionListener> {
 public:
     using CppType = std::shared_ptr<::Kullo::Api::ClientCreateSessionListener>;
+    using CppOptType = std::shared_ptr<::Kullo::Api::ClientCreateSessionListener>;
     using JniType = jobject;
 
     using Boxed = ClientCreateSessionListener;
@@ -18,14 +19,15 @@ public:
     ~ClientCreateSessionListener();
 
     static CppType toCpp(JNIEnv* jniEnv, JniType j) { return ::djinni::JniClass<ClientCreateSessionListener>::get()._fromJava(jniEnv, j); }
-    static ::djinni::LocalRef<JniType> fromCpp(JNIEnv* jniEnv, const CppType& c) { return {jniEnv, ::djinni::JniClass<ClientCreateSessionListener>::get()._toJava(jniEnv, c)}; }
+    static ::djinni::LocalRef<JniType> fromCppOpt(JNIEnv* jniEnv, const CppOptType& c) { return {jniEnv, ::djinni::JniClass<ClientCreateSessionListener>::get()._toJava(jniEnv, c)}; }
+    static ::djinni::LocalRef<JniType> fromCpp(JNIEnv* jniEnv, const CppType& c) { return fromCppOpt(jniEnv, c); }
 
 private:
     ClientCreateSessionListener();
     friend ::djinni::JniClass<ClientCreateSessionListener>;
     friend ::djinni::JniInterface<::Kullo::Api::ClientCreateSessionListener, ClientCreateSessionListener>;
 
-    class JavaProxy final : ::djinni::JavaProxyCacheEntry, public ::Kullo::Api::ClientCreateSessionListener
+    class JavaProxy final : ::djinni::JavaProxyHandle<JavaProxy>, public ::Kullo::Api::ClientCreateSessionListener
     {
     public:
         JavaProxy(JniType j);
@@ -35,9 +37,7 @@ private:
         void error(const std::shared_ptr<::Kullo::Api::Address> & address, ::Kullo::Api::LocalError error) override;
 
     private:
-        using ::djinni::JavaProxyCacheEntry::getGlobalRef;
         friend ::djinni::JniInterface<::Kullo::Api::ClientCreateSessionListener, ::JNI::Kullo::Api::ClientCreateSessionListener>;
-        friend ::djinni::JavaProxyCache<JavaProxy>;
     };
 
     const ::djinni::GlobalRef<jclass> clazz { ::djinni::jniFindClass("net/kullo/libkullo/api/ClientCreateSessionListener") };

@@ -1,8 +1,9 @@
-/* Copyright 2013–2015 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
 #include "kulloclient/api_impl/draftsimpl.h"
 
 #include <stdexcept>
 
+#include "kulloclient/api/DraftState.h"
 #include "kulloclient/dao/attachmentdao.h"
 #include "kulloclient/db/exceptions.h"
 #include "kulloclient/event/draftremovedevent.h"

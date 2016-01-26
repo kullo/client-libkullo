@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include "kulloclient/http/Request.h"
-#include "kulloclient/http/Response.h"
 #include <cstdint>
 #include <memory>
 
@@ -12,6 +10,8 @@ namespace Kullo { namespace Http {
 
 class RequestListener;
 class ResponseListener;
+struct Request;
+struct Response;
 
 class HttpClient {
 public:
