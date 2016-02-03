@@ -8,7 +8,7 @@
 #include <kulloclient/api/AsyncTask.h>
 #include <kulloclient/api/Client.h>
 #include <kulloclient/api/ClientAddressExistsListener.h>
-#include <kulloclient/api/ClientCheckLoginListener.h>
+#include <kulloclient/api/ClientCheckCredentialsListener.h>
 #include <kulloclient/api/ClientCreateSessionListener.h>
 #include <kulloclient/api/LocalError.h>
 #include <kulloclient/api/MasterKey.h>
@@ -85,8 +85,8 @@ public:
     bool exists_ = false;
 };
 
-class CheckLoginListener :
-        public Api::ClientCheckLoginListener
+class CheckCredentialsListener :
+        public Api::ClientCheckCredentialsListener
 {
 public:
     void finished(
@@ -146,15 +146,15 @@ protected:
         EXPECT_THAT(listener->exists_, Eq(exists));
     }
 
-    void checkLoginTest(
+    void checkCredentialsTest(
             const std::string &addrStr,
             const std::vector<std::string> &masterKeyBlocks,
             bool valid)
     {
         auto addr = Api::Address::create(addrStr);
         auto key = Api::MasterKey::createFromDataBlocks(masterKeyBlocks);
-        auto listener = std::make_shared<CheckLoginListener>();
-        auto task = uut->checkLoginAsync(addr, key, listener);
+        auto listener = std::make_shared<CheckCredentialsListener>();
+        auto task = uut->checkCredentialsAsync(addr, key, listener);
 
         ASSERT_THAT(TestUtil::waitAndCheck(task, listener->isFinished_),
                     Eq(TestUtil::OK));
@@ -238,13 +238,13 @@ K_TEST_F(ApiClient, checkLoginAsyncFailsOnNull)
     auto addr = Api::Address::create("doesntexist#example.com");
     auto key = Api::MasterKey::createFromDataBlocks(
                 MasterKeyData::VALID_DATA_BLOCKS);
-    auto listener = std::make_shared<CheckLoginListener>();
+    auto listener = std::make_shared<CheckCredentialsListener>();
 
-    EXPECT_THROW(uut->checkLoginAsync(nullptr, nullptr, nullptr), Util::AssertionFailed);
-    EXPECT_THROW(uut->checkLoginAsync(addr, nullptr, nullptr), Util::AssertionFailed);
-    EXPECT_THROW(uut->checkLoginAsync(nullptr, key, nullptr), Util::AssertionFailed);
-    EXPECT_THROW(uut->checkLoginAsync(addr, nullptr, listener), Util::AssertionFailed);
-    EXPECT_THROW(uut->checkLoginAsync(nullptr, key, listener), Util::AssertionFailed);
+    EXPECT_THROW(uut->checkCredentialsAsync(nullptr, nullptr, nullptr), Util::AssertionFailed);
+    EXPECT_THROW(uut->checkCredentialsAsync(addr, nullptr, nullptr), Util::AssertionFailed);
+    EXPECT_THROW(uut->checkCredentialsAsync(nullptr, key, nullptr), Util::AssertionFailed);
+    EXPECT_THROW(uut->checkCredentialsAsync(addr, nullptr, listener), Util::AssertionFailed);
+    EXPECT_THROW(uut->checkCredentialsAsync(nullptr, key, listener), Util::AssertionFailed);
 }
 
 K_TEST_F(ApiClient, checkLoginAsyncCanBeCanceled)
@@ -252,15 +252,15 @@ K_TEST_F(ApiClient, checkLoginAsyncCanBeCanceled)
     auto addr = Api::Address::create("exists#example.com");
     auto key = Api::MasterKey::createFromDataBlocks(
                 MasterKeyData::VALID_DATA_BLOCKS);
-    auto listener = std::make_shared<CheckLoginListener>();
-    auto task = uut->checkLoginAsync(addr, key, listener);
+    auto listener = std::make_shared<CheckCredentialsListener>();
+    auto task = uut->checkCredentialsAsync(addr, key, listener);
     ASSERT_THAT(task, Not(IsNull()));
     EXPECT_NO_THROW(task->cancel());
 }
 
 K_TEST_F(ApiClient, checkLoginAsyncWorksForBadLogin)
 {
-    checkLoginTest(
+    checkCredentialsTest(
                 "exists#example.com",
                 MasterKeyData::VALID_DATA_BLOCKS2,
                 false);
@@ -268,7 +268,7 @@ K_TEST_F(ApiClient, checkLoginAsyncWorksForBadLogin)
 
 K_TEST_F(ApiClient, checkLoginAsyncWorksForGoodLogin)
 {
-    checkLoginTest(
+    checkCredentialsTest(
                 "exists#example.com",
                 MasterKeyData::VALID_DATA_BLOCKS,
                 true);

@@ -5,20 +5,20 @@
 
 #include "kulloclient/api/Address.h"
 #include "kulloclient/api/MasterKey.h"
-#include "kulloclient/api/ClientCheckLoginListener.h"
+#include "kulloclient/api/ClientCheckCredentialsListener.h"
 #include "kulloclient/api_impl/worker.h"
 #include "kulloclient/protocol/messagesclient.h"
 
 namespace Kullo {
 namespace ApiImpl {
 
-class ClientCheckLoginWorker : public Worker
+class ClientCheckCredentialsWorker : public Worker
 {
 public:
-    ClientCheckLoginWorker(
+    ClientCheckCredentialsWorker(
             std::shared_ptr<Api::Address> address,
             std::shared_ptr<Api::MasterKey> masterKey,
-            std::shared_ptr<Api::ClientCheckLoginListener> listener);
+            std::shared_ptr<Api::ClientCheckCredentialsListener> listener);
 
     void work() override;
     void cancel() override;
@@ -30,7 +30,7 @@ private:
     std::shared_ptr<Api::MasterKey> masterKey_;
 
     // all uses must be synchronized
-    std::shared_ptr<Api::ClientCheckLoginListener> listener_;
+    std::shared_ptr<Api::ClientCheckCredentialsListener> listener_;
 };
 
 }

@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <boost/optional.hpp>
 #include <memory>
 
 namespace Kullo { namespace Api {

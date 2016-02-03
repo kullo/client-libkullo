@@ -8,7 +8,6 @@
 
 namespace Kullo { namespace Api {
 
-class AsyncTask;
 class SyncerListener;
 enum class SyncMode;
 
@@ -36,11 +35,22 @@ public:
     virtual void requestDownloadingAttachmentsForMessage(int64_t msgId) = 0;
 
     /**
-     * Gets an AsyncTask that can be used for cancellation or waiting. It affects
-     * both running and queued jobs. Releasing it will not cancel the job
-     * automatically.
+     * Cancels the running sync and enqueued syncs, but doesn't wait for
+     * termination. Stops all callbacks, even if the task continues to run.
      */
-    virtual std::shared_ptr<AsyncTask> asyncTask() = 0;
+    virtual void cancel() = 0;
+
+    /** Returns true iff a sync is currently running. */
+    virtual bool isSyncing() = 0;
+
+    /** Blocks until the running sync and all enqueued syncs have finished. */
+    virtual void waitUntilDone() = 0;
+
+    /**
+     * Blocks until the sync and all enqueued syncs have finished executing or
+     * until the timeout has expired. Returns false on timeout, true otherwise.
+     */
+    virtual bool waitForMs(int32_t timeout) = 0;
 };
 
 } }  // namespace Kullo::Api

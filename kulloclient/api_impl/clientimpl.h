@@ -22,10 +22,10 @@ public:
             const std::shared_ptr<Api::Address> &address,
             const std::shared_ptr<Api::ClientAddressExistsListener> &listener) override;
 
-    std::shared_ptr<Api::AsyncTask> checkLoginAsync(
+    std::shared_ptr<Api::AsyncTask> checkCredentialsAsync(
             const std::shared_ptr<Api::Address> &address,
             const std::shared_ptr<Api::MasterKey> &masterKey,
-            const std::shared_ptr<Api::ClientCheckLoginListener> &listener) override;
+            const std::shared_ptr<Api::ClientCheckCredentialsListener> &listener) override;
 
     std::shared_ptr<Api::AsyncTask> generateKeysAsync(
             const std::shared_ptr<Api::ClientGenerateKeysListener> &listener) override;

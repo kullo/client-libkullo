@@ -11,10 +11,10 @@ class Address;
 class MasterKey;
 enum class NetworkError;
 
-/** Listener used in Client.checkLoginAsync() */
-class ClientCheckLoginListener {
+/** Listener used in Client.checkCredentialsAsync() */
+class ClientCheckCredentialsListener {
 public:
-    virtual ~ClientCheckLoginListener() {}
+    virtual ~ClientCheckCredentialsListener() {}
 
     virtual void finished(const std::shared_ptr<Address> & address, const std::shared_ptr<MasterKey> & masterKey, bool valid) = 0;
 

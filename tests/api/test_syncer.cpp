@@ -68,8 +68,7 @@ K_TEST_F(ApiSyncer, progressWorks)
     uut_->setListener(listener);
     uut_->requestSync(Api::SyncMode::WithoutAttachments);
 
-    auto task = uut_->asyncTask();
-    ASSERT_THAT(TestUtil::waitAndCheck(task, listener->isFinished_),
+    ASSERT_THAT(TestUtil::waitAndCheck(uut_, listener->isFinished_),
                 Eq(TestUtil::OK));
 
     EXPECT_THAT(listener->countProgressed_, Ge(1));

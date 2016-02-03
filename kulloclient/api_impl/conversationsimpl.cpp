@@ -153,9 +153,10 @@ Api::DateTime ConversationsImpl::latestMessageTimestamp(int64_t convId)
     // optional to allow for later initialization (DateTime has no default ctor)
     boost::optional<Api::DateTime> result;
 
-    if (latestMessageTimestampsCache_.count(convId))
+    auto cacheIter = latestMessageTimestampsCache_.find(convId);
+    if (cacheIter != latestMessageTimestampsCache_.end())
     {
-        result = latestMessageTimestampsCache_.at(convId);
+        result = cacheIter->second;
     }
     else
     {

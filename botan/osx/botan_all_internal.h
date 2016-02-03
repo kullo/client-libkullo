@@ -184,7 +184,7 @@ class Algo_Registry
                {
                std::vector<maker_fn> r;
 
-               if(req_provider != "")
+               if(!req_provider.empty())
                   {
                   // find one explicit provider requested by user or fail
                   auto i = m_maker_fns.find(req_provider);
@@ -259,10 +259,6 @@ make_new_T_1X(const typename Algo_Registry<T>::Spec& spec)
       throw Exception(spec.arg(0));
    return new T(x.release());
    }
-
-// Append to macros living outside of functions, so that invocations must end with a semicolon.
-// The struct is only declared to force the semicolon, it is never defined.
-#define BOTAN_FORCE_SEMICOLON struct BOTAN_DUMMY_STRUCT
 
 #define BOTAN_REGISTER_TYPE(T, type, name, maker, provider, pref)        \
    namespace { Algo_Registry<T>::Add g_ ## type ## _reg(name, maker, provider, pref); } \
@@ -661,11 +657,11 @@ class Fixed_Window_Exponentiator : public Modular_Exponentiator
 
       Fixed_Window_Exponentiator(const BigInt&, Power_Mod::Usage_Hints);
    private:
-      Modular_Reducer reducer;
-      BigInt exp;
-      size_t window_bits;
-      std::vector<BigInt> g;
-      Power_Mod::Usage_Hints hints;
+      Modular_Reducer m_reducer;
+      BigInt m_exp;
+      size_t m_window_bits;
+      std::vector<BigInt> m_g;
+      Power_Mod::Usage_Hints m_hints;
    };
 
 /**
@@ -698,7 +694,7 @@ namespace Botan {
 /**
 * Entropy source reading from kernel devices like /dev/random
 */
-class Device_EntropySource : public Entropy_Source
+class Device_EntropySource final : public Entropy_Source
    {
    public:
       std::string name() const override { return "dev_random"; }
@@ -847,7 +843,7 @@ namespace Botan {
 * @note Any results from timers are marked as not contributing entropy
 * to the poll, as a local attacker could observe them directly.
 */
-class High_Resolution_Timestamp : public Entropy_Source
+class High_Resolution_Timestamp final : public Entropy_Source
    {
    public:
       std::string name() const override { return "timestamp"; }
@@ -1439,8 +1435,8 @@ class Output_Buffers
    private:
       class SecureQueue* get(Pipe::message_id) const;
 
-      std::deque<SecureQueue*> buffers;
-      Pipe::message_id offset;
+      std::deque<SecureQueue*> m_buffers;
+      Pipe::message_id m_offset;
    };
 
 }
@@ -1616,7 +1612,7 @@ class KEM_Decryption_with_KDF : public KEM_Decryption
                                       size_t len,
                                       size_t desired_shared_key_len,
                                       const uint8_t salt[],
-                                      size_t salt_len);
+                                      size_t salt_len) override;
 
    protected:
       virtual secure_vector<byte>
@@ -1696,7 +1692,7 @@ class File_Descriptor_Source
 /**
 * File Tree Walking Entropy Source
 */
-class ProcWalking_EntropySource : public Entropy_Source
+class ProcWalking_EntropySource final : public Entropy_Source
    {
    public:
       std::string name() const override { return "proc_walk"; }
@@ -1843,7 +1839,7 @@ namespace Botan {
 * effective against local attackers as they can sample from the same
 * distribution.
 */
-class Unix_EntropySource : public Entropy_Source
+class Unix_EntropySource final : public Entropy_Source
    {
    public:
       std::string name() const override { return "unix_procs"; }
@@ -1901,7 +1897,7 @@ class Unix_EntropySource : public Entropy_Source
       secure_vector<byte> m_buf;
    };
 
-class UnixProcessInfo_EntropySource : public Entropy_Source
+class UnixProcessInfo_EntropySource final : public Entropy_Source
    {
    public:
       std::string name() const override { return "proc_info"; }

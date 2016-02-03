@@ -70,6 +70,11 @@ Tips and Tricks
 Changelog
 ---------
 
+### v42 (2016-02-02)
+
+ * Retry push token registration on server or network error
+ * Update to Botan 1.11.28
+
 ### v41 (2016-01-26)
 
  * Implement push notifications

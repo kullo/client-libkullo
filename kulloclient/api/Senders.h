@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <boost/optional.hpp>
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -18,6 +19,7 @@ public:
 
     virtual std::string name(int64_t msgId) = 0;
 
+    /** Returns null if the msgId is invalid */
     virtual std::shared_ptr<Address> address(int64_t msgId) = 0;
 
     virtual std::string organization(int64_t msgId) = 0;

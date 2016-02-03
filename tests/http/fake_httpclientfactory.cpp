@@ -79,6 +79,7 @@ Http::Response FakeHttpClient::sendRequest(
         const std::shared_ptr<Http::RequestListener> &requestListener,
         const std::shared_ptr<Http::ResponseListener> &responseListener)
 {
+    boost::optional<Http::ResponseError> responseError;
     int32_t statusCode = 0;
     std::vector<uint8_t> responseBody;
 
@@ -167,7 +168,30 @@ Http::Response FakeHttpClient::sendRequest(
         statusCode = validateAuth(request.headers);
         if (statusCode == 200)
         {
-            responseBody = Util::to_vector("{}");
+            auto json = readJson(requestListener->read(10*1024*1024));
+            auto token = json["registrationToken"];
+            if (token == "return_http_400")
+            {
+                statusCode = 400;
+            }
+            else if (token == "return_http_500")
+            {
+                statusCode = 500;
+            }
+            else if (token == "return_connection_error")
+            {
+                statusCode = 0;
+                responseError = Http::ResponseError::NetworkError;
+            }
+            else if (token == "return_timeout")
+            {
+                statusCode = 0;
+                responseError = Http::ResponseError::Timeout;
+            }
+            else
+            {
+                responseBody = Util::to_vector("{}");
+            }
         }
     }
 
@@ -259,7 +283,7 @@ Http::Response FakeHttpClient::sendRequest(
 
     if (responseListener) responseListener->dataReceived(responseBody);
     return Http::Response(
-                boost::optional<Http::ResponseError>(),
+                responseError,
                 statusCode,
                 std::vector<Http::HttpHeader>());
 }

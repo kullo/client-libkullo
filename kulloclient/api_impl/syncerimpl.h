@@ -24,28 +24,12 @@ public:
         override;
     void requestSync(Api::SyncMode mode) override;
     void requestDownloadingAttachmentsForMessage(int64_t msgId) override;
-    std::shared_ptr<Api::AsyncTask> asyncTask() override;
+    void cancel() override;
+    bool isSyncing() override;
+    void waitUntilDone() override;
+    bool waitForMs(int32_t timeout) override;
 
 private:
-    class SyncerAsyncTask : public Api::AsyncTask
-    {
-    public:
-        SyncerAsyncTask(SyncerImpl &parent);
-
-        // Api::AsyncTask implementation
-        void cancel() override;
-        bool isDone() override;
-        void waitUntilDone() override;
-        bool waitForMs(int32_t timeout) override;
-
-        void setTask(const std::shared_ptr<Api::AsyncTask> &task);
-        void onFinished();
-
-    private:
-        SyncerImpl &parent_;
-        std::shared_ptr<Api::AsyncTask> task_;
-    };
-
     class SyncerSyncerListener : public Api::SyncerListener
     {
     public:
@@ -70,7 +54,7 @@ private:
     std::shared_ptr<Api::SessionListener> sessionListener_;
     std::shared_ptr<Api::SyncerListener> listener_;
 
-    std::shared_ptr<SyncerAsyncTask> task_;
+    std::shared_ptr<Api::AsyncTask> task_;
     std::shared_ptr<SyncerSyncerListener> taskSyncerListener_;
     std::recursive_mutex queueMutex_;
 

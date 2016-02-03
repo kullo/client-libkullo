@@ -25,8 +25,8 @@ HttpClient::JavaProxy::~JavaProxy() = default;
     auto jret = jniEnv->CallObjectMethod(Handle::get().get(), data.method_sendRequest,
                                          ::djinni::get(::JNI::Kullo::Http::Request::fromCpp(jniEnv, c_request)),
                                          ::djinni::get(::djinni::I64::fromCpp(jniEnv, c_timeout)),
-                                         ::djinni::get(::JNI::Kullo::Http::RequestListener::fromCpp(jniEnv, c_requestListener)),
-                                         ::djinni::get(::JNI::Kullo::Http::ResponseListener::fromCpp(jniEnv, c_responseListener)));
+                                         ::djinni::get(::djinni::Optional<boost::optional, ::JNI::Kullo::Http::RequestListener>::fromCpp(jniEnv, c_requestListener)),
+                                         ::djinni::get(::djinni::Optional<boost::optional, ::JNI::Kullo::Http::ResponseListener>::fromCpp(jniEnv, c_responseListener)));
     ::djinni::jniExceptionCheck(jniEnv);
     return ::JNI::Kullo::Http::Response::toCpp(jniEnv, jret);
 }

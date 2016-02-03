@@ -25,7 +25,7 @@ CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_MasterKey_createFromPem(J
     try {
         DJINNI_FUNCTION_PROLOGUE0(jniEnv);
         auto r = ::Kullo::Api::MasterKey::createFromPem(::djinni::String::toCpp(jniEnv, j_pem));
-        return ::djinni::release(::JNI::Kullo::Api::MasterKey::fromCpp(jniEnv, r));
+        return ::djinni::release(::djinni::Optional<boost::optional, ::JNI::Kullo::Api::MasterKey>::fromCpp(jniEnv, r));
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, 0 /* value doesn't matter */)
 }
 
@@ -34,7 +34,7 @@ CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_MasterKey_createFromDataB
     try {
         DJINNI_FUNCTION_PROLOGUE0(jniEnv);
         auto r = ::Kullo::Api::MasterKey::createFromDataBlocks(::djinni::List<::djinni::String>::toCpp(jniEnv, j_dataBlocks));
-        return ::djinni::release(::JNI::Kullo::Api::MasterKey::fromCpp(jniEnv, r));
+        return ::djinni::release(::djinni::Optional<boost::optional, ::JNI::Kullo::Api::MasterKey>::fromCpp(jniEnv, r));
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, 0 /* value doesn't matter */)
 }
 

@@ -7,7 +7,7 @@
 #include "kulloclient/api/Address.h"
 #include "kulloclient/api_impl/asynctaskimpl.h"
 #include "kulloclient/api_impl/clientaddressexistsworker.h"
-#include "kulloclient/api_impl/clientcheckloginworker.h"
+#include "kulloclient/api_impl/clientcheckcredentialsworker.h"
 #include "kulloclient/api_impl/clientcreatesessionworker.h"
 #include "kulloclient/api_impl/clientgeneratekeysworker.h"
 #include "kulloclient/protocol/exceptions.h"
@@ -72,17 +72,17 @@ std::shared_ptr<Api::AsyncTask> ClientImpl::addressExistsAsync(
         std::make_shared<ClientAddressExistsWorker>(address, listener));
 }
 
-std::shared_ptr<Api::AsyncTask> ClientImpl::checkLoginAsync(
+std::shared_ptr<Api::AsyncTask> ClientImpl::checkCredentialsAsync(
         const std::shared_ptr<Api::Address> &address,
         const std::shared_ptr<Api::MasterKey> &masterKey,
-        const std::shared_ptr<Api::ClientCheckLoginListener> &listener)
+        const std::shared_ptr<Api::ClientCheckCredentialsListener> &listener)
 {
     kulloAssert(address);
     kulloAssert(masterKey);
     kulloAssert(listener);
 
     return std::make_shared<AsyncTaskImpl>(
-                std::make_shared<ClientCheckLoginWorker>(address, masterKey, listener));
+                std::make_shared<ClientCheckCredentialsWorker>(address, masterKey, listener));
 }
 
 std::shared_ptr<Api::AsyncTask> ClientImpl::generateKeysAsync(

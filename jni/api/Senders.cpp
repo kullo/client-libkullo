@@ -36,7 +36,7 @@ CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_Senders_00024CppProxy_nat
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
         const auto& ref = ::djinni::objectFromHandleAddress<::Kullo::Api::Senders>(nativeRef);
         auto r = ref->address(::djinni::I64::toCpp(jniEnv, j_msgId));
-        return ::djinni::release(::JNI::Kullo::Api::Address::fromCpp(jniEnv, r));
+        return ::djinni::release(::djinni::Optional<boost::optional, ::JNI::Kullo::Api::Address>::fromCpp(jniEnv, r));
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, 0 /* value doesn't matter */)
 }
 

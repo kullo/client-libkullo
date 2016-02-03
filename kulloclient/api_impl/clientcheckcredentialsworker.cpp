@@ -1,5 +1,5 @@
 /* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
-#include "kulloclient/api_impl/clientcheckloginworker.h"
+#include "kulloclient/api_impl/clientcheckcredentialsworker.h"
 
 #include "kulloclient/api_impl/exception_conversion.h"
 #include "kulloclient/protocol/exceptions.h"
@@ -11,10 +11,10 @@
 namespace Kullo {
 namespace ApiImpl {
 
-ClientCheckLoginWorker::ClientCheckLoginWorker(
+ClientCheckCredentialsWorker::ClientCheckCredentialsWorker(
         std::shared_ptr<Api::Address> address,
         std::shared_ptr<Api::MasterKey> masterKey,
-        std::shared_ptr<Api::ClientCheckLoginListener> listener)
+        std::shared_ptr<Api::ClientCheckCredentialsListener> listener)
     : messagesClient_(
           Util::KulloAddress(address->toString()),
           Util::MasterKey(masterKey->dataBlocks()))
@@ -23,7 +23,7 @@ ClientCheckLoginWorker::ClientCheckLoginWorker(
     , listener_(listener)
 {}
 
-void ClientCheckLoginWorker::work()
+void ClientCheckCredentialsWorker::work()
 {
     Util::LibraryLogger::setCurrentThreadName("CheckLoginW");
 
@@ -56,7 +56,7 @@ void ClientCheckLoginWorker::work()
     }
 }
 
-void ClientCheckLoginWorker::cancel()
+void ClientCheckCredentialsWorker::cancel()
 {
     // thread-safe, can be called without locking
     messagesClient_.cancel();

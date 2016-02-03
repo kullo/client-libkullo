@@ -53,6 +53,15 @@ public:
     }
 
 protected:
+    void testRegisterPushTokenWaiting(const std::string &token)
+    {
+        auto task = uut->registerPushToken(token);
+        // wait for 11 seconds because the retry interval is 10 seconds
+        ASSERT_THAT(task->waitForMs(11*1000), Eq(false));
+        task->cancel();
+        ASSERT_THAT(task->waitForMs(1000), Eq(true));
+    }
+
     std::shared_ptr<Api::Session> uut;
 };
 
@@ -138,7 +147,27 @@ K_TEST_F(ApiSession, registerPushTokenWorks)
 {
     auto task = uut->registerPushToken("token_123_token");
     task->waitUntilDone();
+}
 
+K_TEST_F(ApiSession, registerPushTokenReturnsEarlyOnClientError)
+{
+    auto task = uut->registerPushToken("return_http_400");
+    ASSERT_THAT(task->waitForMs(1000), Eq(true));
+}
+
+K_TEST_F(ApiSession, DISABLED_registerPushTokenRetriesOnConnectionError)
+{
+    testRegisterPushTokenWaiting("return_connection_error");
+}
+
+K_TEST_F(ApiSession, DISABLED_registerPushTokenRetriesOnTimeout)
+{
+    testRegisterPushTokenWaiting("return_timeout");
+}
+
+K_TEST_F(ApiSession, DISABLED_registerPushTokenRetriesOnServerError)
+{
+    testRegisterPushTokenWaiting("return_http_500");
 }
 
 K_TEST_F(ApiSession, notifyWorks)

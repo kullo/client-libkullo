@@ -18,7 +18,7 @@ kullo_add_simple_library(
     api_impl/attachmentssavetoworker.cpp
     api_impl/challengeimpl.cpp
     api_impl/clientaddressexistsworker.cpp
-    api_impl/clientcheckloginworker.cpp
+    api_impl/clientcheckcredentialsworker.cpp
     api_impl/clientcreatesessionworker.cpp
     api_impl/clientgeneratekeyssigningworker.cpp
     api_impl/clientgeneratekeysworker.cpp

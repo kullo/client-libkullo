@@ -4,6 +4,7 @@
 #include "Registry.h"  // my header
 #include "LogListener.h"
 #include "TaskRunner.h"
+#include "jni/support-lib/jni/Marshal.hpp"
 
 namespace JNI { namespace Kullo { namespace Api {
 
@@ -24,7 +25,7 @@ CJNIEXPORT void JNICALL Java_net_kullo_libkullo_api_Registry_setLogListener(JNIE
 {
     try {
         DJINNI_FUNCTION_PROLOGUE0(jniEnv);
-        ::Kullo::Api::Registry::setLogListener(::JNI::Kullo::Api::LogListener::toCpp(jniEnv, j_listener));
+        ::Kullo::Api::Registry::setLogListener(::djinni::Optional<boost::optional, ::JNI::Kullo::Api::LogListener>::toCpp(jniEnv, j_listener));
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, )
 }
 

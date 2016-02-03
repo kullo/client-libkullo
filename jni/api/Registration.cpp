@@ -29,7 +29,7 @@ CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_Registration_00024CppProx
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
         const auto& ref = ::djinni::objectFromHandleAddress<::Kullo::Api::Registration>(nativeRef);
         auto r = ref->registerAccountAsync(::JNI::Kullo::Api::Address::toCpp(jniEnv, j_address),
-                                           ::JNI::Kullo::Api::Challenge::toCpp(jniEnv, j_challenge),
+                                           ::djinni::Optional<boost::optional, ::JNI::Kullo::Api::Challenge>::toCpp(jniEnv, j_challenge),
                                            ::djinni::String::toCpp(jniEnv, j_challengeAnswer),
                                            ::JNI::Kullo::Api::RegistrationRegisterAccountListener::toCpp(jniEnv, j_listener));
         return ::djinni::release(::JNI::Kullo::Api::AsyncTask::fromCpp(jniEnv, r));

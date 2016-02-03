@@ -25,6 +25,11 @@ private:
     // const stuff, synchronization unnecessary
     const Operation operation_;
 
+    // synchronized by cancelMutex_
+    std::mutex cancelMutex_;
+    std::condition_variable cancelCv_;
+    bool cancelled_ = false;
+
     // not synchronized, non-threadsafe stuff is only used from work()
     Protocol::PushClient pushClient_;
     std::string registrationToken_;

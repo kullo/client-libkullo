@@ -6,7 +6,7 @@
 #include "AsyncTask.h"
 #include "Client.h"
 #include "ClientAddressExistsListener.h"
-#include "ClientCheckLoginListener.h"
+#include "ClientCheckCredentialsListener.h"
 #include "ClientCreateSessionListener.h"
 #include "ClientGenerateKeysListener.h"
 #include "MasterKey.h"
@@ -62,14 +62,14 @@ CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_Client_00024CppProxy_nati
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, 0 /* value doesn't matter */)
 }
 
-CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_Client_00024CppProxy_native_1checkLoginAsync(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef, jobject j_address, jobject j_masterKey, jobject j_listener)
+CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_Client_00024CppProxy_native_1checkCredentialsAsync(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef, jobject j_address, jobject j_masterKey, jobject j_listener)
 {
     try {
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
         const auto& ref = ::djinni::objectFromHandleAddress<::Kullo::Api::Client>(nativeRef);
-        auto r = ref->checkLoginAsync(::JNI::Kullo::Api::Address::toCpp(jniEnv, j_address),
-                                      ::JNI::Kullo::Api::MasterKey::toCpp(jniEnv, j_masterKey),
-                                      ::JNI::Kullo::Api::ClientCheckLoginListener::toCpp(jniEnv, j_listener));
+        auto r = ref->checkCredentialsAsync(::JNI::Kullo::Api::Address::toCpp(jniEnv, j_address),
+                                            ::JNI::Kullo::Api::MasterKey::toCpp(jniEnv, j_masterKey),
+                                            ::JNI::Kullo::Api::ClientCheckCredentialsListener::toCpp(jniEnv, j_listener));
         return ::djinni::release(::JNI::Kullo::Api::AsyncTask::fromCpp(jniEnv, r));
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, 0 /* value doesn't matter */)
 }

@@ -12,7 +12,7 @@ namespace Kullo { namespace Api {
 class Address;
 class AsyncTask;
 class ClientAddressExistsListener;
-class ClientCheckLoginListener;
+class ClientCheckCredentialsListener;
 class ClientCreateSessionListener;
 class ClientGenerateKeysListener;
 class MasterKey;
@@ -54,7 +54,7 @@ public:
     virtual std::shared_ptr<AsyncTask> addressExistsAsync(const std::shared_ptr<Address> & address, const std::shared_ptr<ClientAddressExistsListener> & listener) = 0;
 
     /** Check whether the master key is valid for the given address. */
-    virtual std::shared_ptr<AsyncTask> checkLoginAsync(const std::shared_ptr<Address> & address, const std::shared_ptr<MasterKey> & masterKey, const std::shared_ptr<ClientCheckLoginListener> & listener) = 0;
+    virtual std::shared_ptr<AsyncTask> checkCredentialsAsync(const std::shared_ptr<Address> & address, const std::shared_ptr<MasterKey> & masterKey, const std::shared_ptr<ClientCheckCredentialsListener> & listener) = 0;
 
     /** Generate new keys, which is the first step to registering an account. */
     virtual std::shared_ptr<AsyncTask> generateKeysAsync(const std::shared_ptr<ClientGenerateKeysListener> & listener) = 0;

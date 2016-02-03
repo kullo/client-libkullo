@@ -14,8 +14,8 @@ api/Client.cpp
 api/Client.h
 api/ClientAddressExistsListener.cpp
 api/ClientAddressExistsListener.h
-api/ClientCheckLoginListener.cpp
-api/ClientCheckLoginListener.h
+api/ClientCheckCredentialsListener.cpp
+api/ClientCheckCredentialsListener.h
 api/ClientCreateSessionListener.cpp
 api/ClientCreateSessionListener.h
 api/ClientGenerateKeysListener.cpp

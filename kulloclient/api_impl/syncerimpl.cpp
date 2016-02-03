@@ -17,7 +17,6 @@ SyncerImpl::SyncerImpl(
         std::shared_ptr<Api::SessionListener> sessionListener)
     : sessionData_(session)
     , sessionListener_(sessionListener)
-    , task_(std::make_shared<SyncerAsyncTask>(*this))
     , taskSyncerListener_(std::make_shared<SyncerSyncerListener>(*this))
     , running_(false)
 {
@@ -89,9 +88,60 @@ void SyncerImpl::requestDownloadingAttachmentsForMessage(int64_t msgId)
     runNextJobIfIdle();
 }
 
-std::shared_ptr<Api::AsyncTask> SyncerImpl::asyncTask()
+void SyncerImpl::cancel()
 {
-    return task_;
+    std::lock_guard<std::recursive_mutex> lock(queueMutex_); K_RAII(lock);
+
+    messageAttachmentDownloadQueue_.clear();
+    enqueuedSync_.reset();
+    task_ = nullptr;
+    running_ = false;
+}
+
+bool SyncerImpl::isSyncing()
+{
+    std::lock_guard<std::recursive_mutex> lock(queueMutex_); K_RAII(lock);
+
+    // We're syncing if the queues are not empty or there's a running task
+    return !messageAttachmentDownloadQueue_.empty() || enqueuedSync_ || running_;
+}
+
+void SyncerImpl::waitUntilDone()
+{
+    while (isSyncing())
+    {
+        if (auto task = task_)
+        {
+            task->waitUntilDone();
+        }
+        else
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+    }
+}
+
+bool SyncerImpl::waitForMs(int32_t timeout)
+{
+    auto start = std::chrono::high_resolution_clock::now();
+    auto deadline = start + std::chrono::milliseconds(timeout);
+    while (isSyncing())
+    {
+        auto now = std::chrono::high_resolution_clock::now();
+        if (now >= deadline) return false;
+
+        if (auto task = task_)
+        {
+            auto timeout = deadline - now;
+            auto timeoutMs = std::chrono::duration_cast<std::chrono::milliseconds>(timeout).count();
+            task->waitForMs(timeoutMs);
+        }
+        else
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+    }
+    return true;
 }
 
 // must only be called while queueMutex_ is locked
@@ -105,12 +155,12 @@ void SyncerImpl::runNextJobIfIdle()
             auto msgId = messageAttachmentDownloadQueue_.front();
             messageAttachmentDownloadQueue_.pop_front();
             running_ = true;
-            task_->setTask(downloadAttachmentsForMessageAsync(msgId));
+            task_ = downloadAttachmentsForMessageAsync(msgId);
         }
         else if (enqueuedSync_)
         {
             running_ = true;
-            task_->setTask(runAsync(*enqueuedSync_));
+            task_ = runAsync(*enqueuedSync_);
             enqueuedSync_.reset();
         }
         else
@@ -132,75 +182,6 @@ std::shared_ptr<Api::AsyncTask> SyncerImpl::downloadAttachmentsForMessageAsync(i
     return std::make_shared<AsyncTaskImpl>(
                 std::make_shared<SyncerDownloadAttachmentsForMessageWorker>(
                     sessionData_, msgId, sessionListener_, taskSyncerListener_));
-}
-
-SyncerImpl::SyncerAsyncTask::SyncerAsyncTask(SyncerImpl &parent)
-    : parent_(parent)
-{}
-
-void SyncerImpl::SyncerAsyncTask::cancel()
-{
-    std::lock_guard<std::recursive_mutex> lock(parent_.queueMutex_); K_RAII(lock);
-
-    parent_.messageAttachmentDownloadQueue_.clear();
-    parent_.enqueuedSync_.reset();
-    task_ = nullptr;
-    parent_.running_ = false;
-}
-
-bool SyncerImpl::SyncerAsyncTask::isDone()
-{
-    std::lock_guard<std::recursive_mutex> lock(parent_.queueMutex_); K_RAII(lock);
-
-    // We're done if the queues are empty and there's no running task
-    return
-            parent_.messageAttachmentDownloadQueue_.empty() &&
-            !parent_.enqueuedSync_ &&
-            !parent_.running_;
-}
-
-void SyncerImpl::SyncerAsyncTask::waitUntilDone()
-{
-    while (!isDone())
-    {
-        if (auto task = task_)
-        {
-            task->waitUntilDone();
-        }
-        else
-        {
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        }
-    }
-}
-
-bool SyncerImpl::SyncerAsyncTask::waitForMs(int32_t timeout)
-{
-    auto start = std::chrono::high_resolution_clock::now();
-    auto deadline = start + std::chrono::milliseconds(timeout);
-    while (!isDone())
-    {
-        auto now = std::chrono::high_resolution_clock::now();
-        if (now >= deadline) return false;
-
-        if (auto task = task_)
-        {
-            auto timeout = deadline - now;
-            auto timeoutMs = std::chrono::duration_cast<std::chrono::milliseconds>(timeout).count();
-            task->waitForMs(timeoutMs);
-        }
-        else
-        {
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        }
-    }
-    return true;
-}
-
-void SyncerImpl::SyncerAsyncTask::setTask(
-        const std::shared_ptr<Api::AsyncTask> &task)
-{
-    task_ = task;
 }
 
 SyncerImpl::SyncerSyncerListener::SyncerSyncerListener(SyncerImpl &parent)

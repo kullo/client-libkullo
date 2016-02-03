@@ -1,5 +1,5 @@
 /*
-* Botan 1.11.26 Amalgamation
+* Botan 1.11.28 Amalgamation
 * (C) 1999-2013,2014,2015 Jack Lloyd and others
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -28,8 +28,8 @@
 #include <vector>
 
 /*
-* This file was automatically generated Tue Jan 26 13:43:16 2016 UTC by
-* simon@laptitude running '/tmp/update-botan/1.11.26/Botan-1.11.26/configure.py --via-amalgamation --no-autoload --disable-shared --with-boost --with-zlib --enable-modules=aes,sha1,sha2_32,sha2_64,auto_rng,codec_filt,eme_oaep,emsa_pssr,gcm,hres_timer,rsa,srp6,system_rng,dev_random,proc_walk,unix_procs --os=darwin --cpu=x86_64 --cc=clang'
+* This file was automatically generated Tue Feb  2 08:57:50 2016 UTC by
+* daniel@twentyone running '/tmp/update-botan/1.11.28/Botan-1.11.28/configure.py --via-amalgamation --no-autoload --disable-shared --with-boost --with-zlib --enable-modules=aes,sha1,sha2_32,sha2_64,auto_rng,codec_filt,eme_oaep,emsa_pssr,gcm,hres_timer,rsa,srp6,system_rng,dev_random,proc_walk,unix_procs --os=darwin --cpu=x86_64 --cc=clang'
 *
 * Target
 *  - Compiler: clang++  -m64 -pthread -std=c++11 -D_REENTRANT -fstack-protector -O3
@@ -39,12 +39,12 @@
 
 #define BOTAN_VERSION_MAJOR 1
 #define BOTAN_VERSION_MINOR 11
-#define BOTAN_VERSION_PATCH 26
-#define BOTAN_VERSION_DATESTAMP 20160104
+#define BOTAN_VERSION_PATCH 28
+#define BOTAN_VERSION_DATESTAMP 20160201
 
 #define BOTAN_VERSION_RELEASE_TYPE "released"
 
-#define BOTAN_VERSION_VC_REVISION "git:9d3ad9a0f44a9321185ed9f221c828dac81b9f0c"
+#define BOTAN_VERSION_VC_REVISION "git:87a59dd0ea8a783540d30bb697b4c86d9b66f7ee"
 
 #define BOTAN_DISTRIBUTION_INFO "unspecified"
 
@@ -295,6 +295,22 @@ softare-based entropy polling is still used.
 
 #endif
 
+#if !defined(BOTAN_NORETURN)
+
+  #if defined (__clang__) || defined (__GNUG__)
+    #define BOTAN_NORETURN __attribute__ ((__noreturn__))
+
+  #elif defined (_MSC_VER)
+    #define BOTAN_NORETURN __declspec(noreturn)
+
+  #else
+    #define BOTAN_NORETURN
+	
+  #endif
+
+#endif
+
+
 #if defined(_MSC_VER)
   #define BOTAN_CURRENT_FUNCTION __FUNCTION__
 #else
@@ -376,13 +392,17 @@ softare-based entropy polling is still used.
 */
 
 
+// Append to macros living outside of functions, so that invocations must end with a semicolon.
+// The struct is only declared to force the semicolon, it is never defined.
+#define BOTAN_FORCE_SEMICOLON struct BOTAN_DUMMY_STRUCT
+
 
 namespace Botan {
 
 /**
 * Called when an assertion fails
 */
-void BOTAN_DLL assertion_failure(const char* expr_str,
+BOTAN_NORETURN void BOTAN_DLL assertion_failure(const char* expr_str,
                                  const char* assertion_made,
                                  const char* func,
                                  const char* file,
@@ -818,9 +838,9 @@ class BOTAN_DLL Key_Length_Specification
       * @param keylen the supported key length
       */
       Key_Length_Specification(size_t keylen) :
-         min_keylen(keylen),
-         max_keylen(keylen),
-         keylen_mod(1)
+         m_min_keylen(keylen),
+         m_max_keylen(keylen),
+         m_keylen_mod(1)
          {
          }
 
@@ -833,9 +853,9 @@ class BOTAN_DLL Key_Length_Specification
       Key_Length_Specification(size_t min_k,
                                size_t max_k,
                                size_t k_mod = 1) :
-         min_keylen(min_k),
-         max_keylen(max_k ? max_k : min_k),
-         keylen_mod(k_mod)
+         m_min_keylen(min_k),
+         m_max_keylen(max_k ? max_k : min_k),
+         m_keylen_mod(k_mod)
          {
          }
 
@@ -845,9 +865,9 @@ class BOTAN_DLL Key_Length_Specification
       */
       bool valid_keylength(size_t length) const
          {
-         return ((length >= min_keylen) &&
-                 (length <= max_keylen) &&
-                 (length % keylen_mod == 0));
+         return ((length >= m_min_keylen) &&
+                 (length <= m_max_keylen) &&
+                 (length % m_keylen_mod == 0));
          }
 
       /**
@@ -855,7 +875,7 @@ class BOTAN_DLL Key_Length_Specification
       */
       size_t minimum_keylength() const
          {
-         return min_keylen;
+         return m_min_keylen;
          }
 
       /**
@@ -863,7 +883,7 @@ class BOTAN_DLL Key_Length_Specification
       */
       size_t maximum_keylength() const
          {
-         return max_keylen;
+         return m_max_keylen;
          }
 
       /**
@@ -871,18 +891,18 @@ class BOTAN_DLL Key_Length_Specification
       */
       size_t keylength_multiple() const
          {
-         return keylen_mod;
+         return m_keylen_mod;
          }
 
       Key_Length_Specification multiple(size_t n) const
          {
-         return Key_Length_Specification(n * min_keylen,
-                                         n * max_keylen,
-                                         n * keylen_mod);
+         return Key_Length_Specification(n * m_min_keylen,
+                                         n * m_max_keylen,
+                                         n * m_keylen_mod);
          }
 
    private:
-      size_t min_keylen, max_keylen, keylen_mod;
+      size_t m_min_keylen, m_max_keylen, m_keylen_mod;
    };
 
 }
@@ -1371,12 +1391,12 @@ class BOTAN_DLL SCAN_Name
       /**
       * @return original input string
       */
-      const std::string& as_string() const { return orig_algo_spec; }
+      const std::string& as_string() const { return m_orig_algo_spec; }
 
       /**
       * @return algorithm name
       */
-      const std::string& algo_name() const { return alg_name; }
+      const std::string& algo_name() const { return m_alg_name; }
 
       /**
       * @return algorithm name plus any arguments
@@ -1391,7 +1411,7 @@ class BOTAN_DLL SCAN_Name
       /**
       * @return number of arguments
       */
-      size_t arg_count() const { return args.size(); }
+      size_t arg_count() const { return m_args.size(); }
 
       /**
       * @param lower is the lower bound
@@ -1425,13 +1445,13 @@ class BOTAN_DLL SCAN_Name
       * @return cipher mode (if any)
       */
       std::string cipher_mode() const
-         { return (mode_info.size() >= 1) ? mode_info[0] : ""; }
+         { return (m_mode_info.size() >= 1) ? m_mode_info[0] : ""; }
 
       /**
       * @return cipher mode padding (if any)
       */
       std::string cipher_mode_pad() const
-         { return (mode_info.size() >= 2) ? mode_info[1] : ""; }
+         { return (m_mode_info.size() >= 2) ? m_mode_info[1] : ""; }
 
       static void add_alias(const std::string& alias, const std::string& basename);
 
@@ -1440,10 +1460,10 @@ class BOTAN_DLL SCAN_Name
       static std::mutex g_alias_map_mutex;
       static std::map<std::string, std::string> g_alias_map;
 
-      std::string orig_algo_spec;
-      std::string alg_name;
-      std::vector<std::string> args;
-      std::vector<std::string> mode_info;
+      std::string m_orig_algo_spec;
+      std::string m_alg_name;
+      std::vector<std::string> m_args;
+      std::vector<std::string> m_mode_info;
    };
 
 }
@@ -2032,7 +2052,7 @@ namespace Botan {
 /**
 * AES-128
 */
-class BOTAN_DLL AES_128 : public Block_Cipher_Fixed_Params<16, 16>
+class BOTAN_DLL AES_128 final : public Block_Cipher_Fixed_Params<16, 16>
    {
    public:
       void encrypt_n(const byte in[], byte out[], size_t blocks) const override;
@@ -2045,14 +2065,14 @@ class BOTAN_DLL AES_128 : public Block_Cipher_Fixed_Params<16, 16>
    private:
       void key_schedule(const byte key[], size_t length) override;
 
-      secure_vector<u32bit> EK, DK;
-      secure_vector<byte> ME, MD;
+      secure_vector<u32bit> m_EK, m_DK;
+      secure_vector<byte> m_ME, m_MD;
    };
 
 /**
 * AES-192
 */
-class BOTAN_DLL AES_192 : public Block_Cipher_Fixed_Params<16, 24>
+class BOTAN_DLL AES_192 final : public Block_Cipher_Fixed_Params<16, 24>
    {
    public:
       void encrypt_n(const byte in[], byte out[], size_t blocks) const override;
@@ -2065,14 +2085,14 @@ class BOTAN_DLL AES_192 : public Block_Cipher_Fixed_Params<16, 24>
    private:
       void key_schedule(const byte key[], size_t length) override;
 
-      secure_vector<u32bit> EK, DK;
-      secure_vector<byte> ME, MD;
+      secure_vector<u32bit> m_EK, m_DK;
+      secure_vector<byte> m_ME, m_MD;
    };
 
 /**
 * AES-256
 */
-class BOTAN_DLL AES_256 : public Block_Cipher_Fixed_Params<16, 32>
+class BOTAN_DLL AES_256 final : public Block_Cipher_Fixed_Params<16, 32>
    {
    public:
       void encrypt_n(const byte in[], byte out[], size_t blocks) const override;
@@ -2085,8 +2105,8 @@ class BOTAN_DLL AES_256 : public Block_Cipher_Fixed_Params<16, 32>
    private:
       void key_schedule(const byte key[], size_t length) override;
 
-      secure_vector<u32bit> EK, DK;
-      secure_vector<byte> ME, MD;
+      secure_vector<u32bit> m_EK, m_DK;
+      secure_vector<byte> m_ME, m_MD;
    };
 
 }
@@ -2165,7 +2185,10 @@ class BOTAN_DLL BER_Object
    public:
       void assert_is_a(ASN1_Tag, ASN1_Tag);
 
+      // public member variable:
       ASN1_Tag type_tag, class_tag;
+
+      // public member variable:
       secure_vector<byte> value;
    };
 
@@ -2212,7 +2235,7 @@ namespace Botan {
 /**
 * This class represents ASN.1 object identifiers.
 */
-class BOTAN_DLL OID : public ASN1_Object
+class BOTAN_DLL OID final : public ASN1_Object
    {
    public:
       void encode_into(class DER_Encoder&) const override;
@@ -2222,13 +2245,13 @@ class BOTAN_DLL OID : public ASN1_Object
       * Find out whether this OID is empty
       * @return true is no OID value is set
       */
-      bool empty() const { return id.size() == 0; }
+      bool empty() const { return m_id.size() == 0; }
 
       /**
       * Get this OID as list (vector) of its components.
       * @return vector representing this OID
       */
-      const std::vector<u32bit>& get_id() const { return id; }
+      const std::vector<u32bit>& get_id() const { return m_id; }
 
       /**
       * Get this OID as a string
@@ -2260,7 +2283,7 @@ class BOTAN_DLL OID : public ASN1_Object
       */
       OID(const std::string& str = "");
    private:
-      std::vector<u32bit> id;
+      std::vector<u32bit> m_id;
    };
 
 /**
@@ -2294,7 +2317,7 @@ namespace Botan {
 /**
 * Algorithm Identifier
 */
-class BOTAN_DLL AlgorithmIdentifier : public ASN1_Object
+class BOTAN_DLL AlgorithmIdentifier final : public ASN1_Object
    {
    public:
       enum Encoding_Option { USE_NULL_PARAM };
@@ -2309,7 +2332,10 @@ class BOTAN_DLL AlgorithmIdentifier : public ASN1_Object
       AlgorithmIdentifier(const OID&, const std::vector<byte>&);
       AlgorithmIdentifier(const std::string&, const std::vector<byte>&);
 
+      // public member variable:
       OID oid;
+
+      // public member variable:
       std::vector<byte> parameters;
    };
 
@@ -2329,7 +2355,7 @@ namespace Botan {
 /**
 * Simple String
 */
-class BOTAN_DLL ASN1_String : public ASN1_Object
+class BOTAN_DLL ASN1_String final : public ASN1_Object
    {
    public:
       void encode_into(class DER_Encoder&) const override;
@@ -2343,8 +2369,8 @@ class BOTAN_DLL ASN1_String : public ASN1_Object
       ASN1_String(const std::string& = "");
       ASN1_String(const std::string&, ASN1_Tag);
    private:
-      std::string iso_8859_str;
-      ASN1_Tag tag;
+      std::string m_iso_8859_str;
+      ASN1_Tag m_tag;
    };
 
 }
@@ -2355,7 +2381,7 @@ namespace Botan {
 /**
 * Alternative Name
 */
-class BOTAN_DLL AlternativeName : public ASN1_Object
+class BOTAN_DLL AlternativeName final : public ASN1_Object
    {
    public:
       void encode_into(class DER_Encoder&) const override;
@@ -2374,8 +2400,8 @@ class BOTAN_DLL AlternativeName : public ASN1_Object
       AlternativeName(const std::string& = "", const std::string& = "",
                       const std::string& = "", const std::string& = "");
    private:
-      std::multimap<std::string, std::string> alt_info;
-      std::multimap<OID, ASN1_String> othernames;
+      std::multimap<std::string, std::string> m_alt_info;
+      std::multimap<OID, ASN1_String> m_othernames;
    };
 
 }
@@ -2386,13 +2412,16 @@ namespace Botan {
 /**
 * Attribute
 */
-class BOTAN_DLL Attribute : public ASN1_Object
+class BOTAN_DLL Attribute final : public ASN1_Object
    {
    public:
       void encode_into(class DER_Encoder& to) const override;
       void decode_from(class BER_Decoder& from) override;
 
+      // public member variable:
       OID oid;
+
+      // public member variable:
       std::vector<byte> parameters;
 
       Attribute() {}
@@ -2408,7 +2437,7 @@ namespace Botan {
 /**
 * X.509 Time
 */
-class BOTAN_DLL X509_Time : public ASN1_Object
+class BOTAN_DLL X509_Time final : public ASN1_Object
    {
    public:
       /// DER encode a X509_Time
@@ -2792,7 +2821,7 @@ class BOTAN_DLL Filter
       friend class Fanout_Filter;
 
       size_t total_ports() const;
-      size_t current_port() const { return port_num; }
+      size_t current_port() const { return m_port_num; }
 
       /**
       * Set the active port
@@ -2800,7 +2829,7 @@ class BOTAN_DLL Filter
       */
       void set_port(size_t new_port);
 
-      size_t owns() const { return filter_owns; }
+      size_t owns() const { return m_filter_owns; }
 
       /**
       * Attach another filter to this one
@@ -2815,12 +2844,12 @@ class BOTAN_DLL Filter
       void set_next(Filter* filters[], size_t count);
       Filter* get_next() const;
 
-      secure_vector<byte> write_queue;
-      std::vector<Filter*> next;
-      size_t port_num, filter_owns;
+      secure_vector<byte> m_write_queue;
+      std::vector<Filter*> m_next;
+      size_t m_port_num, m_filter_owns;
 
       // true if filter belongs to a pipe --> prohibit filter sharing!
-      bool owned;
+      bool m_owned;
    };
 
 /**
@@ -2832,7 +2861,7 @@ class BOTAN_DLL Fanout_Filter : public Filter
       /**
       * Increment the number of filters past us that we own
       */
-      void incr_owns() { ++filter_owns; }
+      void incr_owns() { ++m_filter_owns; }
 
       void set_port(size_t n) { Filter::set_port(n); }
 
@@ -2842,9 +2871,9 @@ class BOTAN_DLL Fanout_Filter : public Filter
 
    private:
       friend class Threaded_Fork;
-      using Filter::write_queue;
+      using Filter::m_write_queue;
       using Filter::total_ports;
-      using Filter::next;
+      using Filter::m_next;
    };
 
 /**
@@ -2863,7 +2892,7 @@ namespace Botan {
 /**
 * This class represents a Base64 encoder.
 */
-class BOTAN_DLL Base64_Encoder : public Filter
+class BOTAN_DLL Base64_Encoder final : public Filter
    {
    public:
       std::string name() const override { return "Base64_Encoder"; }
@@ -2893,16 +2922,16 @@ class BOTAN_DLL Base64_Encoder : public Filter
                            bool final_inputs = false);
       void do_output(const byte output[], size_t length);
 
-      const size_t line_length;
-      const bool trailing_newline;
-      std::vector<byte> in, out;
-      size_t position, out_position;
+      const size_t m_line_length;
+      const bool m_trailing_newline;
+      std::vector<byte> m_in, m_out;
+      size_t m_position, m_out_position;
    };
 
 /**
 * This object represents a Base64 decoder.
 */
-class BOTAN_DLL Base64_Decoder : public Filter
+class BOTAN_DLL Base64_Decoder final : public Filter
    {
    public:
       std::string name() const override { return "Base64_Decoder"; }
@@ -2926,9 +2955,9 @@ class BOTAN_DLL Base64_Decoder : public Filter
       */
       Base64_Decoder(Decoder_Checking checking = NONE);
    private:
-      const Decoder_Checking checking;
-      std::vector<byte> in, out;
-      size_t position;
+      const Decoder_Checking m_checking;
+      std::vector<byte> m_in, m_out;
+      size_t m_position;
    };
 
 }
@@ -3053,7 +3082,7 @@ namespace Botan {
 /**
 * BitBucket is a filter which simply discards all inputs
 */
-struct BOTAN_DLL BitBucket : public Filter
+struct BOTAN_DLL BitBucket final : public Filter
    {
    void write(const byte[], size_t) override {}
 
@@ -3256,26 +3285,26 @@ class BOTAN_DLL DataSource_Memory : public DataSource
       * @param length the length of the byte array
       */
       DataSource_Memory(const byte in[], size_t length) :
-         source(in, in + length), offset(0) {}
+         m_source(in, in + length), m_offset(0) {}
 
       /**
       * Construct a memory source that reads from a secure_vector
       * @param in the MemoryRegion to read from
       */
       DataSource_Memory(const secure_vector<byte>& in) :
-         source(in), offset(0) {}
+         m_source(in), m_offset(0) {}
 
       /**
       * Construct a memory source that reads from a std::vector
       * @param in the MemoryRegion to read from
       */
       DataSource_Memory(const std::vector<byte>& in) :
-         source(in.begin(), in.end()), offset(0) {}
+         m_source(in.begin(), in.end()), m_offset(0) {}
 
-      size_t get_bytes_read() const override { return offset; }
+      size_t get_bytes_read() const override { return m_offset; }
    private:
-      secure_vector<byte> source;
-      size_t offset;
+      secure_vector<byte> m_source;
+      size_t m_offset;
    };
 
 /**
@@ -3306,13 +3335,13 @@ class BOTAN_DLL DataSource_Stream : public DataSource
 
       ~DataSource_Stream();
 
-      size_t get_bytes_read() const override { return total_read; }
+      size_t get_bytes_read() const override { return m_total_read; }
    private:
-      const std::string identifier;
+      const std::string m_identifier;
 
-      std::istream* source_p;
-      std::istream& source;
-      size_t total_read;
+      std::istream* m_source_p;
+      std::istream& m_source;
+      size_t m_total_read;
    };
 
 }
@@ -3475,10 +3504,10 @@ class BOTAN_DLL BER_Decoder
       BER_Decoder(const BER_Decoder&);
       ~BER_Decoder();
    private:
-      BER_Decoder* parent;
-      DataSource* source;
-      BER_Object pushed;
-      mutable bool owns;
+      BER_Decoder* m_parent;
+      DataSource* m_source;
+      BER_Object m_pushed;
+      mutable bool m_owns;
    };
 
 /*
@@ -5341,7 +5370,7 @@ namespace Botan {
 class BOTAN_DLL Modular_Reducer
    {
    public:
-      const BigInt& get_modulus() const { return modulus; }
+      const BigInt& get_modulus() const { return m_modulus; }
 
       BigInt reduce(const BigInt& x) const;
 
@@ -5370,13 +5399,13 @@ class BOTAN_DLL Modular_Reducer
       BigInt cube(const BigInt& x) const
          { return multiply(x, this->square(x)); }
 
-      bool initialized() const { return (mod_words != 0); }
+      bool initialized() const { return (m_mod_words != 0); }
 
-      Modular_Reducer() { mod_words = 0; }
+      Modular_Reducer() { m_mod_words = 0; }
       Modular_Reducer(const BigInt& mod);
    private:
-      BigInt modulus, modulus_2, mu;
-      size_t mod_words;
+      BigInt m_modulus, m_modulus_2, m_mu;
+      size_t m_mod_words;
    };
 
 }
@@ -5952,22 +5981,22 @@ class BOTAN_DLL Buffered_Filter
       /**
       * @return block size of inputs
       */
-      size_t buffered_block_size() const { return main_block_mod; }
+      size_t buffered_block_size() const { return m_main_block_mod; }
 
       /**
       * @return current position in the buffer
       */
-      size_t current_position() const { return buffer_pos; }
+      size_t current_position() const { return m_buffer_pos; }
 
       /**
       * Reset the buffer position
       */
-      void buffer_reset() { buffer_pos = 0; }
+      void buffer_reset() { m_buffer_pos = 0; }
    private:
-      size_t main_block_mod, final_minimum;
+      size_t m_main_block_mod, m_final_minimum;
 
-      secure_vector<byte> buffer;
-      size_t buffer_pos;
+      secure_vector<byte> m_buffer;
+      size_t m_buffer_pos;
    };
 
 }
@@ -6080,7 +6109,7 @@ class BOTAN_DLL BlockCipherModePaddingMethod
 /**
 * PKCS#7 Padding
 */
-class BOTAN_DLL PKCS7_Padding : public BlockCipherModePaddingMethod
+class BOTAN_DLL PKCS7_Padding final : public BlockCipherModePaddingMethod
    {
    public:
       void add_padding(secure_vector<byte>& buffer,
@@ -6097,7 +6126,7 @@ class BOTAN_DLL PKCS7_Padding : public BlockCipherModePaddingMethod
 /**
 * ANSI X9.23 Padding
 */
-class BOTAN_DLL ANSI_X923_Padding : public BlockCipherModePaddingMethod
+class BOTAN_DLL ANSI_X923_Padding final : public BlockCipherModePaddingMethod
    {
    public:
       void add_padding(secure_vector<byte>& buffer,
@@ -6114,7 +6143,7 @@ class BOTAN_DLL ANSI_X923_Padding : public BlockCipherModePaddingMethod
 /**
 * One And Zeros Padding
 */
-class BOTAN_DLL OneAndZeros_Padding : public BlockCipherModePaddingMethod
+class BOTAN_DLL OneAndZeros_Padding final : public BlockCipherModePaddingMethod
    {
    public:
       void add_padding(secure_vector<byte>& buffer,
@@ -6131,7 +6160,7 @@ class BOTAN_DLL OneAndZeros_Padding : public BlockCipherModePaddingMethod
 /**
 * Null Padding
 */
-class BOTAN_DLL Null_Padding : public BlockCipherModePaddingMethod
+class BOTAN_DLL Null_Padding final : public BlockCipherModePaddingMethod
    {
    public:
       void add_padding(secure_vector<byte>&, size_t, size_t) const override {}
@@ -6213,7 +6242,7 @@ class BOTAN_DLL CBC_Encryption : public CBC_Mode
 /**
 * CBC Encryption with ciphertext stealing (CBC-CS3 variant)
 */
-class BOTAN_DLL CTS_Encryption : public CBC_Encryption
+class BOTAN_DLL CTS_Encryption final : public CBC_Encryption
    {
    public:
       CTS_Encryption(BlockCipher* cipher) : CBC_Encryption(cipher, nullptr) {}
@@ -6250,7 +6279,7 @@ class BOTAN_DLL CBC_Decryption : public CBC_Mode
 /**
 * CBC Decryption with ciphertext stealing (CBC-CS3 variant)
 */
-class BOTAN_DLL CTS_Decryption : public CBC_Decryption
+class BOTAN_DLL CTS_Decryption final : public CBC_Decryption
    {
    public:
       CTS_Decryption(BlockCipher* cipher) : CBC_Decryption(cipher, nullptr) {}
@@ -6393,16 +6422,16 @@ class Compression_Stream
 class BOTAN_DLL Stream_Compression : public Compressor_Transform
    {
    public:
-      void update(secure_vector<byte>& buf, size_t offset = 0) override;
+      void update(secure_vector<byte>& buf, size_t offset = 0) final override;
 
-      void flush(secure_vector<byte>& buf, size_t offset = 0) override;
+      void flush(secure_vector<byte>& buf, size_t offset = 0) final override;
 
-      void finish(secure_vector<byte>& buf, size_t offset = 0) override;
+      void finish(secure_vector<byte>& buf, size_t offset = 0) final override;
 
-      void clear() override;
+      void clear() final override;
 
    private:
-      secure_vector<byte> start_raw(const byte[], size_t) override;
+      secure_vector<byte> start_raw(const byte[], size_t) final override;
 
       void process(secure_vector<byte>& buf, size_t offset, u32bit flags);
 
@@ -6415,14 +6444,14 @@ class BOTAN_DLL Stream_Compression : public Compressor_Transform
 class BOTAN_DLL Stream_Decompression : public Compressor_Transform
    {
    public:
-      void update(secure_vector<byte>& buf, size_t offset = 0) override;
+      void update(secure_vector<byte>& buf, size_t offset = 0) final override;
 
-      void finish(secure_vector<byte>& buf, size_t offset = 0) override;
+      void finish(secure_vector<byte>& buf, size_t offset = 0) final override;
 
-      void clear() override;
+      void clear() final override;
 
    private:
-      secure_vector<byte> start_raw(const byte[], size_t) override;
+      secure_vector<byte> start_raw(const byte[], size_t) final override;
 
       void process(secure_vector<byte>& buf, size_t offset, u32bit flags);
 
@@ -6600,7 +6629,7 @@ namespace Botan {
 /**
 * CTR-BE (Counter mode, big-endian)
 */
-class BOTAN_DLL CTR_BE : public StreamCipher
+class BOTAN_DLL CTR_BE final : public StreamCipher
    {
    public:
       void cipher(const byte in[], byte out[], size_t length) override;
@@ -6662,7 +6691,7 @@ class BOTAN_DLL DataSink : public Filter
 class BOTAN_DLL DataSink_Stream : public DataSink
    {
    public:
-      std::string name() const override { return identifier; }
+      std::string name() const override { return m_identifier; }
 
       void write(const byte[], size_t) override;
 
@@ -6685,10 +6714,10 @@ class BOTAN_DLL DataSink_Stream : public DataSink
 
       ~DataSink_Stream();
    private:
-      const std::string identifier;
+      const std::string m_identifier;
 
-      std::ostream* sink_p;
-      std::ostream& sink;
+      std::ostream* m_sink_p;
+      std::ostream& m_sink;
    };
 
 }
@@ -6860,13 +6889,13 @@ class BOTAN_DLL DER_Encoder
             void add_bytes(const byte[], size_t);
             DER_Sequence(ASN1_Tag, ASN1_Tag);
          private:
-            ASN1_Tag type_tag, class_tag;
-            secure_vector<byte> contents;
-            std::vector< secure_vector<byte> > set_contents;
+            ASN1_Tag m_type_tag, m_class_tag;
+            secure_vector<byte> m_contents;
+            std::vector< secure_vector<byte> > m_set_contents;
          };
 
-      secure_vector<byte> contents;
-      std::vector<DER_Sequence> subsequences;
+      secure_vector<byte> m_contents;
+      std::vector<DER_Sequence> m_subsequences;
    };
 
 }
@@ -7039,8 +7068,8 @@ class BOTAN_DLL DL_Group
 
       void init_check() const;
       void initialize(const BigInt&, const BigInt&, const BigInt&);
-      bool initialized;
-      BigInt p, q, g;
+      bool m_initialized;
+      BigInt m_p, m_q, m_g;
    };
 
 }
@@ -7209,7 +7238,7 @@ namespace Botan {
 /**
 * Class used to accumulate the poll results of EntropySources
 */
-class BOTAN_DLL Entropy_Accumulator
+class BOTAN_DLL Entropy_Accumulator final
    {
    public:
       /**
@@ -7224,8 +7253,6 @@ class BOTAN_DLL Entropy_Accumulator
       */
       Entropy_Accumulator(std::function<bool (const byte[], size_t, double)> accum) :
          m_accum_fn(accum) {}
-
-      virtual ~Entropy_Accumulator() {}
 
       /**
       * @return if our polling goal has been achieved
@@ -7294,7 +7321,7 @@ class BOTAN_DLL Entropy_Source
       virtual ~Entropy_Source() {}
    };
 
-class BOTAN_DLL Entropy_Sources
+class BOTAN_DLL Entropy_Sources final
    {
    public:
       static Entropy_Sources& global_sources();
@@ -7327,7 +7354,7 @@ namespace Botan {
 * collected for retrieval.  If you're familiar with the Unix shell
 * environment, this design will sound quite familiar.
 */
-class BOTAN_DLL Pipe : public DataSource
+class BOTAN_DLL Pipe final : public DataSource
    {
    public:
       /**
@@ -7535,7 +7562,7 @@ class BOTAN_DLL Pipe : public DataSource
       /**
       * @return currently set default message
       */
-      size_t default_msg() const { return default_read; }
+      size_t default_msg() const { return m_default_read; }
 
       /**
       * Set the default message
@@ -7614,10 +7641,10 @@ class BOTAN_DLL Pipe : public DataSource
 
       message_id get_message_no(const std::string&, message_id) const;
 
-      Filter* pipe;
-      class Output_Buffers* outputs;
-      message_id default_read;
-      bool inside_msg;
+      Filter* m_pipe;
+      class Output_Buffers* m_outputs;
+      message_id m_default_read;
+      bool m_inside_msg;
    };
 
 /**
@@ -7746,7 +7773,7 @@ namespace Botan {
 * Converts arbitrary binary data to hex strings, optionally with
 * newlines inserted
 */
-class BOTAN_DLL Hex_Encoder : public Filter
+class BOTAN_DLL Hex_Encoder final : public Filter
    {
    public:
       /**
@@ -7777,16 +7804,16 @@ class BOTAN_DLL Hex_Encoder : public Filter
    private:
       void encode_and_send(const byte[], size_t);
 
-      const Case casing;
-      const size_t line_length;
-      std::vector<byte> in, out;
-      size_t position, counter;
+      const Case m_casing;
+      const size_t m_line_length;
+      std::vector<byte> m_in, m_out;
+      size_t m_position, m_counter;
    };
 
 /**
 * Converts hex strings to bytes
 */
-class BOTAN_DLL Hex_Decoder : public Filter
+class BOTAN_DLL Hex_Decoder final : public Filter
    {
    public:
       std::string name() const override { return "Hex_Decoder"; }
@@ -7801,9 +7828,9 @@ class BOTAN_DLL Hex_Decoder : public Filter
       */
       Hex_Decoder(Decoder_Checking checking = NONE);
    private:
-      const Decoder_Checking checking;
-      std::vector<byte> in, out;
-      size_t position;
+      const Decoder_Checking m_checking;
+      std::vector<byte> m_in, m_out;
+      size_t m_position;
    };
 
 }
@@ -8023,7 +8050,7 @@ class BOTAN_DLL GCM_Mode : public AEAD_Mode
    protected:
       GCM_Mode(BlockCipher* cipher, size_t tag_size);
 
-      const size_t BS = 16;
+      const size_t m_BS = 16;
 
       const size_t m_tag_size;
       const std::string m_cipher_name;
@@ -8039,7 +8066,7 @@ class BOTAN_DLL GCM_Mode : public AEAD_Mode
 /**
 * GCM Encryption
 */
-class BOTAN_DLL GCM_Encryption : public GCM_Mode
+class BOTAN_DLL GCM_Encryption final : public GCM_Mode
    {
    public:
       /**
@@ -8062,7 +8089,7 @@ class BOTAN_DLL GCM_Encryption : public GCM_Mode
 /**
 * GCM Decryption
 */
-class BOTAN_DLL GCM_Decryption : public GCM_Mode
+class BOTAN_DLL GCM_Decryption final : public GCM_Mode
    {
    public:
       /**
@@ -8272,7 +8299,7 @@ namespace Botan {
 /**
 * HMAC
 */
-class BOTAN_DLL HMAC : public MessageAuthenticationCode
+class BOTAN_DLL HMAC final : public MessageAuthenticationCode
    {
    public:
       void clear() override;
@@ -8567,7 +8594,7 @@ class BOTAN_DLL IF_Scheme_PublicKey : public virtual Public_Key
                           const secure_vector<byte>& key_bits);
 
       IF_Scheme_PublicKey(const BigInt& n, const BigInt& e) :
-         n(n), e(e) {}
+         m_n(n), m_e(e) {}
 
       bool check_key(RandomNumberGenerator& rng, bool) const override;
 
@@ -8578,21 +8605,21 @@ class BOTAN_DLL IF_Scheme_PublicKey : public virtual Public_Key
       /**
       * @return public modulus
       */
-      const BigInt& get_n() const { return n; }
+      const BigInt& get_n() const { return m_n; }
 
       /**
       * @return public exponent
       */
-      const BigInt& get_e() const { return e; }
+      const BigInt& get_e() const { return m_e; }
 
-      size_t max_input_bits() const override { return (n.bits() - 1); }
+      size_t max_input_bits() const override { return (m_n.bits() - 1); }
 
       size_t estimated_strength() const override;
 
    protected:
       IF_Scheme_PublicKey() {}
 
-      BigInt n, e;
+      BigInt m_n, m_e;
    };
 
 /**
@@ -8619,30 +8646,30 @@ class BOTAN_DLL IF_Scheme_PrivateKey : public virtual IF_Scheme_PublicKey,
       * Get the first prime p.
       * @return prime p
       */
-      const BigInt& get_p() const { return p; }
+      const BigInt& get_p() const { return m_p; }
 
       /**
       * Get the second prime q.
       * @return prime q
       */
-      const BigInt& get_q() const { return q; }
+      const BigInt& get_q() const { return m_q; }
 
       /**
       * Get d with exp * d = 1 mod (p - 1, q - 1).
       * @return d
       */
-      const BigInt& get_d() const { return d; }
+      const BigInt& get_d() const { return m_d; }
 
-      const BigInt& get_c() const { return c; }
-      const BigInt& get_d1() const { return d1; }
-      const BigInt& get_d2() const { return d2; }
+      const BigInt& get_c() const { return m_c; }
+      const BigInt& get_d1() const { return m_d1; }
+      const BigInt& get_d2() const { return m_d2; }
 
       secure_vector<byte> pkcs8_private_key() const override;
 
    protected:
       IF_Scheme_PrivateKey() {}
 
-      BigInt d, p, q, d1, d2, c;
+      BigInt m_d, m_p, m_q, m_d1, m_d2, m_c;
    };
 
 }
@@ -8853,7 +8880,7 @@ class BOTAN_DLL MDx_HashFunction : public HashFunction
                        bool big_bit_endian,
                        size_t counter_size = 8);
 
-      size_t hash_block_size() const override { return buffer.size(); }
+      size_t hash_block_size() const override { return m_buffer.size(); }
    protected:
       void add_data(const byte input[], size_t length) override;
       void final_result(byte output[]) override;
@@ -8879,9 +8906,9 @@ class BOTAN_DLL MDx_HashFunction : public HashFunction
       */
       virtual void write_count(byte out[]);
    private:
-      secure_vector<byte> buffer;
-      u64bit count;
-      size_t position;
+      secure_vector<byte> m_buffer;
+      u64bit m_count;
+      size_t m_position;
 
       const bool BIG_BYTE_ENDIAN, BIG_BIT_ENDIAN;
       const size_t COUNT_SIZE;
@@ -9016,7 +9043,7 @@ namespace Botan {
 /**
 * OAEP (called EME1 in IEEE 1363 and in earlier versions of the library)
 */
-class BOTAN_DLL OAEP : public EME
+class BOTAN_DLL OAEP final : public EME
    {
    public:
       size_t maximum_input_size(size_t) const override;
@@ -9302,17 +9329,17 @@ BOTAN_DLL size_t pbkdf2(MessageAuthenticationCode& prf,
 /**
 * PKCS #5 PBKDF2
 */
-class BOTAN_DLL PKCS5_PBKDF2 : public PBKDF
+class BOTAN_DLL PKCS5_PBKDF2 final : public PBKDF
    {
    public:
       std::string name() const override
          {
-         return "PBKDF2(" + mac->name() + ")";
+         return "PBKDF2(" + m_mac->name() + ")";
          }
 
       PBKDF* clone() const override
          {
-         return new PKCS5_PBKDF2(mac->clone());
+         return new PKCS5_PBKDF2(m_mac->clone());
          }
 
       size_t pbkdf(byte output_buf[], size_t output_len,
@@ -9325,11 +9352,11 @@ class BOTAN_DLL PKCS5_PBKDF2 : public PBKDF
       * Create a PKCS #5 instance using the specified message auth code
       * @param mac_fn the MAC object to use as PRF
       */
-      PKCS5_PBKDF2(MessageAuthenticationCode* mac_fn) : mac(mac_fn) {}
+      PKCS5_PBKDF2(MessageAuthenticationCode* mac_fn) : m_mac(mac_fn) {}
 
       static PKCS5_PBKDF2* make(const Spec& spec);
    private:
-      std::unique_ptr<MessageAuthenticationCode> mac;
+      std::unique_ptr<MessageAuthenticationCode> m_mac;
    };
 
 }
@@ -9748,7 +9775,7 @@ namespace Botan {
 /**
 * PSSR (called EMSA4 in IEEE 1363 and in old versions of the library)
 */
-class BOTAN_DLL PSSR : public EMSA
+class BOTAN_DLL PSSR final : public EMSA
    {
    public:
 
@@ -9777,8 +9804,8 @@ class BOTAN_DLL PSSR : public EMSA
                   const secure_vector<byte>& raw,
                   size_t key_bits) override;
 
-      size_t SALT_SIZE;
-      std::unique_ptr<HashFunction> hash;
+      size_t m_SALT_SIZE;
+      std::unique_ptr<HashFunction> m_hash;
    };
 
 }
@@ -10439,7 +10466,7 @@ class BOTAN_DLL SHA_160 : public MDx_HashFunction
 
       void clear() override;
 
-      SHA_160() : MDx_HashFunction(64, true, true), digest(5), W(80)
+      SHA_160() : MDx_HashFunction(64, true, true), m_digest(5), m_W(80)
          {
          clear();
          }
@@ -10451,7 +10478,7 @@ class BOTAN_DLL SHA_160 : public MDx_HashFunction
       * @param W_size how big to make W
       */
       SHA_160(size_t W_size) :
-         MDx_HashFunction(64, true, true), digest(5), W(W_size)
+         MDx_HashFunction(64, true, true), m_digest(5), m_W(W_size)
          {
          clear();
          }
@@ -10462,12 +10489,12 @@ class BOTAN_DLL SHA_160 : public MDx_HashFunction
       /**
       * The digest value, exposed for use by subclasses (asm, SSE2)
       */
-      secure_vector<u32bit> digest;
+      secure_vector<u32bit> m_digest;
 
       /**
       * The message buffer, exposed for use by subclasses (asm, SSE2)
       */
-      secure_vector<u32bit> W;
+      secure_vector<u32bit> m_W;
    };
 
 }
@@ -10478,7 +10505,7 @@ namespace Botan {
 /**
 * SHA-224
 */
-class BOTAN_DLL SHA_224 : public MDx_HashFunction
+class BOTAN_DLL SHA_224 final : public MDx_HashFunction
    {
    public:
       std::string name() const override { return "SHA-224"; }
@@ -10487,19 +10514,19 @@ class BOTAN_DLL SHA_224 : public MDx_HashFunction
 
       void clear() override;
 
-      SHA_224() : MDx_HashFunction(64, true, true), digest(8)
+      SHA_224() : MDx_HashFunction(64, true, true), m_digest(8)
          { clear(); }
    private:
       void compress_n(const byte[], size_t blocks) override;
       void copy_out(byte[]) override;
 
-      secure_vector<u32bit> digest;
+      secure_vector<u32bit> m_digest;
    };
 
 /**
 * SHA-256
 */
-class BOTAN_DLL SHA_256 : public MDx_HashFunction
+class BOTAN_DLL SHA_256 final : public MDx_HashFunction
    {
    public:
       std::string name() const override { return "SHA-256"; }
@@ -10508,13 +10535,13 @@ class BOTAN_DLL SHA_256 : public MDx_HashFunction
 
       void clear() override;
 
-      SHA_256() : MDx_HashFunction(64, true, true), digest(8)
+      SHA_256() : MDx_HashFunction(64, true, true), m_digest(8)
          { clear(); }
    private:
       void compress_n(const byte[], size_t blocks) override;
       void copy_out(byte[]) override;
 
-      secure_vector<u32bit> digest;
+      secure_vector<u32bit> m_digest;
    };
 
 }
@@ -10525,7 +10552,7 @@ namespace Botan {
 /**
 * SHA-384
 */
-class BOTAN_DLL SHA_384 : public MDx_HashFunction
+class BOTAN_DLL SHA_384 final : public MDx_HashFunction
    {
    public:
       std::string name() const override { return "SHA-384"; }
@@ -10546,7 +10573,7 @@ class BOTAN_DLL SHA_384 : public MDx_HashFunction
 /**
 * SHA-512
 */
-class BOTAN_DLL SHA_512 : public MDx_HashFunction
+class BOTAN_DLL SHA_512 final : public MDx_HashFunction
    {
    public:
       std::string name() const override { return "SHA-512"; }
@@ -10567,7 +10594,7 @@ class BOTAN_DLL SHA_512 : public MDx_HashFunction
 /**
 * SHA-512/256
 */
-class BOTAN_DLL SHA_512_256 : public MDx_HashFunction
+class BOTAN_DLL SHA_512_256 final : public MDx_HashFunction
    {
    public:
       std::string name() const override { return "SHA-512-256"; }
@@ -10696,12 +10723,17 @@ class BOTAN_DLL SRP6_Authenticator_File
                    const std::string& group_id) :
             v(v), salt(salt), group_id(group_id) {}
 
+         // public member variable:
          BigInt v;
+
+         // public member variable:
          std::vector<byte> salt;
+
+         // public member variable:
          std::string group_id;
          };
 
-      std::map<std::string, SRP6_Data> entries;
+      std::map<std::string, SRP6_Data> m_entries;
    };
 
 }
@@ -10897,7 +10929,7 @@ namespace Botan {
 /**
 * Distinguished Name
 */
-class BOTAN_DLL X509_DN : public ASN1_Object
+class BOTAN_DLL X509_DN final : public ASN1_Object
    {
    public:
       void encode_into(class DER_Encoder&) const override;
@@ -10919,8 +10951,8 @@ class BOTAN_DLL X509_DN : public ASN1_Object
       X509_DN(const std::multimap<OID, std::string>&);
       X509_DN(const std::multimap<std::string, std::string>&);
    private:
-      std::multimap<OID, ASN1_String> dn_info;
-      std::vector<byte> dn_bits;
+      std::multimap<OID, ASN1_String> m_dn_info;
+      std::vector<byte> m_dn_bits;
    };
 
 bool BOTAN_DLL operator==(const X509_DN&, const X509_DN&);
@@ -10937,7 +10969,7 @@ namespace Botan {
 /**
 * Zlib Compression
 */
-class BOTAN_DLL Zlib_Compression : public Stream_Compression
+class BOTAN_DLL Zlib_Compression final : public Stream_Compression
    {
    public:
       /**
@@ -10959,7 +10991,7 @@ class BOTAN_DLL Zlib_Compression : public Stream_Compression
 /**
 * Zlib Decompression
 */
-class BOTAN_DLL Zlib_Decompression : public Stream_Decompression
+class BOTAN_DLL Zlib_Decompression final : public Stream_Decompression
    {
    public:
       std::string name() const override { return "Zlib_Decompression"; }
@@ -10971,7 +11003,7 @@ class BOTAN_DLL Zlib_Decompression : public Stream_Decompression
 /**
 * Deflate Compression
 */
-class BOTAN_DLL Deflate_Compression : public Stream_Compression
+class BOTAN_DLL Deflate_Compression final : public Stream_Compression
    {
    public:
       /**
@@ -10992,7 +11024,7 @@ class BOTAN_DLL Deflate_Compression : public Stream_Compression
 /**
 * Deflate Decompression
 */
-class BOTAN_DLL Deflate_Decompression : public Stream_Decompression
+class BOTAN_DLL Deflate_Decompression final : public Stream_Decompression
    {
    public:
       std::string name() const override { return "Deflate_Decompression"; }
@@ -11004,7 +11036,7 @@ class BOTAN_DLL Deflate_Decompression : public Stream_Decompression
 /**
 * Gzip Compression
 */
-class BOTAN_DLL Gzip_Compression : public Stream_Compression
+class BOTAN_DLL Gzip_Compression final : public Stream_Compression
    {
    public:
       /**
@@ -11027,7 +11059,7 @@ class BOTAN_DLL Gzip_Compression : public Stream_Compression
 /**
 * Gzip Decompression
 */
-class BOTAN_DLL Gzip_Decompression : public Stream_Decompression
+class BOTAN_DLL Gzip_Decompression final : public Stream_Decompression
    {
    public:
       std::string name() const override { return "Gzip_Decompression"; }

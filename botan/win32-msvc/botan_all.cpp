@@ -1,5 +1,5 @@
 /*
-* Botan 1.11.26 Amalgamation
+* Botan 1.11.28 Amalgamation
 * (C) 1999-2013,2014,2015 Jack Lloyd and others
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -488,71 +488,71 @@ void aes_key_schedule(const byte key[], size_t length,
 
 void AES_128::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   aes_encrypt_n(in, out, blocks, EK, ME);
+   aes_encrypt_n(in, out, blocks, m_EK, m_ME);
    }
 
 void AES_128::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   aes_decrypt_n(in, out, blocks, DK, MD);
+   aes_decrypt_n(in, out, blocks, m_DK, m_MD);
    }
 
 void AES_128::key_schedule(const byte key[], size_t length)
    {
-   aes_key_schedule(key, length, EK, DK, ME, MD);
+   aes_key_schedule(key, length, m_EK, m_DK, m_ME, m_MD);
    }
 
 void AES_128::clear()
    {
-   zap(EK);
-   zap(DK);
-   zap(ME);
-   zap(MD);
+   zap(m_EK);
+   zap(m_DK);
+   zap(m_ME);
+   zap(m_MD);
    }
 
 void AES_192::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   aes_encrypt_n(in, out, blocks, EK, ME);
+   aes_encrypt_n(in, out, blocks, m_EK, m_ME);
    }
 
 void AES_192::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   aes_decrypt_n(in, out, blocks, DK, MD);
+   aes_decrypt_n(in, out, blocks, m_DK, m_MD);
    }
 
 void AES_192::key_schedule(const byte key[], size_t length)
    {
-   aes_key_schedule(key, length, EK, DK, ME, MD);
+   aes_key_schedule(key, length, m_EK, m_DK, m_ME, m_MD);
    }
 
 void AES_192::clear()
    {
-   zap(EK);
-   zap(DK);
-   zap(ME);
-   zap(MD);
+   zap(m_EK);
+   zap(m_DK);
+   zap(m_ME);
+   zap(m_MD);
    }
 
 void AES_256::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   aes_encrypt_n(in, out, blocks, EK, ME);
+   aes_encrypt_n(in, out, blocks, m_EK, m_ME);
    }
 
 void AES_256::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   aes_decrypt_n(in, out, blocks, DK, MD);
+   aes_decrypt_n(in, out, blocks, m_DK, m_MD);
    }
 
 void AES_256::key_schedule(const byte key[], size_t length)
    {
-   aes_key_schedule(key, length, EK, DK, ME, MD);
+   aes_key_schedule(key, length, m_EK, m_DK, m_ME, m_MD);
    }
 
 void AES_256::clear()
    {
-   zap(EK);
-   zap(DK);
-   zap(ME);
-   zap(MD);
+   zap(m_EK);
+   zap(m_DK);
+   zap(m_ME);
+   zap(m_MD);
    }
 
 }
@@ -720,15 +720,15 @@ AlternativeName::AlternativeName(const std::string& email_addr,
 void AlternativeName::add_attribute(const std::string& type,
                                     const std::string& str)
    {
-   if(type == "" || str == "")
+   if(type.empty() || str.empty())
       return;
 
-   auto range = alt_info.equal_range(type);
+   auto range = m_alt_info.equal_range(type);
    for(auto j = range.first; j != range.second; ++j)
       if(j->second == str)
          return;
 
-   multimap_insert(alt_info, type, str);
+   multimap_insert(m_alt_info, type, str);
    }
 
 /*
@@ -737,9 +737,9 @@ void AlternativeName::add_attribute(const std::string& type,
 void AlternativeName::add_othername(const OID& oid, const std::string& value,
                                     ASN1_Tag type)
    {
-   if(value == "")
+   if(value.empty())
       return;
-   multimap_insert(othernames, oid, ASN1_String(value, type));
+   multimap_insert(m_othernames, oid, ASN1_String(value, type));
    }
 
 /*
@@ -747,7 +747,7 @@ void AlternativeName::add_othername(const OID& oid, const std::string& value,
 */
 std::multimap<std::string, std::string> AlternativeName::get_attributes() const
    {
-   return alt_info;
+   return m_alt_info;
    }
 
 /*
@@ -755,7 +755,7 @@ std::multimap<std::string, std::string> AlternativeName::get_attributes() const
 */
 std::multimap<OID, ASN1_String> AlternativeName::get_othernames() const
    {
-   return othernames;
+   return m_othernames;
    }
 
 /*
@@ -765,10 +765,10 @@ std::multimap<std::string, std::string> AlternativeName::contents() const
    {
    std::multimap<std::string, std::string> names;
 
-   for(auto i = alt_info.begin(); i != alt_info.end(); ++i)
+   for(auto i = m_alt_info.begin(); i != m_alt_info.end(); ++i)
       multimap_insert(names, i->first, i->second);
 
-   for(auto i = othernames.begin(); i != othernames.end(); ++i)
+   for(auto i = m_othernames.begin(); i != m_othernames.end(); ++i)
       multimap_insert(names, OIDS::lookup(i->first), i->second.value());
 
    return names;
@@ -779,7 +779,7 @@ std::multimap<std::string, std::string> AlternativeName::contents() const
 */
 bool AlternativeName::has_items() const
    {
-   return (alt_info.size() > 0 || othernames.size() > 0);
+   return (m_alt_info.size() > 0 || m_othernames.size() > 0);
    }
 
 namespace {
@@ -819,12 +819,12 @@ void AlternativeName::encode_into(DER_Encoder& der) const
    {
    der.start_cons(SEQUENCE);
 
-   encode_entries(der, alt_info, "RFC822", ASN1_Tag(1));
-   encode_entries(der, alt_info, "DNS", ASN1_Tag(2));
-   encode_entries(der, alt_info, "URI", ASN1_Tag(6));
-   encode_entries(der, alt_info, "IP", ASN1_Tag(7));
+   encode_entries(der, m_alt_info, "RFC822", ASN1_Tag(1));
+   encode_entries(der, m_alt_info, "DNS", ASN1_Tag(2));
+   encode_entries(der, m_alt_info, "URI", ASN1_Tag(6));
+   encode_entries(der, m_alt_info, "IP", ASN1_Tag(7));
 
-   for(auto i = othernames.begin(); i != othernames.end(); ++i)
+   for(auto i = m_othernames.begin(); i != m_othernames.end(); ++i)
       {
       der.start_explicit(0)
          .encode(i->first)
@@ -1037,20 +1037,20 @@ namespace Botan {
 */
 OID::OID(const std::string& oid_str)
    {
-   if(oid_str != "")
+   if(!oid_str.empty())
       {
       try
          {
-         id = parse_asn1_oid(oid_str);
+         m_id = parse_asn1_oid(oid_str);
          }
       catch(...)
          {
          throw Invalid_OID(oid_str);
          }
 
-      if(id.size() < 2 || id[0] > 2)
+      if(m_id.size() < 2 || m_id[0] > 2)
          throw Invalid_OID(oid_str);
-      if((id[0] == 0 || id[0] == 1) && id[1] > 39)
+      if((m_id[0] == 0 || m_id[0] == 1) && m_id[1] > 39)
          throw Invalid_OID(oid_str);
       }
    }
@@ -1060,7 +1060,7 @@ OID::OID(const std::string& oid_str)
 */
 void OID::clear()
    {
-   id.clear();
+   m_id.clear();
    }
 
 /*
@@ -1069,10 +1069,10 @@ void OID::clear()
 std::string OID::as_string() const
    {
    std::string oid_str;
-   for(size_t i = 0; i != id.size(); ++i)
+   for(size_t i = 0; i != m_id.size(); ++i)
       {
-      oid_str += std::to_string(id[i]);
-      if(i != id.size() - 1)
+      oid_str += std::to_string(m_id[i]);
+      if(i != m_id.size() - 1)
          oid_str += ".";
       }
    return oid_str;
@@ -1083,10 +1083,10 @@ std::string OID::as_string() const
 */
 bool OID::operator==(const OID& oid) const
    {
-   if(id.size() != oid.id.size())
+   if(m_id.size() != oid.m_id.size())
       return false;
-   for(size_t i = 0; i != id.size(); ++i)
-      if(id[i] != oid.id[i])
+   for(size_t i = 0; i != m_id.size(); ++i)
+      if(m_id[i] != oid.m_id[i])
          return false;
    return true;
    }
@@ -1096,7 +1096,7 @@ bool OID::operator==(const OID& oid) const
 */
 OID& OID::operator+=(u32bit component)
    {
-   id.push_back(component);
+   m_id.push_back(component);
    return (*this);
    }
 
@@ -1145,24 +1145,24 @@ bool operator<(const OID& a, const OID& b)
 */
 void OID::encode_into(DER_Encoder& der) const
    {
-   if(id.size() < 2)
+   if(m_id.size() < 2)
       throw Invalid_Argument("OID::encode_into: OID is invalid");
 
    std::vector<byte> encoding;
-   encoding.push_back(40 * id[0] + id[1]);
+   encoding.push_back(40 * m_id[0] + m_id[1]);
 
-   for(size_t i = 2; i != id.size(); ++i)
+   for(size_t i = 2; i != m_id.size(); ++i)
       {
-      if(id[i] == 0)
+      if(m_id[i] == 0)
          encoding.push_back(0);
       else
          {
-         size_t blocks = high_bit(id[i]) + 6;
+         size_t blocks = high_bit(m_id[i]) + 6;
          blocks = (blocks - (blocks % 7)) / 7;
 
          for(size_t j = 0; j != blocks - 1; ++j)
-            encoding.push_back(0x80 | ((id[i] >> 7*(blocks-j-1)) & 0x7F));
-         encoding.push_back(id[i] & 0x7F);
+            encoding.push_back(0x80 | ((m_id[i] >> 7*(blocks-j-1)) & 0x7F));
+         encoding.push_back(m_id[i] & 0x7F);
          }
       }
    der.add_object(OBJECT_ID, UNIVERSAL, encoding);
@@ -1182,8 +1182,8 @@ void OID::decode_from(BER_Decoder& decoder)
 
 
    clear();
-   id.push_back(obj.value[0] / 40);
-   id.push_back(obj.value[0] % 40);
+   m_id.push_back(obj.value[0] / 40);
+   m_id.push_back(obj.value[0] % 40);
 
    size_t i = 0;
    while(i != obj.value.size() - 1)
@@ -1201,7 +1201,7 @@ void OID::decode_from(BER_Decoder& decoder)
          if(!(obj.value[i] & 0x80))
             break;
          }
-      id.push_back(component);
+      m_id.push_back(component);
       }
    }
 
@@ -1265,22 +1265,22 @@ ASN1_Tag choose_encoding(const std::string& str,
 /*
 * Create an ASN1_String
 */
-ASN1_String::ASN1_String(const std::string& str, ASN1_Tag t) : tag(t)
+ASN1_String::ASN1_String(const std::string& str, ASN1_Tag t) : m_tag(t)
    {
-   iso_8859_str = Charset::transcode(str, LOCAL_CHARSET, LATIN1_CHARSET);
+   m_iso_8859_str = Charset::transcode(str, LOCAL_CHARSET, LATIN1_CHARSET);
 
-   if(tag == DIRECTORY_STRING)
-      tag = choose_encoding(iso_8859_str, "latin1");
+   if(m_tag == DIRECTORY_STRING)
+      m_tag = choose_encoding(m_iso_8859_str, "latin1");
 
-   if(tag != NUMERIC_STRING &&
-      tag != PRINTABLE_STRING &&
-      tag != VISIBLE_STRING &&
-      tag != T61_STRING &&
-      tag != IA5_STRING &&
-      tag != UTF8_STRING &&
-      tag != BMP_STRING)
+   if(m_tag != NUMERIC_STRING &&
+      m_tag != PRINTABLE_STRING &&
+      m_tag != VISIBLE_STRING &&
+      m_tag != T61_STRING &&
+      m_tag != IA5_STRING &&
+      m_tag != UTF8_STRING &&
+      m_tag != BMP_STRING)
       throw Invalid_Argument("ASN1_String: Unknown string type " +
-                             std::to_string(tag));
+                             std::to_string(m_tag));
    }
 
 /*
@@ -1288,8 +1288,8 @@ ASN1_String::ASN1_String(const std::string& str, ASN1_Tag t) : tag(t)
 */
 ASN1_String::ASN1_String(const std::string& str)
    {
-   iso_8859_str = Charset::transcode(str, LOCAL_CHARSET, LATIN1_CHARSET);
-   tag = choose_encoding(iso_8859_str, "latin1");
+   m_iso_8859_str = Charset::transcode(str, LOCAL_CHARSET, LATIN1_CHARSET);
+   m_tag = choose_encoding(m_iso_8859_str, "latin1");
    }
 
 /*
@@ -1297,7 +1297,7 @@ ASN1_String::ASN1_String(const std::string& str)
 */
 std::string ASN1_String::iso_8859() const
    {
-   return iso_8859_str;
+   return m_iso_8859_str;
    }
 
 /*
@@ -1305,7 +1305,7 @@ std::string ASN1_String::iso_8859() const
 */
 std::string ASN1_String::value() const
    {
-   return Charset::transcode(iso_8859_str, LATIN1_CHARSET, LOCAL_CHARSET);
+   return Charset::transcode(m_iso_8859_str, LATIN1_CHARSET, LOCAL_CHARSET);
    }
 
 /*
@@ -1313,7 +1313,7 @@ std::string ASN1_String::value() const
 */
 ASN1_Tag ASN1_String::tagging() const
    {
-   return tag;
+   return m_tag;
    }
 
 /*
@@ -1766,7 +1766,7 @@ void BER_Object::assert_is_a(ASN1_Tag type_tag, ASN1_Tag class_tag)
 */
 bool BER_Decoder::more_items() const
    {
-   if(source->end_of_data() && (pushed.type_tag == NO_OBJECT))
+   if(m_source->end_of_data() && (m_pushed.type_tag == NO_OBJECT))
       return false;
    return true;
    }
@@ -1776,7 +1776,7 @@ bool BER_Decoder::more_items() const
 */
 BER_Decoder& BER_Decoder::verify_end()
    {
-   if(!source->end_of_data() || (pushed.type_tag != NO_OBJECT))
+   if(!m_source->end_of_data() || (m_pushed.type_tag != NO_OBJECT))
       throw Invalid_State("BER_Decoder::verify_end called, but data remains");
    return (*this);
    }
@@ -1788,7 +1788,7 @@ BER_Decoder& BER_Decoder::raw_bytes(secure_vector<byte>& out)
    {
    out.clear();
    byte buf;
-   while(source->read_byte(buf))
+   while(m_source->read_byte(buf))
       out.push_back(buf);
    return (*this);
    }
@@ -1797,7 +1797,7 @@ BER_Decoder& BER_Decoder::raw_bytes(std::vector<byte>& out)
    {
    out.clear();
    byte buf;
-   while(source->read_byte(buf))
+   while(m_source->read_byte(buf))
       out.push_back(buf);
    return (*this);
    }
@@ -1808,7 +1808,7 @@ BER_Decoder& BER_Decoder::raw_bytes(std::vector<byte>& out)
 BER_Decoder& BER_Decoder::discard_remaining()
    {
    byte buf;
-   while(source->read_byte(buf))
+   while(m_source->read_byte(buf))
       ;
    return (*this);
    }
@@ -1820,23 +1820,23 @@ BER_Object BER_Decoder::get_next_object()
    {
    BER_Object next;
 
-   if(pushed.type_tag != NO_OBJECT)
+   if(m_pushed.type_tag != NO_OBJECT)
       {
-      next = pushed;
-      pushed.class_tag = pushed.type_tag = NO_OBJECT;
+      next = m_pushed;
+      m_pushed.class_tag = m_pushed.type_tag = NO_OBJECT;
       return next;
       }
 
-   decode_tag(source, next.type_tag, next.class_tag);
+   decode_tag(m_source, next.type_tag, next.class_tag);
    if(next.type_tag == NO_OBJECT)
       return next;
 
-   const size_t length = decode_length(source);
-   if(!source->check_available(length))
+   const size_t length = decode_length(m_source);
+   if(!m_source->check_available(length))
       throw BER_Decoding_Error("Value truncated");
 
    next.value.resize(length);
-   if(source->read(next.value.data(), length) != length)
+   if(m_source->read(next.value.data(), length) != length)
       throw BER_Decoding_Error("Value truncated");
 
    if(next.type_tag == EOC && next.class_tag == UNIVERSAL)
@@ -1856,9 +1856,9 @@ BER_Decoder& BER_Decoder::get_next(BER_Object& ber)
 */
 void BER_Decoder::push_back(const BER_Object& obj)
    {
-   if(pushed.type_tag != NO_OBJECT)
+   if(m_pushed.type_tag != NO_OBJECT)
       throw Invalid_State("BER_Decoder: Only one push back is allowed");
-   pushed = obj;
+   m_pushed = obj;
    }
 
 /*
@@ -1871,7 +1871,7 @@ BER_Decoder BER_Decoder::start_cons(ASN1_Tag type_tag,
    obj.assert_is_a(type_tag, ASN1_Tag(class_tag | CONSTRUCTED));
 
    BER_Decoder result(obj.value.data(), obj.value.size());
-   result.parent = this;
+   result.m_parent = this;
    return result;
    }
 
@@ -1880,11 +1880,11 @@ BER_Decoder BER_Decoder::start_cons(ASN1_Tag type_tag,
 */
 BER_Decoder& BER_Decoder::end_cons()
    {
-   if(!parent)
+   if(!m_parent)
       throw Invalid_State("BER_Decoder::end_cons called with NULL parent");
-   if(!source->end_of_data())
+   if(!m_source->end_of_data())
       throw Decoding_Error("BER_Decoder::end_cons called with data left");
-   return (*parent);
+   return (*m_parent);
    }
 
 /*
@@ -1892,10 +1892,10 @@ BER_Decoder& BER_Decoder::end_cons()
 */
 BER_Decoder::BER_Decoder(DataSource& src)
    {
-   source = &src;
-   owns = false;
-   pushed.type_tag = pushed.class_tag = NO_OBJECT;
-   parent = nullptr;
+   m_source = &src;
+   m_owns = false;
+   m_pushed.type_tag = m_pushed.class_tag = NO_OBJECT;
+   m_parent = nullptr;
    }
 
 /*
@@ -1903,10 +1903,10 @@ BER_Decoder::BER_Decoder(DataSource& src)
  */
 BER_Decoder::BER_Decoder(const byte data[], size_t length)
    {
-   source = new DataSource_Memory(data, length);
-   owns = true;
-   pushed.type_tag = pushed.class_tag = NO_OBJECT;
-   parent = nullptr;
+   m_source = new DataSource_Memory(data, length);
+   m_owns = true;
+   m_pushed.type_tag = m_pushed.class_tag = NO_OBJECT;
+   m_parent = nullptr;
    }
 
 /*
@@ -1914,10 +1914,10 @@ BER_Decoder::BER_Decoder(const byte data[], size_t length)
 */
 BER_Decoder::BER_Decoder(const secure_vector<byte>& data)
    {
-   source = new DataSource_Memory(data);
-   owns = true;
-   pushed.type_tag = pushed.class_tag = NO_OBJECT;
-   parent = nullptr;
+   m_source = new DataSource_Memory(data);
+   m_owns = true;
+   m_pushed.type_tag = m_pushed.class_tag = NO_OBJECT;
+   m_parent = nullptr;
    }
 
 /*
@@ -1925,10 +1925,10 @@ BER_Decoder::BER_Decoder(const secure_vector<byte>& data)
 */
 BER_Decoder::BER_Decoder(const std::vector<byte>& data)
    {
-   source = new DataSource_Memory(data.data(), data.size());
-   owns = true;
-   pushed.type_tag = pushed.class_tag = NO_OBJECT;
-   parent = nullptr;
+   m_source = new DataSource_Memory(data.data(), data.size());
+   m_owns = true;
+   m_pushed.type_tag = m_pushed.class_tag = NO_OBJECT;
+   m_parent = nullptr;
    }
 
 /*
@@ -1936,15 +1936,15 @@ BER_Decoder::BER_Decoder(const std::vector<byte>& data)
 */
 BER_Decoder::BER_Decoder(const BER_Decoder& other)
    {
-   source = other.source;
-   owns = false;
-   if(other.owns)
+   m_source = other.m_source;
+   m_owns = false;
+   if(other.m_owns)
       {
-      other.owns = false;
-      owns = true;
+      other.m_owns = false;
+      m_owns = true;
       }
-   pushed.type_tag = pushed.class_tag = NO_OBJECT;
-   parent = other.parent;
+   m_pushed.type_tag = m_pushed.class_tag = NO_OBJECT;
+   m_parent = other.m_parent;
    }
 
 /*
@@ -1952,9 +1952,9 @@ BER_Decoder::BER_Decoder(const BER_Decoder& other)
 */
 BER_Decoder::~BER_Decoder()
    {
-   if(owns)
-      delete source;
-   source = nullptr;
+   if(m_owns)
+      delete m_source;
+   m_source = nullptr;
    }
 
 /*
@@ -2244,21 +2244,21 @@ secure_vector<byte> encode_length(size_t length)
 */
 secure_vector<byte> DER_Encoder::DER_Sequence::get_contents()
    {
-   const ASN1_Tag real_class_tag = ASN1_Tag(class_tag | CONSTRUCTED);
+   const ASN1_Tag real_class_tag = ASN1_Tag(m_class_tag | CONSTRUCTED);
 
-   if(type_tag == SET)
+   if(m_type_tag == SET)
       {
-      std::sort(set_contents.begin(), set_contents.end());
-      for(size_t i = 0; i != set_contents.size(); ++i)
-         contents += set_contents[i];
-      set_contents.clear();
+      std::sort(m_set_contents.begin(), m_set_contents.end());
+      for(size_t i = 0; i != m_set_contents.size(); ++i)
+         m_contents += m_set_contents[i];
+      m_set_contents.clear();
       }
 
    secure_vector<byte> result;
-   result += encode_tag(type_tag, real_class_tag);
-   result += encode_length(contents.size());
-   result += contents;
-   contents.clear();
+   result += encode_tag(m_type_tag, real_class_tag);
+   result += encode_length(m_contents.size());
+   result += m_contents;
+   m_contents.clear();
 
    return result;
    }
@@ -2268,10 +2268,10 @@ secure_vector<byte> DER_Encoder::DER_Sequence::get_contents()
 */
 void DER_Encoder::DER_Sequence::add_bytes(const byte data[], size_t length)
    {
-   if(type_tag == SET)
-      set_contents.push_back(secure_vector<byte>(data, data + length));
+   if(m_type_tag == SET)
+      m_set_contents.push_back(secure_vector<byte>(data, data + length));
    else
-      contents += std::make_pair(data, length);
+      m_contents += std::make_pair(data, length);
    }
 
 /*
@@ -2279,14 +2279,14 @@ void DER_Encoder::DER_Sequence::add_bytes(const byte data[], size_t length)
 */
 ASN1_Tag DER_Encoder::DER_Sequence::tag_of() const
    {
-   return ASN1_Tag(type_tag | class_tag);
+   return ASN1_Tag(m_type_tag | m_class_tag);
    }
 
 /*
 * DER_Sequence Constructor
 */
 DER_Encoder::DER_Sequence::DER_Sequence(ASN1_Tag t1, ASN1_Tag t2) :
-   type_tag(t1), class_tag(t2)
+   m_type_tag(t1), m_class_tag(t2)
    {
    }
 
@@ -2295,11 +2295,11 @@ DER_Encoder::DER_Sequence::DER_Sequence(ASN1_Tag t1, ASN1_Tag t2) :
 */
 secure_vector<byte> DER_Encoder::get_contents()
    {
-   if(subsequences.size() != 0)
+   if(m_subsequences.size() != 0)
       throw Invalid_State("DER_Encoder: Sequence hasn't been marked done");
 
    secure_vector<byte> output;
-   std::swap(output, contents);
+   std::swap(output, m_contents);
    return output;
    }
 
@@ -2309,7 +2309,7 @@ secure_vector<byte> DER_Encoder::get_contents()
 DER_Encoder& DER_Encoder::start_cons(ASN1_Tag type_tag,
                                      ASN1_Tag class_tag)
    {
-   subsequences.push_back(DER_Sequence(type_tag, class_tag));
+   m_subsequences.push_back(DER_Sequence(type_tag, class_tag));
    return (*this);
    }
 
@@ -2318,11 +2318,11 @@ DER_Encoder& DER_Encoder::start_cons(ASN1_Tag type_tag,
 */
 DER_Encoder& DER_Encoder::end_cons()
    {
-   if(subsequences.empty())
+   if(m_subsequences.empty())
       throw Invalid_State("DER_Encoder::end_cons: No such sequence");
 
-   secure_vector<byte> seq = subsequences[subsequences.size()-1].get_contents();
-   subsequences.pop_back();
+   secure_vector<byte> seq = m_subsequences[m_subsequences.size()-1].get_contents();
+   m_subsequences.pop_back();
    raw_bytes(seq);
    return (*this);
    }
@@ -2366,10 +2366,10 @@ DER_Encoder& DER_Encoder::raw_bytes(const std::vector<byte>& val)
 */
 DER_Encoder& DER_Encoder::raw_bytes(const byte bytes[], size_t length)
    {
-   if(subsequences.size())
-      subsequences[subsequences.size()-1].add_bytes(bytes, length);
+   if(m_subsequences.size())
+      m_subsequences[m_subsequences.size()-1].add_bytes(bytes, length);
    else
-      contents += std::make_pair(bytes, length);
+      m_contents += std::make_pair(bytes, length);
 
    return (*this);
    }
@@ -2633,16 +2633,16 @@ void X509_DN::add_attribute(const std::string& type,
 */
 void X509_DN::add_attribute(const OID& oid, const std::string& str)
    {
-   if(str == "")
+   if(str.empty())
       return;
 
-   auto range = dn_info.equal_range(oid);
+   auto range = m_dn_info.equal_range(oid);
    for(auto i = range.first; i != range.second; ++i)
       if(i->second.value() == str)
          return;
 
-   multimap_insert(dn_info, oid, ASN1_String(str));
-   dn_bits.clear();
+   multimap_insert(m_dn_info, oid, ASN1_String(str));
+   m_dn_bits.clear();
    }
 
 /*
@@ -2651,7 +2651,7 @@ void X509_DN::add_attribute(const OID& oid, const std::string& str)
 std::multimap<OID, std::string> X509_DN::get_attributes() const
    {
    std::multimap<OID, std::string> retval;
-   for(auto i = dn_info.begin(); i != dn_info.end(); ++i)
+   for(auto i = m_dn_info.begin(); i != m_dn_info.end(); ++i)
       multimap_insert(retval, i->first, i->second.value());
    return retval;
    }
@@ -2662,7 +2662,7 @@ std::multimap<OID, std::string> X509_DN::get_attributes() const
 std::multimap<std::string, std::string> X509_DN::contents() const
    {
    std::multimap<std::string, std::string> retval;
-   for(auto i = dn_info.begin(); i != dn_info.end(); ++i)
+   for(auto i = m_dn_info.begin(); i != m_dn_info.end(); ++i)
       multimap_insert(retval, OIDS::lookup(i->first), i->second.value());
    return retval;
    }
@@ -2674,7 +2674,7 @@ std::vector<std::string> X509_DN::get_attribute(const std::string& attr) const
    {
    const OID oid = OIDS::lookup(deref_info_field(attr));
 
-   auto range = dn_info.equal_range(oid);
+   auto range = m_dn_info.equal_range(oid);
 
    std::vector<std::string> values;
    for(auto i = range.first; i != range.second; ++i)
@@ -2687,7 +2687,7 @@ std::vector<std::string> X509_DN::get_attribute(const std::string& attr) const
 */
 std::vector<byte> X509_DN::get_bits() const
    {
-   return dn_bits;
+   return m_dn_bits;
    }
 
 /*
@@ -2805,8 +2805,8 @@ void X509_DN::encode_into(DER_Encoder& der) const
 
    der.start_cons(SEQUENCE);
 
-   if(!dn_bits.empty())
-      der.raw_bytes(dn_bits);
+   if(!m_dn_bits.empty())
+      der.raw_bytes(m_dn_bits);
    else
       {
       do_ava(der, dn_info, PRINTABLE_STRING, "X520.Country");
@@ -2853,7 +2853,7 @@ void X509_DN::decode_from(BER_Decoder& source)
          }
       }
 
-   dn_bits = bits;
+   m_dn_bits = bits;
    }
 
 namespace {
@@ -2971,7 +2971,7 @@ deref_aliases(const std::pair<size_t, std::string>& in)
 
 SCAN_Name::SCAN_Name(std::string algo_spec, const std::string& extra) : SCAN_Name(algo_spec)
    {
-   alg_name += extra;
+   m_alg_name += extra;
    }
 
 SCAN_Name::SCAN_Name(const char* algo_spec) : SCAN_Name(std::string(algo_spec))
@@ -2980,7 +2980,7 @@ SCAN_Name::SCAN_Name(const char* algo_spec) : SCAN_Name(std::string(algo_spec))
 
 SCAN_Name::SCAN_Name(std::string algo_spec)
    {
-   orig_algo_spec = algo_spec;
+   m_orig_algo_spec = algo_spec;
 
    std::vector<std::pair<size_t, std::string> > name;
    size_t level = 0;
@@ -3027,7 +3027,7 @@ SCAN_Name::SCAN_Name(std::string algo_spec)
    if(name.size() == 0)
       throw Decoding_Error(decoding_error + "Empty name");
 
-   alg_name = name[0].second;
+   m_alg_name = name[0].second;
 
    bool in_modes = false;
 
@@ -3035,11 +3035,11 @@ SCAN_Name::SCAN_Name(std::string algo_spec)
       {
       if(name[i].first == 0)
          {
-         mode_info.push_back(make_arg(name, i));
+         m_mode_info.push_back(make_arg(name, i));
          in_modes = true;
          }
       else if(name[i].first == 1 && !in_modes)
-         args.push_back(make_arg(name, i));
+         m_args.push_back(make_arg(name, i));
       }
    }
 
@@ -3065,21 +3065,21 @@ std::string SCAN_Name::arg(size_t i) const
    if(i >= arg_count())
       throw Invalid_Argument("SCAN_Name::arg " + std::to_string(i) +
                              " out of range for '" + as_string() + "'");
-   return args[i];
+   return m_args[i];
    }
 
 std::string SCAN_Name::arg(size_t i, const std::string& def_value) const
    {
    if(i >= arg_count())
       return def_value;
-   return args[i];
+   return m_args[i];
    }
 
 size_t SCAN_Name::arg_as_integer(size_t i, size_t def_value) const
    {
    if(i >= arg_count())
       return def_value;
-   return to_u32bit(args[i]);
+   return to_u32bit(m_args[i]);
    }
 
 std::mutex SCAN_Name::g_alias_map_mutex;
@@ -5206,12 +5206,12 @@ namespace Botan {
 * Base64_Encoder Constructor
 */
 Base64_Encoder::Base64_Encoder(bool breaks, size_t length, bool t_n) :
-   line_length(breaks ? length : 0),
-   trailing_newline(t_n && breaks),
-   in(48),
-   out(64),
-   position(0),
-   out_position(0)
+   m_line_length(breaks ? length : 0),
+   m_trailing_newline(t_n && breaks),
+   m_in(48),
+   m_out(64),
+   m_position(0),
+   m_out_position(0)
    {
    }
 
@@ -5223,13 +5223,13 @@ void Base64_Encoder::encode_and_send(const byte input[], size_t length,
    {
    while(length)
       {
-      const size_t proc = std::min(length, in.size());
+      const size_t proc = std::min(length, m_in.size());
 
       size_t consumed = 0;
-      size_t produced = base64_encode(reinterpret_cast<char*>(out.data()), input,
+      size_t produced = base64_encode(reinterpret_cast<char*>(m_out.data()), input,
                                       proc, consumed, final_inputs);
 
-      do_output(out.data(), produced);
+      do_output(m_out.data(), produced);
 
       // FIXME: s/proc/consumed/?
       input += proc;
@@ -5242,22 +5242,22 @@ void Base64_Encoder::encode_and_send(const byte input[], size_t length,
 */
 void Base64_Encoder::do_output(const byte input[], size_t length)
    {
-   if(line_length == 0)
+   if(m_line_length == 0)
       send(input, length);
    else
       {
       size_t remaining = length, offset = 0;
       while(remaining)
          {
-         size_t sent = std::min(line_length - out_position, remaining);
+         size_t sent = std::min(m_line_length - m_out_position, remaining);
          send(input + offset, sent);
-         out_position += sent;
+         m_out_position += sent;
          remaining -= sent;
          offset += sent;
-         if(out_position == line_length)
+         if(m_out_position == m_line_length)
             {
             send('\n');
-            out_position = 0;
+            m_out_position = 0;
             }
          }
       }
@@ -5268,22 +5268,22 @@ void Base64_Encoder::do_output(const byte input[], size_t length)
 */
 void Base64_Encoder::write(const byte input[], size_t length)
    {
-   buffer_insert(in, position, input, length);
-   if(position + length >= in.size())
+   buffer_insert(m_in, m_position, input, length);
+   if(m_position + length >= m_in.size())
       {
-      encode_and_send(in.data(), in.size());
-      input += (in.size() - position);
-      length -= (in.size() - position);
-      while(length >= in.size())
+      encode_and_send(m_in.data(), m_in.size());
+      input += (m_in.size() - m_position);
+      length -= (m_in.size() - m_position);
+      while(length >= m_in.size())
          {
-         encode_and_send(input, in.size());
-         input += in.size();
-         length -= in.size();
+         encode_and_send(input, m_in.size());
+         input += m_in.size();
+         length -= m_in.size();
          }
-      copy_mem(in.data(), input, length);
-      position = 0;
+      copy_mem(m_in.data(), input, length);
+      m_position = 0;
       }
-   position += length;
+   m_position += length;
    }
 
 /*
@@ -5291,19 +5291,19 @@ void Base64_Encoder::write(const byte input[], size_t length)
 */
 void Base64_Encoder::end_msg()
    {
-   encode_and_send(in.data(), position, true);
+   encode_and_send(m_in.data(), m_position, true);
 
-   if(trailing_newline || (out_position && line_length))
+   if(m_trailing_newline || (m_out_position && m_line_length))
       send('\n');
 
-   out_position = position = 0;
+   m_out_position = m_position = 0;
    }
 
 /*
 * Base64_Decoder Constructor
 */
 Base64_Decoder::Base64_Decoder(Decoder_Checking c) :
-   checking(c), in(64), out(48), position(0)
+   m_checking(c), m_in(64), m_out(48), m_position(0)
    {
    }
 
@@ -5314,32 +5314,32 @@ void Base64_Decoder::write(const byte input[], size_t length)
    {
    while(length)
       {
-      size_t to_copy = std::min<size_t>(length, in.size() - position);
+      size_t to_copy = std::min<size_t>(length, m_in.size() - m_position);
       if(to_copy == 0)
          {
-         in.resize(in.size()*2);
-         out.resize(out.size()*2);
+         m_in.resize(m_in.size()*2);
+         m_out.resize(m_out.size()*2);
          }
-      copy_mem(&in[position], input, to_copy);
-      position += to_copy;
+      copy_mem(&m_in[m_position], input, to_copy);
+      m_position += to_copy;
 
       size_t consumed = 0;
-      size_t written = base64_decode(out.data(),
-                                     reinterpret_cast<const char*>(in.data()),
-                                     position,
+      size_t written = base64_decode(m_out.data(),
+                                     reinterpret_cast<const char*>(m_in.data()),
+                                     m_position,
                                      consumed,
                                      false,
-                                     checking != FULL_CHECK);
+                                     m_checking != FULL_CHECK);
 
-      send(out, written);
+      send(m_out, written);
 
-      if(consumed != position)
+      if(consumed != m_position)
          {
-         copy_mem(in.data(), in.data() + consumed, position - consumed);
-         position = position - consumed;
+         copy_mem(m_in.data(), m_in.data() + consumed, m_position - consumed);
+         m_position = m_position - consumed;
          }
       else
-         position = 0;
+         m_position = 0;
 
       length -= to_copy;
       input += to_copy;
@@ -5352,18 +5352,18 @@ void Base64_Decoder::write(const byte input[], size_t length)
 void Base64_Decoder::end_msg()
    {
    size_t consumed = 0;
-   size_t written = base64_decode(out.data(),
-                                  reinterpret_cast<const char*>(in.data()),
-                                  position,
+   size_t written = base64_decode(m_out.data(),
+                                  reinterpret_cast<const char*>(m_in.data()),
+                                  m_position,
                                   consumed,
                                   true,
-                                  checking != FULL_CHECK);
+                                  m_checking != FULL_CHECK);
 
-   send(out, written);
+   send(m_out, written);
 
-   const bool not_full_bytes = consumed != position;
+   const bool not_full_bytes = consumed != m_position;
 
-   position = 0;
+   m_position = 0;
 
    if(not_full_bytes)
       throw Invalid_Argument("Base64_Decoder: Input not full bytes");
@@ -5389,21 +5389,21 @@ const size_t HEX_CODEC_BUFFER_SIZE = 256;
 * Hex_Encoder Constructor
 */
 Hex_Encoder::Hex_Encoder(bool breaks, size_t length, Case c) :
-   casing(c), line_length(breaks ? length : 0)
+   m_casing(c), m_line_length(breaks ? length : 0)
    {
-   in.resize(HEX_CODEC_BUFFER_SIZE);
-   out.resize(2*in.size());
-   counter = position = 0;
+   m_in.resize(HEX_CODEC_BUFFER_SIZE);
+   m_out.resize(2*m_in.size());
+   m_counter = m_position = 0;
    }
 
 /*
 * Hex_Encoder Constructor
 */
-Hex_Encoder::Hex_Encoder(Case c) : casing(c), line_length(0)
+Hex_Encoder::Hex_Encoder(Case c) : m_casing(c), m_line_length(0)
    {
-   in.resize(HEX_CODEC_BUFFER_SIZE);
-   out.resize(2*in.size());
-   counter = position = 0;
+   m_in.resize(HEX_CODEC_BUFFER_SIZE);
+   m_out.resize(2*m_in.size());
+   m_counter = m_position = 0;
    }
 
 /*
@@ -5411,26 +5411,26 @@ Hex_Encoder::Hex_Encoder(Case c) : casing(c), line_length(0)
 */
 void Hex_Encoder::encode_and_send(const byte block[], size_t length)
    {
-   hex_encode(reinterpret_cast<char*>(out.data()),
+   hex_encode(reinterpret_cast<char*>(m_out.data()),
               block, length,
-              casing == Uppercase);
+              m_casing == Uppercase);
 
-   if(line_length == 0)
-      send(out, 2*length);
+   if(m_line_length == 0)
+      send(m_out, 2*length);
    else
       {
       size_t remaining = 2*length, offset = 0;
       while(remaining)
          {
-         size_t sent = std::min(line_length - counter, remaining);
-         send(&out[offset], sent);
-         counter += sent;
+         size_t sent = std::min(m_line_length - m_counter, remaining);
+         send(&m_out[offset], sent);
+         m_counter += sent;
          remaining -= sent;
          offset += sent;
-         if(counter == line_length)
+         if(m_counter == m_line_length)
             {
             send('\n');
-            counter = 0;
+            m_counter = 0;
             }
          }
       }
@@ -5441,22 +5441,22 @@ void Hex_Encoder::encode_and_send(const byte block[], size_t length)
 */
 void Hex_Encoder::write(const byte input[], size_t length)
    {
-   buffer_insert(in, position, input, length);
-   if(position + length >= in.size())
+   buffer_insert(m_in, m_position, input, length);
+   if(m_position + length >= m_in.size())
       {
-      encode_and_send(in.data(), in.size());
-      input += (in.size() - position);
-      length -= (in.size() - position);
-      while(length >= in.size())
+      encode_and_send(m_in.data(), m_in.size());
+      input += (m_in.size() - m_position);
+      length -= (m_in.size() - m_position);
+      while(length >= m_in.size())
          {
-         encode_and_send(input, in.size());
-         input += in.size();
-         length -= in.size();
+         encode_and_send(input, m_in.size());
+         input += m_in.size();
+         length -= m_in.size();
          }
-      copy_mem(in.data(), input, length);
-      position = 0;
+      copy_mem(m_in.data(), input, length);
+      m_position = 0;
       }
-   position += length;
+   m_position += length;
    }
 
 /*
@@ -5464,20 +5464,20 @@ void Hex_Encoder::write(const byte input[], size_t length)
 */
 void Hex_Encoder::end_msg()
    {
-   encode_and_send(in.data(), position);
-   if(counter && line_length)
+   encode_and_send(m_in.data(), m_position);
+   if(m_counter && m_line_length)
       send('\n');
-   counter = position = 0;
+   m_counter = m_position = 0;
    }
 
 /*
 * Hex_Decoder Constructor
 */
-Hex_Decoder::Hex_Decoder(Decoder_Checking c) : checking(c)
+Hex_Decoder::Hex_Decoder(Decoder_Checking c) : m_checking(c)
    {
-   in.resize(HEX_CODEC_BUFFER_SIZE);
-   out.resize(in.size() / 2);
-   position = 0;
+   m_in.resize(HEX_CODEC_BUFFER_SIZE);
+   m_out.resize(m_in.size() / 2);
+   m_position = 0;
    }
 
 /*
@@ -5487,26 +5487,26 @@ void Hex_Decoder::write(const byte input[], size_t length)
    {
    while(length)
       {
-      size_t to_copy = std::min<size_t>(length, in.size() - position);
-      copy_mem(&in[position], input, to_copy);
-      position += to_copy;
+      size_t to_copy = std::min<size_t>(length, m_in.size() - m_position);
+      copy_mem(&m_in[m_position], input, to_copy);
+      m_position += to_copy;
 
       size_t consumed = 0;
-      size_t written = hex_decode(out.data(),
-                                  reinterpret_cast<const char*>(in.data()),
-                                  position,
+      size_t written = hex_decode(m_out.data(),
+                                  reinterpret_cast<const char*>(m_in.data()),
+                                  m_position,
                                   consumed,
-                                  checking != FULL_CHECK);
+                                  m_checking != FULL_CHECK);
 
-      send(out, written);
+      send(m_out, written);
 
-      if(consumed != position)
+      if(consumed != m_position)
          {
-         copy_mem(in.data(), in.data() + consumed, position - consumed);
-         position = position - consumed;
+         copy_mem(m_in.data(), m_in.data() + consumed, m_position - consumed);
+         m_position = m_position - consumed;
          }
       else
-         position = 0;
+         m_position = 0;
 
       length -= to_copy;
       input += to_copy;
@@ -5519,17 +5519,17 @@ void Hex_Decoder::write(const byte input[], size_t length)
 void Hex_Decoder::end_msg()
    {
    size_t consumed = 0;
-   size_t written = hex_decode(out.data(),
-                               reinterpret_cast<const char*>(in.data()),
-                               position,
+   size_t written = hex_decode(m_out.data(),
+                               reinterpret_cast<const char*>(m_in.data()),
+                               m_position,
                                consumed,
-                               checking != FULL_CHECK);
+                               m_checking != FULL_CHECK);
 
-   send(out, written);
+   send(m_out, written);
 
-   const bool not_full_bytes = consumed != position;
+   const bool not_full_bytes = consumed != m_position;
 
-   position = 0;
+   m_position = 0;
 
    if(not_full_bytes)
       throw Invalid_Argument("Hex_Decoder: Input not full bytes");
@@ -5788,33 +5788,33 @@ class CSP_Handle
    public:
       CSP_Handle(u64bit capi_provider)
          {
-         valid = false;
+         m_valid = false;
          DWORD prov_type = (DWORD)capi_provider;
 
-         if(CryptAcquireContext(&handle, 0, 0,
+         if(CryptAcquireContext(&m_handle, 0, 0,
                                 prov_type, CRYPT_VERIFYCONTEXT))
-            valid = true;
+            m_valid = true;
          }
 
       ~CSP_Handle()
          {
          if(is_valid())
-            CryptReleaseContext(handle, 0);
+            CryptReleaseContext(m_handle, 0);
          }
 
       size_t gen_random(byte out[], size_t n) const
          {
-         if(is_valid() && CryptGenRandom(handle, static_cast<DWORD>(n), out))
+         if(is_valid() && CryptGenRandom(m_handle, static_cast<DWORD>(n), out))
             return n;
          return 0;
          }
 
-      bool is_valid() const { return valid; }
+      bool is_valid() const { return m_valid; }
 
-      HCRYPTPROV get_handle() const { return handle; }
+      HCRYPTPROV get_handle() const { return m_handle; }
    private:
-      HCRYPTPROV handle;
-      bool valid;
+      HCRYPTPROV m_handle;
+      bool m_valid;
    };
 
 }
@@ -5826,9 +5826,9 @@ void Win32_CAPI_EntropySource::poll(Entropy_Accumulator& accum)
    {
    secure_vector<byte>& buf = accum.get_io_buf(BOTAN_SYSTEM_RNG_POLL_REQUEST);
 
-   for(size_t i = 0; i != prov_types.size(); ++i)
+   for(size_t i = 0; i != m_prov_types.size(); ++i)
       {
-      CSP_Handle csp(prov_types[i]);
+      CSP_Handle csp(m_prov_types[i]);
 
       if(size_t got = csp.gen_random(buf.data(), buf.size()))
          {
@@ -5847,14 +5847,14 @@ Win32_CAPI_EntropySource::Win32_CAPI_EntropySource(const std::string& provs)
 
    for(size_t i = 0; i != capi_provs.size(); ++i)
       {
-      if(capi_provs[i] == "RSA_FULL")  prov_types.push_back(PROV_RSA_FULL);
-      if(capi_provs[i] == "INTEL_SEC") prov_types.push_back(PROV_INTEL_SEC);
-      if(capi_provs[i] == "FORTEZZA")  prov_types.push_back(PROV_FORTEZZA);
-      if(capi_provs[i] == "RNG")       prov_types.push_back(PROV_RNG);
+      if(capi_provs[i] == "RSA_FULL")  m_prov_types.push_back(PROV_RSA_FULL);
+      if(capi_provs[i] == "INTEL_SEC") m_prov_types.push_back(PROV_INTEL_SEC);
+      if(capi_provs[i] == "FORTEZZA")  m_prov_types.push_back(PROV_FORTEZZA);
+      if(capi_provs[i] == "RNG")       m_prov_types.push_back(PROV_RNG);
       }
 
-   if(prov_types.size() == 0)
-      prov_types.push_back(PROV_RSA_FULL);
+   if(m_prov_types.size() == 0)
+      m_prov_types.push_back(PROV_RSA_FULL);
    }
 
 }
@@ -5987,7 +5987,7 @@ namespace Botan {
 */
 DL_Group::DL_Group()
    {
-   initialized = false;
+   m_initialized = false;
    }
 
 /*
@@ -6015,35 +6015,35 @@ DL_Group::DL_Group(RandomNumberGenerator& rng,
 
    if(type == Strong)
       {
-      p = random_safe_prime(rng, pbits);
-      q = (p - 1) / 2;
-      g = 2;
+      m_p = random_safe_prime(rng, pbits);
+      m_q = (m_p - 1) / 2;
+      m_g = 2;
       }
    else if(type == Prime_Subgroup)
       {
       if(!qbits)
          qbits = dl_exponent_size(pbits);
 
-      q = random_prime(rng, qbits);
+      m_q = random_prime(rng, qbits);
       BigInt X;
-      while(p.bits() != pbits || !is_prime(p, rng))
+      while(m_p.bits() != pbits || !is_prime(m_p, rng))
          {
          X.randomize(rng, pbits);
-         p = X - (X % (2*q) - 1);
+         m_p = X - (X % (2*m_q) - 1);
          }
 
-      g = make_dsa_generator(p, q);
+      m_g = make_dsa_generator(m_p, m_q);
       }
    else if(type == DSA_Kosherizer)
       {
       qbits = qbits ? qbits : ((pbits <= 1024) ? 160 : 256);
 
-      generate_dsa_primes(rng, p, q, pbits, qbits);
+      generate_dsa_primes(rng, m_p, m_q, pbits, qbits);
 
-      g = make_dsa_generator(p, q);
+      m_g = make_dsa_generator(m_p, m_q);
       }
 
-   initialized = true;
+   m_initialized = true;
    }
 
 /*
@@ -6053,13 +6053,13 @@ DL_Group::DL_Group(RandomNumberGenerator& rng,
                    const std::vector<byte>& seed,
                    size_t pbits, size_t qbits)
    {
-   if(!generate_dsa_primes(rng, p, q, pbits, qbits, seed))
+   if(!generate_dsa_primes(rng, m_p, m_q, pbits, qbits, seed))
       throw Invalid_Argument("DL_Group: The seed given does not "
                              "generate a DSA group");
 
-   g = make_dsa_generator(p, q);
+   m_g = make_dsa_generator(m_p, m_q);
 
-   initialized = true;
+   m_initialized = true;
    }
 
 /*
@@ -6090,11 +6090,11 @@ void DL_Group::initialize(const BigInt& p1, const BigInt& q1, const BigInt& g1)
    if(q1 < 0 || q1 >= p1)
       throw Invalid_Argument("DL_Group: Subgroup invalid");
 
-   p = p1;
-   g = g1;
-   q = q1;
+   m_p = p1;
+   m_g = g1;
+   m_q = q1;
 
-   initialized = true;
+   m_initialized = true;
    }
 
 /*
@@ -6102,7 +6102,7 @@ void DL_Group::initialize(const BigInt& p1, const BigInt& q1, const BigInt& g1)
 */
 void DL_Group::init_check() const
    {
-   if(!initialized)
+   if(!m_initialized)
       throw Invalid_State("DLP group cannot be used uninitialized");
    }
 
@@ -6114,16 +6114,16 @@ bool DL_Group::verify_group(RandomNumberGenerator& rng,
    {
    init_check();
 
-   if(g < 2 || p < 3 || q < 0)
+   if(m_g < 2 || m_p < 3 || m_q < 0)
       return false;
-   if((q != 0) && ((p - 1) % q != 0))
+   if((m_q != 0) && ((m_p - 1) % m_q != 0))
       return false;
 
    const size_t prob = (strong) ? 56 : 10;
 
-   if(!is_prime(p, rng, prob))
+   if(!is_prime(m_p, rng, prob))
       return false;
-   if((q > 0) && !is_prime(q, rng, prob))
+   if((m_q > 0) && !is_prime(m_q, rng, prob))
       return false;
    return true;
    }
@@ -6134,7 +6134,7 @@ bool DL_Group::verify_group(RandomNumberGenerator& rng,
 const BigInt& DL_Group::get_p() const
    {
    init_check();
-   return p;
+   return m_p;
    }
 
 /*
@@ -6143,7 +6143,7 @@ const BigInt& DL_Group::get_p() const
 const BigInt& DL_Group::get_g() const
    {
    init_check();
-   return g;
+   return m_g;
    }
 
 /*
@@ -6152,9 +6152,9 @@ const BigInt& DL_Group::get_g() const
 const BigInt& DL_Group::get_q() const
    {
    init_check();
-   if(q == 0)
+   if(m_q == 0)
       throw Invalid_State("DLP group has no q prime specified");
-   return q;
+   return m_q;
    }
 
 /*
@@ -6164,16 +6164,16 @@ std::vector<byte> DL_Group::DER_encode(Format format) const
    {
    init_check();
 
-   if((q == 0) && (format != PKCS_3))
+   if((m_q == 0) && (format != PKCS_3))
       throw Encoding_Error("The ANSI DL parameter formats require a subgroup");
 
    if(format == ANSI_X9_57)
       {
       return DER_Encoder()
          .start_cons(SEQUENCE)
-            .encode(p)
-            .encode(q)
-            .encode(g)
+            .encode(m_p)
+            .encode(m_q)
+            .encode(m_g)
          .end_cons()
       .get_contents_unlocked();
       }
@@ -6181,9 +6181,9 @@ std::vector<byte> DL_Group::DER_encode(Format format) const
       {
       return DER_Encoder()
          .start_cons(SEQUENCE)
-            .encode(p)
-            .encode(g)
-            .encode(q)
+            .encode(m_p)
+            .encode(m_g)
+            .encode(m_q)
          .end_cons()
       .get_contents_unlocked();
       }
@@ -6191,8 +6191,8 @@ std::vector<byte> DL_Group::DER_encode(Format format) const
       {
       return DER_Encoder()
          .start_cons(SEQUENCE)
-            .encode(p)
-            .encode(g)
+            .encode(m_p)
+            .encode(m_g)
          .end_cons()
       .get_contents_unlocked();
       }
@@ -6829,7 +6829,7 @@ PSSR* PSSR::make(const Spec& request)
 */
 void PSSR::update(const byte input[], size_t length)
    {
-   hash->update(input, length);
+   m_hash->update(input, length);
    }
 
 /*
@@ -6837,7 +6837,7 @@ void PSSR::update(const byte input[], size_t length)
 */
 secure_vector<byte> PSSR::raw_data()
    {
-   return hash->final();
+   return m_hash->final();
    }
 
 /*
@@ -6847,28 +6847,28 @@ secure_vector<byte> PSSR::encoding_of(const secure_vector<byte>& msg,
                                       size_t output_bits,
                                       RandomNumberGenerator& rng)
    {
-   const size_t HASH_SIZE = hash->output_length();
+   const size_t HASH_SIZE = m_hash->output_length();
 
    if(msg.size() != HASH_SIZE)
       throw Encoding_Error("PSSR::encoding_of: Bad input length");
-   if(output_bits < 8*HASH_SIZE + 8*SALT_SIZE + 9)
+   if(output_bits < 8*HASH_SIZE + 8*m_SALT_SIZE + 9)
       throw Encoding_Error("PSSR::encoding_of: Output length is too small");
 
    const size_t output_length = (output_bits + 7) / 8;
 
-   secure_vector<byte> salt = rng.random_vec(SALT_SIZE);
+   secure_vector<byte> salt = rng.random_vec(m_SALT_SIZE);
 
    for(size_t j = 0; j != 8; ++j)
-      hash->update(0);
-   hash->update(msg);
-   hash->update(salt);
-   secure_vector<byte> H = hash->final();
+      m_hash->update(0);
+   m_hash->update(msg);
+   m_hash->update(salt);
+   secure_vector<byte> H = m_hash->final();
 
    secure_vector<byte> EM(output_length);
 
-   EM[output_length - HASH_SIZE - SALT_SIZE - 2] = 0x01;
-   buffer_insert(EM, output_length - 1 - HASH_SIZE - SALT_SIZE, salt);
-   mgf1_mask(*hash, H.data(), HASH_SIZE, EM.data(), output_length - HASH_SIZE - 1);
+   EM[output_length - HASH_SIZE - m_SALT_SIZE - 2] = 0x01;
+   buffer_insert(EM, output_length - 1 - HASH_SIZE - m_SALT_SIZE, salt);
+   mgf1_mask(*m_hash, H.data(), HASH_SIZE, EM.data(), output_length - HASH_SIZE - 1);
    EM[0] &= 0xFF >> (8 * ((output_bits + 7) / 8) - output_bits);
    buffer_insert(EM, output_length - 1 - HASH_SIZE, H);
    EM[output_length-1] = 0xBC;
@@ -6882,7 +6882,7 @@ secure_vector<byte> PSSR::encoding_of(const secure_vector<byte>& msg,
 bool PSSR::verify(const secure_vector<byte>& const_coded,
                    const secure_vector<byte>& raw, size_t key_bits)
    {
-   const size_t HASH_SIZE = hash->output_length();
+   const size_t HASH_SIZE = m_hash->output_length();
    const size_t KEY_BYTES = (key_bits + 7) / 8;
 
    if(key_bits < 8*HASH_SIZE + 9)
@@ -6915,7 +6915,7 @@ bool PSSR::verify(const secure_vector<byte>& const_coded,
    const byte* H = &coded[DB_size];
    const size_t H_size = HASH_SIZE;
 
-   mgf1_mask(*hash, H, H_size, DB, DB_size);
+   mgf1_mask(*m_hash, H, H_size, DB, DB_size);
    DB[0] &= 0xFF >> TOP_BITS;
 
    size_t salt_offset = 0;
@@ -6930,21 +6930,21 @@ bool PSSR::verify(const secure_vector<byte>& const_coded,
       return false;
 
    for(size_t j = 0; j != 8; ++j)
-      hash->update(0);
-   hash->update(raw);
-   hash->update(&DB[salt_offset], DB_size - salt_offset);
-   secure_vector<byte> H2 = hash->final();
+      m_hash->update(0);
+   m_hash->update(raw);
+   m_hash->update(&DB[salt_offset], DB_size - salt_offset);
+   secure_vector<byte> H2 = m_hash->final();
 
    return same_mem(H, H2.data(), HASH_SIZE);
    }
 
 PSSR::PSSR(HashFunction* h) :
-   SALT_SIZE(h->output_length()), hash(h)
+   m_SALT_SIZE(h->output_length()), m_hash(h)
    {
    }
 
 PSSR::PSSR(HashFunction* h, size_t salt_size) :
-   SALT_SIZE(salt_size), hash(h)
+   m_SALT_SIZE(salt_size), m_hash(h)
    {
    }
 
@@ -7320,16 +7320,16 @@ namespace Botan {
 * Buffered_Filter Constructor
 */
 Buffered_Filter::Buffered_Filter(size_t b, size_t f) :
-   main_block_mod(b), final_minimum(f)
+   m_main_block_mod(b), m_final_minimum(f)
    {
-   if(main_block_mod == 0)
-      throw Invalid_Argument("main_block_mod == 0");
+   if(m_main_block_mod == 0)
+      throw Invalid_Argument("m_main_block_mod == 0");
 
-   if(final_minimum > main_block_mod)
-      throw Invalid_Argument("final_minimum > main_block_mod");
+   if(m_final_minimum > m_main_block_mod)
+      throw Invalid_Argument("m_final_minimum > m_main_block_mod");
 
-   buffer.resize(2 * main_block_mod);
-   buffer_pos = 0;
+   m_buffer.resize(2 * m_main_block_mod);
+   m_buffer_pos = 0;
    }
 
 /*
@@ -7340,32 +7340,32 @@ void Buffered_Filter::write(const byte input[], size_t input_size)
    if(!input_size)
       return;
 
-   if(buffer_pos + input_size >= main_block_mod + final_minimum)
+   if(m_buffer_pos + input_size >= m_main_block_mod + m_final_minimum)
       {
-      size_t to_copy = std::min<size_t>(buffer.size() - buffer_pos, input_size);
+      size_t to_copy = std::min<size_t>(m_buffer.size() - m_buffer_pos, input_size);
 
-      copy_mem(&buffer[buffer_pos], input, to_copy);
-      buffer_pos += to_copy;
+      copy_mem(&m_buffer[m_buffer_pos], input, to_copy);
+      m_buffer_pos += to_copy;
 
       input += to_copy;
       input_size -= to_copy;
 
       size_t total_to_consume =
-         round_down(std::min(buffer_pos,
-                             buffer_pos + input_size - final_minimum),
-                    main_block_mod);
+         round_down(std::min(m_buffer_pos,
+                             m_buffer_pos + input_size - m_final_minimum),
+                    m_main_block_mod);
 
-      buffered_block(buffer.data(), total_to_consume);
+      buffered_block(m_buffer.data(), total_to_consume);
 
-      buffer_pos -= total_to_consume;
+      m_buffer_pos -= total_to_consume;
 
-      copy_mem(buffer.data(), buffer.data() + total_to_consume, buffer_pos);
+      copy_mem(m_buffer.data(), m_buffer.data() + total_to_consume, m_buffer_pos);
       }
 
-   if(input_size >= final_minimum)
+   if(input_size >= m_final_minimum)
       {
-      size_t full_blocks = (input_size - final_minimum) / main_block_mod;
-      size_t to_copy = full_blocks * main_block_mod;
+      size_t full_blocks = (input_size - m_final_minimum) / m_main_block_mod;
+      size_t to_copy = full_blocks * m_main_block_mod;
 
       if(to_copy)
          {
@@ -7376,8 +7376,8 @@ void Buffered_Filter::write(const byte input[], size_t input_size)
          }
       }
 
-   copy_mem(&buffer[buffer_pos], input, input_size);
-   buffer_pos += input_size;
+   copy_mem(&m_buffer[m_buffer_pos], input, input_size);
+   m_buffer_pos += input_size;
    }
 
 /*
@@ -7385,23 +7385,23 @@ void Buffered_Filter::write(const byte input[], size_t input_size)
 */
 void Buffered_Filter::end_msg()
    {
-   if(buffer_pos < final_minimum)
+   if(m_buffer_pos < m_final_minimum)
       throw Exception("Buffered filter end_msg without enough input");
 
-   size_t spare_blocks = (buffer_pos - final_minimum) / main_block_mod;
+   size_t spare_blocks = (m_buffer_pos - m_final_minimum) / m_main_block_mod;
 
    if(spare_blocks)
       {
-      size_t spare_bytes = main_block_mod * spare_blocks;
-      buffered_block(buffer.data(), spare_bytes);
-      buffered_final(&buffer[spare_bytes], buffer_pos - spare_bytes);
+      size_t spare_bytes = m_main_block_mod * spare_blocks;
+      buffered_block(m_buffer.data(), spare_bytes);
+      buffered_final(&m_buffer[spare_bytes], m_buffer_pos - spare_bytes);
       }
    else
       {
-      buffered_final(buffer.data(), buffer_pos);
+      buffered_final(m_buffer.data(), m_buffer_pos);
       }
 
-   buffer_pos = 0;
+   m_buffer_pos = 0;
    }
 
 }
@@ -7499,10 +7499,10 @@ namespace Botan {
 */
 void DataSink_Stream::write(const byte out[], size_t length)
    {
-   sink.write(reinterpret_cast<const char*>(out), length);
-   if(!sink.good())
+   m_sink.write(reinterpret_cast<const char*>(out), length);
+   if(!m_sink.good())
       throw Stream_IO_Error("DataSink_Stream: Failure writing to " +
-                            identifier);
+                            m_identifier);
    }
 
 /*
@@ -7510,9 +7510,9 @@ void DataSink_Stream::write(const byte out[], size_t length)
 */
 DataSink_Stream::DataSink_Stream(std::ostream& out,
                                  const std::string& name) :
-   identifier(name),
-   sink_p(nullptr),
-   sink(out)
+   m_identifier(name),
+   m_sink_p(nullptr),
+   m_sink(out)
    {
    }
 
@@ -7521,14 +7521,14 @@ DataSink_Stream::DataSink_Stream(std::ostream& out,
 */
 DataSink_Stream::DataSink_Stream(const std::string& path,
                                  bool use_binary) :
-   identifier(path),
-   sink_p(new std::ofstream(path,
+   m_identifier(path),
+   m_sink_p(new std::ofstream(path,
                             use_binary ? std::ios::binary : std::ios::out)),
-   sink(*sink_p)
+   m_sink(*m_sink_p)
    {
-   if(!sink.good())
+   if(!m_sink.good())
       {
-      delete sink_p;
+      delete m_sink_p;
       throw Stream_IO_Error("DataSink_Stream: Failure opening " + path);
       }
    }
@@ -7538,7 +7538,7 @@ DataSink_Stream::DataSink_Stream(const std::string& path,
 */
 DataSink_Stream::~DataSink_Stream()
    {
-   delete sink_p;
+   delete m_sink_p;
    }
 
 }
@@ -7557,10 +7557,10 @@ namespace Botan {
 */
 Filter::Filter()
    {
-   next.resize(1);
-   port_num = 0;
-   filter_owns = 0;
-   owned = false;
+   m_next.resize(1);
+   m_port_num = 0;
+   m_filter_owns = 0;
+   m_owned = false;
    }
 
 /*
@@ -7573,18 +7573,18 @@ void Filter::send(const byte input[], size_t length)
 
    bool nothing_attached = true;
    for(size_t j = 0; j != total_ports(); ++j)
-      if(next[j])
+      if(m_next[j])
          {
-         if(write_queue.size())
-            next[j]->write(write_queue.data(), write_queue.size());
-         next[j]->write(input, length);
+         if(m_write_queue.size())
+            m_next[j]->write(m_write_queue.data(), m_write_queue.size());
+         m_next[j]->write(input, length);
          nothing_attached = false;
          }
 
    if(nothing_attached)
-      write_queue += std::make_pair(input, length);
+      m_write_queue += std::make_pair(input, length);
    else
-      write_queue.clear();
+      m_write_queue.clear();
    }
 
 /*
@@ -7594,8 +7594,8 @@ void Filter::new_msg()
    {
    start_msg();
    for(size_t j = 0; j != total_ports(); ++j)
-      if(next[j])
-         next[j]->new_msg();
+      if(m_next[j])
+         m_next[j]->new_msg();
    }
 
 /*
@@ -7605,8 +7605,8 @@ void Filter::finish_msg()
    {
    end_msg();
    for(size_t j = 0; j != total_ports(); ++j)
-      if(next[j])
-         next[j]->finish_msg();
+      if(m_next[j])
+         m_next[j]->finish_msg();
    }
 
 /*
@@ -7619,7 +7619,7 @@ void Filter::attach(Filter* new_filter)
       Filter* last = this;
       while(last->get_next())
          last = last->get_next();
-      last->next[last->current_port()] = new_filter;
+      last->m_next[last->current_port()] = new_filter;
       }
    }
 
@@ -7630,7 +7630,7 @@ void Filter::set_port(size_t new_port)
    {
    if(new_port >= total_ports())
       throw Invalid_Argument("Filter: Invalid port number");
-   port_num = new_port;
+   m_port_num = new_port;
    }
 
 /*
@@ -7638,8 +7638,8 @@ void Filter::set_port(size_t new_port)
 */
 Filter* Filter::get_next() const
    {
-   if(port_num < next.size())
-      return next[port_num];
+   if(m_port_num < m_next.size())
+      return m_next[m_port_num];
    return nullptr;
    }
 
@@ -7648,16 +7648,16 @@ Filter* Filter::get_next() const
 */
 void Filter::set_next(Filter* filters[], size_t size)
    {
-   next.clear();
+   m_next.clear();
 
-   port_num = 0;
-   filter_owns = 0;
+   m_port_num = 0;
+   m_filter_owns = 0;
 
    while(size && filters && (filters[size-1] == nullptr))
       --size;
 
    if(filters && size)
-      next.assign(filters, filters + size);
+      m_next.assign(filters, filters + size);
    }
 
 /*
@@ -7665,7 +7665,7 @@ void Filter::set_next(Filter* filters[], size_t size)
 */
 size_t Filter::total_ports() const
    {
-   return next.size();
+   return m_next.size();
    }
 
 }
@@ -7773,10 +7773,10 @@ void Output_Buffers::add(SecureQueue* queue)
    {
    BOTAN_ASSERT(queue, "queue was provided");
 
-   BOTAN_ASSERT(buffers.size() < buffers.max_size(),
+   BOTAN_ASSERT(m_buffers.size() < m_buffers.max_size(),
                 "Room was available in container");
 
-   buffers.push_back(queue);
+   m_buffers.push_back(queue);
    }
 
 /*
@@ -7784,17 +7784,17 @@ void Output_Buffers::add(SecureQueue* queue)
 */
 void Output_Buffers::retire()
    {
-   for(size_t i = 0; i != buffers.size(); ++i)
-      if(buffers[i] && buffers[i]->size() == 0)
+   for(size_t i = 0; i != m_buffers.size(); ++i)
+      if(m_buffers[i] && m_buffers[i]->size() == 0)
          {
-         delete buffers[i];
-         buffers[i] = nullptr;
+         delete m_buffers[i];
+         m_buffers[i] = nullptr;
          }
 
-   while(buffers.size() && !buffers[0])
+   while(m_buffers.size() && !m_buffers[0])
       {
-      buffers.pop_front();
-      offset = offset + Pipe::message_id(1);
+      m_buffers.pop_front();
+      m_offset = m_offset + Pipe::message_id(1);
       }
    }
 
@@ -7803,12 +7803,12 @@ void Output_Buffers::retire()
 */
 SecureQueue* Output_Buffers::get(Pipe::message_id msg) const
    {
-   if(msg < offset)
+   if(msg < m_offset)
       return nullptr;
 
    BOTAN_ASSERT(msg < message_count(), "Message number is in range");
 
-   return buffers[msg-offset];
+   return m_buffers[msg-m_offset];
    }
 
 /*
@@ -7816,7 +7816,7 @@ SecureQueue* Output_Buffers::get(Pipe::message_id msg) const
 */
 Pipe::message_id Output_Buffers::message_count() const
    {
-   return (offset + buffers.size());
+   return (m_offset + m_buffers.size());
    }
 
 /*
@@ -7824,7 +7824,7 @@ Pipe::message_id Output_Buffers::message_count() const
 */
 Output_Buffers::Output_Buffers()
    {
-   offset = 0;
+   m_offset = 0;
    }
 
 /*
@@ -7832,8 +7832,8 @@ Output_Buffers::Output_Buffers()
 */
 Output_Buffers::~Output_Buffers()
    {
-   for(size_t j = 0; j != buffers.size(); ++j)
-      delete buffers[j];
+   for(size_t j = 0; j != m_buffers.size(); ++j)
+      delete m_buffers[j];
    }
 
 }
@@ -7891,8 +7891,8 @@ Pipe::Pipe(std::initializer_list<Filter*> args)
 */
 Pipe::~Pipe()
    {
-   destruct(pipe);
-   delete outputs;
+   destruct(m_pipe);
+   delete m_outputs;
    }
 
 /*
@@ -7900,10 +7900,10 @@ Pipe::~Pipe()
 */
 void Pipe::init()
    {
-   outputs = new Output_Buffers;
-   pipe = nullptr;
-   default_read = 0;
-   inside_msg = false;
+   m_outputs = new Output_Buffers;
+   m_pipe = nullptr;
+   m_default_read = 0;
+   m_inside_msg = false;
    }
 
 /*
@@ -7911,9 +7911,9 @@ void Pipe::init()
 */
 void Pipe::reset()
    {
-   destruct(pipe);
-   pipe = nullptr;
-   inside_msg = false;
+   destruct(m_pipe);
+   m_pipe = nullptr;
+   m_inside_msg = false;
    }
 
 /*
@@ -7924,7 +7924,7 @@ void Pipe::destruct(Filter* to_kill)
    if(!to_kill || dynamic_cast<SecureQueue*>(to_kill))
       return;
    for(size_t j = 0; j != to_kill->total_ports(); ++j)
-      destruct(to_kill->next[j]);
+      destruct(to_kill->m_next[j]);
    delete to_kill;
    }
 
@@ -7943,7 +7943,7 @@ void Pipe::set_default_msg(message_id msg)
    {
    if(msg >= message_count())
       throw Invalid_Argument("Pipe::set_default_msg: msg number is too high");
-   default_read = msg;
+   m_default_read = msg;
    }
 
 /*
@@ -7992,13 +7992,13 @@ void Pipe::process_msg(DataSource& input)
 */
 void Pipe::start_msg()
    {
-   if(inside_msg)
+   if(m_inside_msg)
       throw Invalid_State("Pipe::start_msg: Message was already started");
-   if(pipe == nullptr)
-      pipe = new Null_Filter;
-   find_endpoints(pipe);
-   pipe->new_msg();
-   inside_msg = true;
+   if(m_pipe == nullptr)
+      m_pipe = new Null_Filter;
+   find_endpoints(m_pipe);
+   m_pipe->new_msg();
+   m_inside_msg = true;
    }
 
 /*
@@ -8006,18 +8006,18 @@ void Pipe::start_msg()
 */
 void Pipe::end_msg()
    {
-   if(!inside_msg)
+   if(!m_inside_msg)
       throw Invalid_State("Pipe::end_msg: Message was already ended");
-   pipe->finish_msg();
-   clear_endpoints(pipe);
-   if(dynamic_cast<Null_Filter*>(pipe))
+   m_pipe->finish_msg();
+   clear_endpoints(m_pipe);
+   if(dynamic_cast<Null_Filter*>(m_pipe))
       {
-      delete pipe;
-      pipe = nullptr;
+      delete m_pipe;
+      m_pipe = nullptr;
       }
-   inside_msg = false;
+   m_inside_msg = false;
 
-   outputs->retire();
+   m_outputs->retire();
    }
 
 /*
@@ -8026,13 +8026,13 @@ void Pipe::end_msg()
 void Pipe::find_endpoints(Filter* f)
    {
    for(size_t j = 0; j != f->total_ports(); ++j)
-      if(f->next[j] && !dynamic_cast<SecureQueue*>(f->next[j]))
-         find_endpoints(f->next[j]);
+      if(f->m_next[j] && !dynamic_cast<SecureQueue*>(f->m_next[j]))
+         find_endpoints(f->m_next[j]);
       else
          {
          SecureQueue* q = new SecureQueue;
-         f->next[j] = q;
-         outputs->add(q);
+         f->m_next[j] = q;
+         m_outputs->add(q);
          }
    }
 
@@ -8044,9 +8044,9 @@ void Pipe::clear_endpoints(Filter* f)
    if(!f) return;
    for(size_t j = 0; j != f->total_ports(); ++j)
       {
-      if(f->next[j] && dynamic_cast<SecureQueue*>(f->next[j]))
-         f->next[j] = nullptr;
-      clear_endpoints(f->next[j]);
+      if(f->m_next[j] && dynamic_cast<SecureQueue*>(f->m_next[j]))
+         f->m_next[j] = nullptr;
+      clear_endpoints(f->m_next[j]);
       }
    }
 
@@ -8055,19 +8055,19 @@ void Pipe::clear_endpoints(Filter* f)
 */
 void Pipe::append(Filter* filter)
    {
-   if(inside_msg)
+   if(m_inside_msg)
       throw Invalid_State("Cannot append to a Pipe while it is processing");
    if(!filter)
       return;
    if(dynamic_cast<SecureQueue*>(filter))
       throw Invalid_Argument("Pipe::append: SecureQueue cannot be used");
-   if(filter->owned)
+   if(filter->m_owned)
       throw Invalid_Argument("Filters cannot be shared among multiple Pipes");
 
-   filter->owned = true;
+   filter->m_owned = true;
 
-   if(!pipe) pipe = filter;
-   else      pipe->attach(filter);
+   if(!m_pipe) m_pipe = filter;
+   else      m_pipe->attach(filter);
    }
 
 /*
@@ -8075,19 +8075,19 @@ void Pipe::append(Filter* filter)
 */
 void Pipe::prepend(Filter* filter)
    {
-   if(inside_msg)
+   if(m_inside_msg)
       throw Invalid_State("Cannot prepend to a Pipe while it is processing");
    if(!filter)
       return;
    if(dynamic_cast<SecureQueue*>(filter))
       throw Invalid_Argument("Pipe::prepend: SecureQueue cannot be used");
-   if(filter->owned)
+   if(filter->m_owned)
       throw Invalid_Argument("Filters cannot be shared among multiple Pipes");
 
-   filter->owned = true;
+   filter->m_owned = true;
 
-   if(pipe) filter->attach(pipe);
-   pipe = filter;
+   if(m_pipe) filter->attach(m_pipe);
+   m_pipe = filter;
    }
 
 /*
@@ -8095,24 +8095,24 @@ void Pipe::prepend(Filter* filter)
 */
 void Pipe::pop()
    {
-   if(inside_msg)
+   if(m_inside_msg)
       throw Invalid_State("Cannot pop off a Pipe while it is processing");
 
-   if(!pipe)
+   if(!m_pipe)
       return;
 
-   if(pipe->total_ports() > 1)
+   if(m_pipe->total_ports() > 1)
       throw Invalid_State("Cannot pop off a Filter with multiple ports");
 
-   Filter* f = pipe;
+   Filter* f = m_pipe;
    size_t owns = f->owns();
-   pipe = pipe->next[0];
+   m_pipe = m_pipe->m_next[0];
    delete f;
 
    while(owns--)
       {
-      f = pipe;
-      pipe = pipe->next[0];
+      f = m_pipe;
+      m_pipe = m_pipe->m_next[0];
       delete f;
       }
    }
@@ -8122,7 +8122,7 @@ void Pipe::pop()
 */
 Pipe::message_id Pipe::message_count() const
    {
-   return outputs->message_count();
+   return m_outputs->message_count();
    }
 
 /*
@@ -8211,9 +8211,9 @@ Pipe::message_id Pipe::get_message_no(const std::string& func_name,
 */
 void Pipe::write(const byte input[], size_t length)
    {
-   if(!inside_msg)
+   if(!m_inside_msg)
       throw Invalid_State("Cannot write to a Pipe while it is not processing");
-   pipe->write(input, length);
+   m_pipe->write(input, length);
    }
 
 /*
@@ -8250,7 +8250,7 @@ void Pipe::write(DataSource& source)
 */
 size_t Pipe::read(byte output[], size_t length, message_id msg)
    {
-   return outputs->read(output, length, get_message_no("read", msg));
+   return m_outputs->read(output, length, get_message_no("read", msg));
    }
 
 /*
@@ -8307,7 +8307,7 @@ std::string Pipe::read_all_as_string(message_id msg)
 */
 size_t Pipe::remaining(message_id msg) const
    {
-   return outputs->remaining(get_message_no("remaining", msg));
+   return m_outputs->remaining(get_message_no("remaining", msg));
    }
 
 /*
@@ -8316,7 +8316,7 @@ size_t Pipe::remaining(message_id msg) const
 size_t Pipe::peek(byte output[], size_t length,
                   size_t offset, message_id msg) const
    {
-   return outputs->peek(output, length, offset, get_message_no("peek", msg));
+   return m_outputs->peek(output, length, offset, get_message_no("peek", msg));
    }
 
 /*
@@ -8337,12 +8337,12 @@ size_t Pipe::peek(byte& out, size_t offset, message_id msg) const
 
 size_t Pipe::get_bytes_read() const
    {
-   return outputs->get_bytes_read(DEFAULT_MESSAGE);
+   return m_outputs->get_bytes_read(DEFAULT_MESSAGE);
    }
 
 size_t Pipe::get_bytes_read(message_id msg) const
    {
-   return outputs->get_bytes_read(msg);
+   return m_outputs->get_bytes_read(msg);
    }
 
 bool Pipe::check_available(size_t n)
@@ -8373,42 +8373,42 @@ namespace Botan {
 class SecureQueueNode
    {
    public:
-      SecureQueueNode() : buffer(DEFAULT_BUFFERSIZE)
-         { next = nullptr; start = end = 0; }
+      SecureQueueNode() : m_buffer(DEFAULT_BUFFERSIZE)
+         { m_next = nullptr; m_start = m_end = 0; }
 
-      ~SecureQueueNode() { next = nullptr; start = end = 0; }
+      ~SecureQueueNode() { m_next = nullptr; m_start = m_end = 0; }
 
       size_t write(const byte input[], size_t length)
          {
-         size_t copied = std::min<size_t>(length, buffer.size() - end);
-         copy_mem(buffer.data() + end, input, copied);
-         end += copied;
+         size_t copied = std::min<size_t>(length, m_buffer.size() - m_end);
+         copy_mem(m_buffer.data() + m_end, input, copied);
+         m_end += copied;
          return copied;
          }
 
       size_t read(byte output[], size_t length)
          {
-         size_t copied = std::min(length, end - start);
-         copy_mem(output, buffer.data() + start, copied);
-         start += copied;
+         size_t copied = std::min(length, m_end - m_start);
+         copy_mem(output, m_buffer.data() + m_start, copied);
+         m_start += copied;
          return copied;
          }
 
       size_t peek(byte output[], size_t length, size_t offset = 0)
          {
-         const size_t left = end - start;
+         const size_t left = m_end - m_start;
          if(offset >= left) return 0;
          size_t copied = std::min(length, left - offset);
-         copy_mem(output, buffer.data() + start + offset, copied);
+         copy_mem(output, m_buffer.data() + m_start + offset, copied);
          return copied;
          }
 
-      size_t size() const { return (end - start); }
+      size_t size() const { return (m_end - m_start); }
    private:
       friend class SecureQueue;
-      SecureQueueNode* next;
-      secure_vector<byte> buffer;
-      size_t start, end;
+      SecureQueueNode* m_next;
+      secure_vector<byte> m_buffer;
+      size_t m_start, m_end;
    };
 
 /*
@@ -8434,8 +8434,8 @@ SecureQueue::SecureQueue(const SecureQueue& input) :
    SecureQueueNode* temp = input.m_head;
    while(temp)
       {
-      write(&temp->buffer[temp->start], temp->end - temp->start);
-      temp = temp->next;
+      write(&temp->m_buffer[temp->m_start], temp->m_end - temp->m_start);
+      temp = temp->m_next;
       }
    }
 
@@ -8447,7 +8447,7 @@ void SecureQueue::destroy()
    SecureQueueNode* temp = m_head;
    while(temp)
       {
-      SecureQueueNode* holder = temp->next;
+      SecureQueueNode* holder = temp->m_next;
       delete temp;
       temp = holder;
       }
@@ -8464,8 +8464,8 @@ SecureQueue& SecureQueue::operator=(const SecureQueue& input)
    SecureQueueNode* temp = input.m_head;
    while(temp)
       {
-      write(&temp->buffer[temp->start], temp->end - temp->start);
-      temp = temp->next;
+      write(&temp->m_buffer[temp->m_start], temp->m_end - temp->m_start);
+      temp = temp->m_next;
       }
    return (*this);
    }
@@ -8484,8 +8484,8 @@ void SecureQueue::write(const byte input[], size_t length)
       length -= n;
       if(length)
          {
-         m_tail->next = new SecureQueueNode;
-         m_tail = m_tail->next;
+         m_tail->m_next = new SecureQueueNode;
+         m_tail = m_tail->m_next;
          }
       }
    }
@@ -8504,7 +8504,7 @@ size_t SecureQueue::read(byte output[], size_t length)
       length -= n;
       if(m_head->size() == 0)
          {
-         SecureQueueNode* holder = m_head->next;
+         SecureQueueNode* holder = m_head->m_next;
          delete m_head;
          m_head = holder;
          }
@@ -8525,7 +8525,7 @@ size_t SecureQueue::peek(byte output[], size_t length, size_t offset) const
       if(offset >= current->size())
          {
          offset -= current->size();
-         current = current->next;
+         current = current->m_next;
          }
       else
          break;
@@ -8539,7 +8539,7 @@ size_t SecureQueue::peek(byte output[], size_t length, size_t offset) const
       output += n;
       got += n;
       length -= n;
-      current = current->next;
+      current = current->m_next;
       }
    return got;
    }
@@ -8563,7 +8563,7 @@ size_t SecureQueue::size() const
    while(current)
       {
       count += current->size();
-      current = current->next;
+      current = current->m_next;
       }
    return count;
    }
@@ -8659,7 +8659,7 @@ std::string Threaded_Fork::name() const
 void Threaded_Fork::set_next(Filter* f[], size_t n)
    {
    Fork::set_next(f, n);
-   n = next.size();
+   n = m_next.size();
 
    if(n < m_threads.size())
       m_threads.resize(n);
@@ -8671,26 +8671,26 @@ void Threaded_Fork::set_next(Filter* f[], size_t n)
          m_threads.push_back(
             std::shared_ptr<std::thread>(
                new std::thread(
-                  std::bind(&Threaded_Fork::thread_entry, this, next[i]))));
+                  std::bind(&Threaded_Fork::thread_entry, this, m_next[i]))));
          }
       }
    }
 
 void Threaded_Fork::send(const byte input[], size_t length)
    {
-   if(write_queue.size())
-      thread_delegate_work(write_queue.data(), write_queue.size());
+   if(m_write_queue.size())
+      thread_delegate_work(m_write_queue.data(), m_write_queue.size());
    thread_delegate_work(input, length);
 
    bool nothing_attached = true;
    for(size_t j = 0; j != total_ports(); ++j)
-      if(next[j])
+      if(m_next[j])
          nothing_attached = false;
 
    if(nothing_attached)
-      write_queue += std::make_pair(input, length);
+      m_write_queue += std::make_pair(input, length);
    else
-      write_queue.clear();
+      m_write_queue.clear();
    }
 
 void Threaded_Fork::thread_delegate_work(const byte input[], size_t length)
@@ -9001,7 +9001,7 @@ GCM_Mode::GCM_Mode(BlockCipher* cipher, size_t tag_size) :
    m_tag_size(tag_size),
    m_cipher_name(cipher->name())
    {
-   if(cipher->block_size() != BS)
+   if(cipher->block_size() != m_BS)
       throw Invalid_Argument("GCM requires a 128 bit cipher so cannot be used with " +
                                   cipher->name());
 
@@ -9026,7 +9026,7 @@ std::string GCM_Mode::name() const
 
 size_t GCM_Mode::update_granularity() const
    {
-   return BS;
+   return m_BS;
    }
 
 Key_Length_Specification GCM_Mode::key_spec() const
@@ -9038,10 +9038,10 @@ void GCM_Mode::key_schedule(const byte key[], size_t keylen)
    {
    m_ctr->set_key(key, keylen);
 
-   const std::vector<byte> zeros(BS);
+   const std::vector<byte> zeros(m_BS);
    m_ctr->set_iv(zeros.data(), zeros.size());
 
-   secure_vector<byte> H(BS);
+   secure_vector<byte> H(m_BS);
    m_ctr->encipher(H);
    m_ghash->set_key(H);
    }
@@ -9056,7 +9056,7 @@ secure_vector<byte> GCM_Mode::start_raw(const byte nonce[], size_t nonce_len)
    if(!valid_nonce_length(nonce_len))
       throw Invalid_IV_Length(name(), nonce_len);
 
-   secure_vector<byte> y0(BS);
+   secure_vector<byte> y0(m_BS);
 
    if(nonce_len == 12)
       {
@@ -9070,7 +9070,7 @@ secure_vector<byte> GCM_Mode::start_raw(const byte nonce[], size_t nonce_len)
 
    m_ctr->set_iv(y0.data(), y0.size());
 
-   secure_vector<byte> m_enc_y0(BS);
+   secure_vector<byte> m_enc_y0(m_BS);
    m_ctr->encipher(m_enc_y0);
 
    m_ghash->start(m_enc_y0.data(), m_enc_y0.size());
@@ -9201,6 +9201,9 @@ void GCM_Decryption::finish(secure_vector<byte>& buffer, size_t offset)
 #if defined(BOTAN_HAS_COMB4P)
 #endif
 
+#if defined(BOTAN_HAS_BLAKE2B)
+#endif
+
 namespace Botan {
 
 std::unique_ptr<HashFunction> HashFunction::create(const std::string& algo_spec,
@@ -9313,6 +9316,10 @@ BOTAN_REGISTER_NAMED_T(HashFunction, "Skein-512", Skein_512, Skein_512::make);
 
 #if defined(BOTAN_HAS_WHIRLPOOL)
 BOTAN_REGISTER_HASH_NOARGS(Whirlpool);
+#endif
+
+#if defined(BOTAN_HAS_BLAKE2B)
+BOTAN_REGISTER_NAMED_T(HashFunction, "Blake2b", Blake2b, Blake2b::make);
 #endif
 
 }
@@ -9949,7 +9956,7 @@ namespace Botan {
 
 size_t IF_Scheme_PublicKey::estimated_strength() const
    {
-   return if_work_factor(n.bits());
+   return if_work_factor(m_n.bits());
    }
 
 AlgorithmIdentifier IF_Scheme_PublicKey::algorithm_identifier() const
@@ -9962,8 +9969,8 @@ std::vector<byte> IF_Scheme_PublicKey::x509_subject_public_key() const
    {
    return DER_Encoder()
       .start_cons(SEQUENCE)
-         .encode(n)
-         .encode(e)
+         .encode(m_n)
+         .encode(m_e)
       .end_cons()
       .get_contents_unlocked();
    }
@@ -9973,8 +9980,8 @@ IF_Scheme_PublicKey::IF_Scheme_PublicKey(const AlgorithmIdentifier&,
    {
    BER_Decoder(key_bits)
       .start_cons(SEQUENCE)
-        .decode(n)
-        .decode(e)
+        .decode(m_n)
+        .decode(m_e)
       .verify_end()
       .end_cons();
    }
@@ -9984,7 +9991,7 @@ IF_Scheme_PublicKey::IF_Scheme_PublicKey(const AlgorithmIdentifier&,
 */
 bool IF_Scheme_PublicKey::check_key(RandomNumberGenerator&, bool) const
    {
-   if(n < 35 || n.is_even() || e < 2)
+   if(m_n < 35 || m_n.is_even() || m_e < 2)
       return false;
    return true;
    }
@@ -9994,14 +10001,14 @@ secure_vector<byte> IF_Scheme_PrivateKey::pkcs8_private_key() const
    return DER_Encoder()
       .start_cons(SEQUENCE)
          .encode(static_cast<size_t>(0))
-         .encode(n)
-         .encode(e)
-         .encode(d)
-         .encode(p)
-         .encode(q)
-         .encode(d1)
-         .encode(d2)
-         .encode(c)
+         .encode(m_n)
+         .encode(m_e)
+         .encode(m_d)
+         .encode(m_p)
+         .encode(m_q)
+         .encode(m_d1)
+         .encode(m_d2)
+         .encode(m_c)
       .end_cons()
    .get_contents();
    }
@@ -10013,14 +10020,14 @@ IF_Scheme_PrivateKey::IF_Scheme_PrivateKey(RandomNumberGenerator& rng,
    BER_Decoder(key_bits)
       .start_cons(SEQUENCE)
          .decode_and_check<size_t>(0, "Unknown PKCS #1 key format version")
-         .decode(n)
-         .decode(e)
-         .decode(d)
-         .decode(p)
-         .decode(q)
-         .decode(d1)
-         .decode(d2)
-         .decode(c)
+         .decode(m_n)
+         .decode(m_e)
+         .decode(m_d)
+         .decode(m_p)
+         .decode(m_q)
+         .decode(m_d1)
+         .decode(m_d2)
+         .decode(m_c)
       .end_cons();
 
    load_check(rng);
@@ -10033,24 +10040,24 @@ IF_Scheme_PrivateKey::IF_Scheme_PrivateKey(RandomNumberGenerator& rng,
                                            const BigInt& d_exp,
                                            const BigInt& mod)
    {
-   p = prime1;
-   q = prime2;
-   e = exp;
-   d = d_exp;
-   n = mod.is_nonzero() ? mod : p * q;
+   m_p = prime1;
+   m_q = prime2;
+   m_e = exp;
+   m_d = d_exp;
+   m_n = mod.is_nonzero() ? mod : m_p * m_q;
 
-   if(d == 0)
+   if(m_d == 0)
       {
-      BigInt inv_for_d = lcm(p - 1, q - 1);
-      if(e.is_even())
+      BigInt inv_for_d = lcm(m_p - 1, m_q - 1);
+      if(m_e.is_even())
          inv_for_d >>= 1;
 
-      d = inverse_mod(e, inv_for_d);
+      m_d = inverse_mod(m_e, inv_for_d);
       }
 
-   d1 = d % (p - 1);
-   d2 = d % (q - 1);
-   c = inverse_mod(q, p);
+   m_d1 = m_d % (m_p - 1);
+   m_d2 = m_d % (m_q - 1);
+   m_c = inverse_mod(m_q, m_p);
 
    load_check(rng);
    }
@@ -10061,15 +10068,15 @@ IF_Scheme_PrivateKey::IF_Scheme_PrivateKey(RandomNumberGenerator& rng,
 bool IF_Scheme_PrivateKey::check_key(RandomNumberGenerator& rng,
                                      bool strong) const
    {
-   if(n < 35 || n.is_even() || e < 2 || d < 2 || p < 3 || q < 3 || p*q != n)
+   if(m_n < 35 || m_n.is_even() || m_e < 2 || m_d < 2 || m_p < 3 || m_q < 3 || m_p*m_q != m_n)
       return false;
 
-   if(d1 != d % (p - 1) || d2 != d % (q - 1) || c != inverse_mod(q, p))
+   if(m_d1 != m_d % (m_p - 1) || m_d2 != m_d % (m_q - 1) || m_c != inverse_mod(m_q, m_p))
       return false;
 
    const size_t prob = (strong) ? 56 : 12;
 
-   if(!is_prime(p, rng, prob) || !is_prime(q, rng, prob))
+   if(!is_prime(m_p, rng, prob) || !is_prime(m_q, rng, prob))
       return false;
    return true;
    }
@@ -10337,12 +10344,12 @@ MDx_HashFunction::MDx_HashFunction(size_t block_len,
                                    bool byte_end,
                                    bool bit_end,
                                    size_t cnt_size) :
-   buffer(block_len),
+   m_buffer(block_len),
    BIG_BYTE_ENDIAN(byte_end),
    BIG_BIT_ENDIAN(bit_end),
    COUNT_SIZE(cnt_size)
    {
-   count = position = 0;
+   m_count = m_position = 0;
    }
 
 /*
@@ -10350,8 +10357,8 @@ MDx_HashFunction::MDx_HashFunction(size_t block_len,
 */
 void MDx_HashFunction::clear()
    {
-   zeroise(buffer);
-   count = position = 0;
+   zeroise(m_buffer);
+   m_count = m_position = 0;
    }
 
 /*
@@ -10359,29 +10366,29 @@ void MDx_HashFunction::clear()
 */
 void MDx_HashFunction::add_data(const byte input[], size_t length)
    {
-   count += length;
+   m_count += length;
 
-   if(position)
+   if(m_position)
       {
-      buffer_insert(buffer, position, input, length);
+      buffer_insert(m_buffer, m_position, input, length);
 
-      if(position + length >= buffer.size())
+      if(m_position + length >= m_buffer.size())
          {
-         compress_n(buffer.data(), 1);
-         input += (buffer.size() - position);
-         length -= (buffer.size() - position);
-         position = 0;
+         compress_n(m_buffer.data(), 1);
+         input += (m_buffer.size() - m_position);
+         length -= (m_buffer.size() - m_position);
+         m_position = 0;
          }
       }
 
-   const size_t full_blocks = length / buffer.size();
-   const size_t remaining   = length % buffer.size();
+   const size_t full_blocks = length / m_buffer.size();
+   const size_t remaining   = length % m_buffer.size();
 
    if(full_blocks)
       compress_n(input, full_blocks);
 
-   buffer_insert(buffer, position, input + full_blocks * buffer.size(), remaining);
-   position += remaining;
+   buffer_insert(m_buffer, m_position, input + full_blocks * m_buffer.size(), remaining);
+   m_position += remaining;
    }
 
 /*
@@ -10389,19 +10396,19 @@ void MDx_HashFunction::add_data(const byte input[], size_t length)
 */
 void MDx_HashFunction::final_result(byte output[])
    {
-   buffer[position] = (BIG_BIT_ENDIAN ? 0x80 : 0x01);
-   for(size_t i = position+1; i != buffer.size(); ++i)
-      buffer[i] = 0;
+   m_buffer[m_position] = (BIG_BIT_ENDIAN ? 0x80 : 0x01);
+   for(size_t i = m_position+1; i != m_buffer.size(); ++i)
+      m_buffer[i] = 0;
 
-   if(position >= buffer.size() - COUNT_SIZE)
+   if(m_position >= m_buffer.size() - COUNT_SIZE)
       {
-      compress_n(buffer.data(), 1);
-      zeroise(buffer);
+      compress_n(m_buffer.data(), 1);
+      zeroise(m_buffer);
       }
 
-   write_count(&buffer[buffer.size() - COUNT_SIZE]);
+   write_count(&m_buffer[m_buffer.size() - COUNT_SIZE]);
 
-   compress_n(buffer.data(), 1);
+   compress_n(m_buffer.data(), 1);
    copy_out(output);
    clear();
    }
@@ -10416,7 +10423,7 @@ void MDx_HashFunction::write_count(byte out[])
    if(COUNT_SIZE >= output_length() || COUNT_SIZE >= hash_block_size())
       throw Invalid_Argument("MDx_HashFunction: COUNT_SIZE is too big");
 
-   const u64bit bit_count = count * 8;
+   const u64bit bit_count = m_count * 8;
 
    if(BIG_BYTE_ENDIAN)
       store_be(bit_count, out + COUNT_SIZE - 8);
@@ -12271,6 +12278,9 @@ void bigint_mul(word z[], size_t z_size, word workspace[],
                 const word x[], size_t x_size, size_t x_sw,
                 const word y[], size_t y_size, size_t y_sw)
    {
+   // checking that z_size >= x_sw + y_sw without overflow
+   BOTAN_ASSERT(z_size > x_sw && z_size > y_sw && z_size-x_sw >= y_sw, "Output size is sufficient");
+
    if(x_sw == 1)
       {
       bigint_linmul3(z, y, y_sw, x[0]);
@@ -12327,6 +12337,8 @@ void bigint_mul(word z[], size_t z_size, word workspace[],
 void bigint_sqr(word z[], size_t z_size, word workspace[],
                 const word x[], size_t x_size, size_t x_sw)
    {
+   BOTAN_ASSERT(z_size/2 >= x_sw, "Output size is sufficient");
+
    if(x_sw == 1)
       {
       bigint_linmul3(z, x, x_sw, x[0]);
@@ -12751,19 +12763,19 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
    class Seed
       {
       public:
-         Seed(const std::vector<byte>& s) : seed(s) {}
+         Seed(const std::vector<byte>& s) : m_seed(s) {}
 
-         operator std::vector<byte>& () { return seed; }
+         operator std::vector<byte>& () { return m_seed; }
 
          Seed& operator++()
             {
-            for(size_t j = seed.size(); j > 0; --j)
-               if(++seed[j-1])
+            for(size_t j = m_seed.size(); j > 0; --j)
+               if(++m_seed[j-1])
                   break;
             return (*this);
             }
       private:
-         std::vector<byte> seed;
+         std::vector<byte> m_seed;
       };
 
    Seed seed(seed_c);
@@ -13600,7 +13612,7 @@ namespace Botan {
 */
 void Fixed_Window_Exponentiator::set_exponent(const BigInt& e)
    {
-   exp = e;
+   m_exp = e;
    }
 
 /*
@@ -13608,14 +13620,14 @@ void Fixed_Window_Exponentiator::set_exponent(const BigInt& e)
 */
 void Fixed_Window_Exponentiator::set_base(const BigInt& base)
    {
-   window_bits = Power_Mod::window_bits(exp.bits(), base.bits(), hints);
+   m_window_bits = Power_Mod::window_bits(m_exp.bits(), base.bits(), m_hints);
 
-   g.resize((1 << window_bits));
-   g[0] = 1;
-   g[1] = base;
+   m_g.resize((1 << m_window_bits));
+   m_g[0] = 1;
+   m_g[1] = base;
 
-   for(size_t i = 2; i != g.size(); ++i)
-      g[i] = reducer.multiply(g[i-1], g[0]);
+   for(size_t i = 2; i != m_g.size(); ++i)
+      m_g[i] = m_reducer.multiply(m_g[i-1], m_g[0]);
    }
 
 /*
@@ -13623,18 +13635,18 @@ void Fixed_Window_Exponentiator::set_base(const BigInt& base)
 */
 BigInt Fixed_Window_Exponentiator::execute() const
    {
-   const size_t exp_nibbles = (exp.bits() + window_bits - 1) / window_bits;
+   const size_t exp_nibbles = (m_exp.bits() + m_window_bits - 1) / m_window_bits;
 
    BigInt x = 1;
 
    for(size_t i = exp_nibbles; i > 0; --i)
       {
-      for(size_t j = 0; j != window_bits; ++j)
-         x = reducer.square(x);
+      for(size_t j = 0; j != m_window_bits; ++j)
+         x = m_reducer.square(x);
 
-      const u32bit nibble = exp.get_substring(window_bits*(i-1), window_bits);
+      const u32bit nibble = m_exp.get_substring(m_window_bits*(i-1), m_window_bits);
 
-      x = reducer.multiply(x, g[nibble]);
+      x = m_reducer.multiply(x, m_g[nibble]);
       }
    return x;
    }
@@ -13645,9 +13657,9 @@ BigInt Fixed_Window_Exponentiator::execute() const
 Fixed_Window_Exponentiator::Fixed_Window_Exponentiator(const BigInt& n,
                                                        Power_Mod::Usage_Hints hints)
    {
-   reducer = Modular_Reducer(n);
-   this->hints = hints;
-   window_bits = 0;
+   m_reducer = Modular_Reducer(n);
+   m_hints = hints;
+   m_window_bits = 0;
    }
 
 }
@@ -14417,12 +14429,12 @@ Modular_Reducer::Modular_Reducer(const BigInt& mod)
    if(mod <= 0)
       throw Invalid_Argument("Modular_Reducer: modulus must be positive");
 
-   modulus = mod;
-   mod_words = modulus.sig_words();
+   m_modulus = mod;
+   m_mod_words = m_modulus.sig_words();
 
-   modulus_2 = Botan::square(modulus);
+   m_modulus_2 = Botan::square(m_modulus);
 
-   mu = BigInt::power_of_2(2 * MP_WORD_BITS * mod_words) / modulus;
+   m_mu = BigInt::power_of_2(2 * MP_WORD_BITS * m_mod_words) / m_modulus;
    }
 
 /*
@@ -14430,50 +14442,50 @@ Modular_Reducer::Modular_Reducer(const BigInt& mod)
 */
 BigInt Modular_Reducer::reduce(const BigInt& x) const
    {
-   if(mod_words == 0)
+   if(m_mod_words == 0)
       throw Invalid_State("Modular_Reducer: Never initalized");
 
-   if(x.cmp(modulus, false) < 0)
+   if(x.cmp(m_modulus, false) < 0)
       {
       if(x.is_negative())
-         return x + modulus; // make positive
+         return x + m_modulus; // make positive
       return x;
       }
-   else if(x.cmp(modulus_2, false) < 0)
+   else if(x.cmp(m_modulus_2, false) < 0)
       {
       BigInt t1 = x;
       t1.set_sign(BigInt::Positive);
-      t1 >>= (MP_WORD_BITS * (mod_words - 1));
-      t1 *= mu;
+      t1 >>= (MP_WORD_BITS * (m_mod_words - 1));
+      t1 *= m_mu;
 
-      t1 >>= (MP_WORD_BITS * (mod_words + 1));
-      t1 *= modulus;
+      t1 >>= (MP_WORD_BITS * (m_mod_words + 1));
+      t1 *= m_modulus;
 
-      t1.mask_bits(MP_WORD_BITS * (mod_words + 1));
+      t1.mask_bits(MP_WORD_BITS * (m_mod_words + 1));
 
       BigInt t2 = x;
       t2.set_sign(BigInt::Positive);
-      t2.mask_bits(MP_WORD_BITS * (mod_words + 1));
+      t2.mask_bits(MP_WORD_BITS * (m_mod_words + 1));
 
       t2 -= t1;
 
       if(t2.is_negative())
          {
-         t2 += BigInt::power_of_2(MP_WORD_BITS * (mod_words + 1));
+         t2 += BigInt::power_of_2(MP_WORD_BITS * (m_mod_words + 1));
          }
 
-      while(t2 >= modulus)
-         t2 -= modulus;
+      while(t2 >= m_modulus)
+         t2 -= m_modulus;
 
       if(x.is_positive())
          return t2;
       else
-         return (modulus - t2);
+         return (m_modulus - t2);
       }
    else
       {
       // too big, fall back to normal division
-      return (x % modulus);
+      return (x % m_modulus);
       }
    }
 
@@ -14494,15 +14506,17 @@ namespace Botan {
 */
 BigInt ressol(const BigInt& a, const BigInt& p)
    {
-   if(a < 0)
-      throw Invalid_Argument("ressol(): a to solve for must be positive");
-   if(p <= 1)
-      throw Invalid_Argument("ressol(): prime must be > 1");
-
    if(a == 0)
       return 0;
+   else if(a < 0)
+      throw Invalid_Argument("ressol(): a to solve for must be positive");
+
    if(p == 2)
       return a;
+   else if(p <= 1)
+      throw Invalid_Argument("ressol(): prime must be > 1 a");
+   else if(p.is_even())
+      throw Invalid_Argument("ressol(): invalid prime");
 
    if(jacobi(a, p) != 1) // not a quadratic residue
       return -BigInt(1);
@@ -14541,10 +14555,12 @@ BigInt ressol(const BigInt& a, const BigInt& p)
          {
          q = mod_p.square(q);
          ++i;
-         }
 
-      if(s <= i)
-         return -BigInt(1);
+         if(i > s)
+            {
+            return -BigInt(1);
+            }
+         }
 
       c = power_mod(c, BigInt::power_of_2(s-i-1), p);
       r = mod_p.multiply(r, c);
@@ -14759,6 +14775,8 @@ const char* default_oid_list()
       "1.3.6.1.5.5.7.48.1 = PKIX.OCSP" "\n"
       "1.3.6.1.5.5.7.48.1.1 = PKIX.OCSP.BasicResponse" "\n"
 
+      "1.3.6.1.4.1.311.20.2.2 = Microsoft SmartcardLogon" "\n"
+
       // ECC param sets
       "1.3.132.0.8 = secp160r1" "\n"
       "1.3.132.0.9 = secp160k1" "\n"
@@ -14905,12 +14923,12 @@ void OID_Map::read_cfg(std::istream& cfg, const std::string& source)
       std::getline(cfg, s);
       ++line;
 
-      if(s == "" || s[0] == '#')
+      if(s.empty() || s[0] == '#')
          continue;
 
       s = clean_ws(s.substr(0, s.find('#')));
 
-      if(s == "")
+      if(s.empty())
          continue;
 
       auto eq = s.find("=");
@@ -15343,7 +15361,7 @@ PKCS5_PBKDF2::pbkdf(byte key[], size_t key_len,
                     size_t iterations,
                     std::chrono::milliseconds msec) const
    {
-   return pbkdf2(*mac.get(), key, key_len, passphrase, salt, salt_len, iterations, msec);
+   return pbkdf2(*m_mac.get(), key, key_len, passphrase, salt, salt_len, iterations, msec);
    }
 
 
@@ -16287,7 +16305,7 @@ namespace {
 std::pair<std::string, std::string>
 choose_pbe_params(const std::string& pbe_algo, const std::string& key_algo)
    {
-   if(pbe_algo == "")
+   if(pbe_algo.empty())
       {
       // Defaults:
       if(key_algo == "Curve25519" || key_algo == "McEliece")
@@ -16336,7 +16354,7 @@ std::string PEM_encode(const Private_Key& key,
                        std::chrono::milliseconds msec,
                        const std::string& pbe_algo)
    {
-   if(pass == "")
+   if(pass.empty())
       return PEM_encode(key);
 
    return PEM_Code::encode(PKCS8::BER_encode(key, rng, pass, msec, pbe_algo),
@@ -16357,7 +16375,7 @@ Private_Key* load_key(DataSource& source,
    secure_vector<byte> pkcs8_key = PKCS8_decode(source, get_pass, alg_id, is_encrypted);
 
    const std::string alg_name = OIDS::lookup(alg_id.oid);
-   if(alg_name == "" || alg_name == alg_id.oid.as_string())
+   if(alg_name.empty() || alg_name == alg_id.oid.as_string())
       throw PKCS8_Exception("Unknown algorithm OID: " +
                             alg_id.oid.as_string());
 
@@ -16460,7 +16478,7 @@ T* get_pk_op(const std::string& what, const Key& key, const std::string& pad,
       return p;
 
    const std::string err = what + " with " + key.algo_name() + "/" + pad + " not supported";
-   if(provider != "")
+   if(!provider.empty())
       throw Lookup_Error(err + " with provider " + provider);
    else
       throw Lookup_Error(err);
@@ -16894,19 +16912,19 @@ RSA_PrivateKey::RSA_PrivateKey(RandomNumberGenerator& rng,
    if(exp < 3 || exp % 2 == 0)
       throw Invalid_Argument(algo_name() + ": Invalid encryption exponent");
 
-   e = exp;
+   m_e = exp;
 
    do
       {
-      p = random_prime(rng, (bits + 1) / 2, e);
-      q = random_prime(rng, bits - p.bits(), e);
-      n = p * q;
-      } while(n.bits() != bits);
+      m_p = random_prime(rng, (bits + 1) / 2, m_e);
+      m_q = random_prime(rng, bits - m_p.bits(), m_e);
+      m_n = m_p * m_q;
+      } while(m_n.bits() != bits);
 
-   d = inverse_mod(e, lcm(p - 1, q - 1));
-   d1 = d % (p - 1);
-   d2 = d % (q - 1);
-   c = inverse_mod(q, p);
+   m_d = inverse_mod(m_e, lcm(m_p - 1, m_q - 1));
+   m_d1 = m_d % (m_p - 1);
+   m_d2 = m_d % (m_q - 1);
+   m_c = inverse_mod(m_q, m_p);
 
    gen_check(rng);
    }
@@ -16922,7 +16940,7 @@ bool RSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const
    if(!strong)
       return true;
 
-   if((e * d) % lcm(p - 1, q - 1) != 1)
+   if((m_e * m_d) % lcm(m_p - 1, m_q - 1) != 1)
       return false;
 
    return KeyPair::signature_consistency_check(rng, *this, "EMSA4(SHA-1)");
@@ -16936,25 +16954,25 @@ namespace {
 class RSA_Private_Operation
    {
    protected:
-      size_t get_max_input_bits() const { return (n.bits() - 1); }
+      size_t get_max_input_bits() const { return (m_n.bits() - 1); }
 
       RSA_Private_Operation(const RSA_PrivateKey& rsa) :
-         n(rsa.get_n()),
-         q(rsa.get_q()),
-         c(rsa.get_c()),
+         m_n(rsa.get_n()),
+         m_q(rsa.get_q()),
+         m_c(rsa.get_c()),
          m_powermod_e_n(rsa.get_e(), rsa.get_n()),
          m_powermod_d1_p(rsa.get_d1(), rsa.get_p()),
          m_powermod_d2_q(rsa.get_d2(), rsa.get_q()),
          m_mod_p(rsa.get_p()),
-         m_blinder(n,
+         m_blinder(m_n,
                    [this](const BigInt& k) { return m_powermod_e_n(k); },
-                   [this](const BigInt& k) { return inverse_mod(k, n); })
+                   [this](const BigInt& k) { return inverse_mod(k, m_n); })
          {
          }
 
       BigInt blinded_private_op(const BigInt& m) const
          {
-         if(m >= n)
+         if(m >= m_n)
             throw Invalid_Argument("RSA private op - input is too large");
 
          return m_blinder.unblind(private_op(m_blinder.blind(m)));
@@ -16966,14 +16984,14 @@ class RSA_Private_Operation
          BigInt j2 = m_powermod_d2_q(m);
          BigInt j1 = future_j1.get();
 
-         j1 = m_mod_p.reduce(sub_mul(j1, j2, c));
+         j1 = m_mod_p.reduce(sub_mul(j1, j2, m_c));
 
-         return mul_add(j1, q, j2);
+         return mul_add(j1, m_q, j2);
          }
 
-      const BigInt& n;
-      const BigInt& q;
-      const BigInt& c;
+      const BigInt& m_n;
+      const BigInt& m_q;
+      const BigInt& m_c;
       Fixed_Exponent_Power_Mod m_powermod_e_n, m_powermod_d1_p, m_powermod_d2_q;
       Modular_Reducer m_mod_p;
       Blinder m_blinder;
@@ -17000,7 +17018,7 @@ class RSA_Signature_Operation : public PK_Ops::Signature_with_EMSA,
          const BigInt x = blinded_private_op(m);
          const BigInt c = m_powermod_e_n(x);
          BOTAN_ASSERT(m == c, "RSA sign consistency check");
-         return BigInt::encode_1363(x, n.bytes());
+         return BigInt::encode_1363(x, m_n.bytes());
          }
    };
 
@@ -17047,7 +17065,7 @@ class RSA_KEM_Decryption_Operation : public PK_Ops::KEM_Decryption_with_KDF,
          const BigInt x = blinded_private_op(m);
          const BigInt c = m_powermod_e_n(x);
          BOTAN_ASSERT(m == c, "RSA KEM consistency check");
-         return BigInt::encode_1363(x, n.bytes());
+         return BigInt::encode_1363(x, m_n.bytes());
          }
    };
 
@@ -17058,23 +17076,23 @@ class RSA_Public_Operation
    {
    public:
       RSA_Public_Operation(const RSA_PublicKey& rsa) :
-         n(rsa.get_n()), powermod_e_n(rsa.get_e(), rsa.get_n())
+         m_n(rsa.get_n()), m_powermod_e_n(rsa.get_e(), rsa.get_n())
          {}
 
-      size_t get_max_input_bits() const { return (n.bits() - 1); }
+      size_t get_max_input_bits() const { return (m_n.bits() - 1); }
 
    protected:
       BigInt public_op(const BigInt& m) const
          {
-         if(m >= n)
+         if(m >= m_n)
             throw Invalid_Argument("RSA public op - input is too large");
-         return powermod_e_n(m);
+         return m_powermod_e_n(m);
          }
 
-      const BigInt& get_n() const { return n; }
+      const BigInt& get_n() const { return m_n; }
 
-      const BigInt& n;
-      Fixed_Exponent_Power_Mod powermod_e_n;
+      const BigInt& m_n;
+      Fixed_Exponent_Power_Mod m_powermod_e_n;
    };
 
 class RSA_Encryption_Operation : public PK_Ops::Encryption_with_EME,
@@ -17095,7 +17113,7 @@ class RSA_Encryption_Operation : public PK_Ops::Encryption_with_EME,
                                       RandomNumberGenerator&) override
          {
          BigInt m(msg, msg_len);
-         return BigInt::encode_1363(public_op(m), n.bytes());
+         return BigInt::encode_1363(public_op(m), m_n.bytes());
          }
    };
 
@@ -17220,74 +17238,74 @@ void SHA_160::compress_n(const byte input[], size_t blocks)
    {
    using namespace SHA1_F;
 
-   u32bit A = digest[0], B = digest[1], C = digest[2],
-          D = digest[3], E = digest[4];
+   u32bit A = m_digest[0], B = m_digest[1], C = m_digest[2],
+          D = m_digest[3], E = m_digest[4];
 
    for(size_t i = 0; i != blocks; ++i)
       {
-      load_be(W.data(), input, 16);
+      load_be(m_W.data(), input, 16);
 
       for(size_t j = 16; j != 80; j += 8)
          {
-         W[j  ] = rotate_left((W[j-3] ^ W[j-8] ^ W[j-14] ^ W[j-16]), 1);
-         W[j+1] = rotate_left((W[j-2] ^ W[j-7] ^ W[j-13] ^ W[j-15]), 1);
-         W[j+2] = rotate_left((W[j-1] ^ W[j-6] ^ W[j-12] ^ W[j-14]), 1);
-         W[j+3] = rotate_left((W[j  ] ^ W[j-5] ^ W[j-11] ^ W[j-13]), 1);
-         W[j+4] = rotate_left((W[j+1] ^ W[j-4] ^ W[j-10] ^ W[j-12]), 1);
-         W[j+5] = rotate_left((W[j+2] ^ W[j-3] ^ W[j- 9] ^ W[j-11]), 1);
-         W[j+6] = rotate_left((W[j+3] ^ W[j-2] ^ W[j- 8] ^ W[j-10]), 1);
-         W[j+7] = rotate_left((W[j+4] ^ W[j-1] ^ W[j- 7] ^ W[j- 9]), 1);
+         m_W[j  ] = rotate_left((m_W[j-3] ^ m_W[j-8] ^ m_W[j-14] ^ m_W[j-16]), 1);
+         m_W[j+1] = rotate_left((m_W[j-2] ^ m_W[j-7] ^ m_W[j-13] ^ m_W[j-15]), 1);
+         m_W[j+2] = rotate_left((m_W[j-1] ^ m_W[j-6] ^ m_W[j-12] ^ m_W[j-14]), 1);
+         m_W[j+3] = rotate_left((m_W[j  ] ^ m_W[j-5] ^ m_W[j-11] ^ m_W[j-13]), 1);
+         m_W[j+4] = rotate_left((m_W[j+1] ^ m_W[j-4] ^ m_W[j-10] ^ m_W[j-12]), 1);
+         m_W[j+5] = rotate_left((m_W[j+2] ^ m_W[j-3] ^ m_W[j- 9] ^ m_W[j-11]), 1);
+         m_W[j+6] = rotate_left((m_W[j+3] ^ m_W[j-2] ^ m_W[j- 8] ^ m_W[j-10]), 1);
+         m_W[j+7] = rotate_left((m_W[j+4] ^ m_W[j-1] ^ m_W[j- 7] ^ m_W[j- 9]), 1);
          }
 
-      F1(A, B, C, D, E, W[ 0]);   F1(E, A, B, C, D, W[ 1]);
-      F1(D, E, A, B, C, W[ 2]);   F1(C, D, E, A, B, W[ 3]);
-      F1(B, C, D, E, A, W[ 4]);   F1(A, B, C, D, E, W[ 5]);
-      F1(E, A, B, C, D, W[ 6]);   F1(D, E, A, B, C, W[ 7]);
-      F1(C, D, E, A, B, W[ 8]);   F1(B, C, D, E, A, W[ 9]);
-      F1(A, B, C, D, E, W[10]);   F1(E, A, B, C, D, W[11]);
-      F1(D, E, A, B, C, W[12]);   F1(C, D, E, A, B, W[13]);
-      F1(B, C, D, E, A, W[14]);   F1(A, B, C, D, E, W[15]);
-      F1(E, A, B, C, D, W[16]);   F1(D, E, A, B, C, W[17]);
-      F1(C, D, E, A, B, W[18]);   F1(B, C, D, E, A, W[19]);
+      F1(A, B, C, D, E, m_W[ 0]);   F1(E, A, B, C, D, m_W[ 1]);
+      F1(D, E, A, B, C, m_W[ 2]);   F1(C, D, E, A, B, m_W[ 3]);
+      F1(B, C, D, E, A, m_W[ 4]);   F1(A, B, C, D, E, m_W[ 5]);
+      F1(E, A, B, C, D, m_W[ 6]);   F1(D, E, A, B, C, m_W[ 7]);
+      F1(C, D, E, A, B, m_W[ 8]);   F1(B, C, D, E, A, m_W[ 9]);
+      F1(A, B, C, D, E, m_W[10]);   F1(E, A, B, C, D, m_W[11]);
+      F1(D, E, A, B, C, m_W[12]);   F1(C, D, E, A, B, m_W[13]);
+      F1(B, C, D, E, A, m_W[14]);   F1(A, B, C, D, E, m_W[15]);
+      F1(E, A, B, C, D, m_W[16]);   F1(D, E, A, B, C, m_W[17]);
+      F1(C, D, E, A, B, m_W[18]);   F1(B, C, D, E, A, m_W[19]);
 
-      F2(A, B, C, D, E, W[20]);   F2(E, A, B, C, D, W[21]);
-      F2(D, E, A, B, C, W[22]);   F2(C, D, E, A, B, W[23]);
-      F2(B, C, D, E, A, W[24]);   F2(A, B, C, D, E, W[25]);
-      F2(E, A, B, C, D, W[26]);   F2(D, E, A, B, C, W[27]);
-      F2(C, D, E, A, B, W[28]);   F2(B, C, D, E, A, W[29]);
-      F2(A, B, C, D, E, W[30]);   F2(E, A, B, C, D, W[31]);
-      F2(D, E, A, B, C, W[32]);   F2(C, D, E, A, B, W[33]);
-      F2(B, C, D, E, A, W[34]);   F2(A, B, C, D, E, W[35]);
-      F2(E, A, B, C, D, W[36]);   F2(D, E, A, B, C, W[37]);
-      F2(C, D, E, A, B, W[38]);   F2(B, C, D, E, A, W[39]);
+      F2(A, B, C, D, E, m_W[20]);   F2(E, A, B, C, D, m_W[21]);
+      F2(D, E, A, B, C, m_W[22]);   F2(C, D, E, A, B, m_W[23]);
+      F2(B, C, D, E, A, m_W[24]);   F2(A, B, C, D, E, m_W[25]);
+      F2(E, A, B, C, D, m_W[26]);   F2(D, E, A, B, C, m_W[27]);
+      F2(C, D, E, A, B, m_W[28]);   F2(B, C, D, E, A, m_W[29]);
+      F2(A, B, C, D, E, m_W[30]);   F2(E, A, B, C, D, m_W[31]);
+      F2(D, E, A, B, C, m_W[32]);   F2(C, D, E, A, B, m_W[33]);
+      F2(B, C, D, E, A, m_W[34]);   F2(A, B, C, D, E, m_W[35]);
+      F2(E, A, B, C, D, m_W[36]);   F2(D, E, A, B, C, m_W[37]);
+      F2(C, D, E, A, B, m_W[38]);   F2(B, C, D, E, A, m_W[39]);
 
-      F3(A, B, C, D, E, W[40]);   F3(E, A, B, C, D, W[41]);
-      F3(D, E, A, B, C, W[42]);   F3(C, D, E, A, B, W[43]);
-      F3(B, C, D, E, A, W[44]);   F3(A, B, C, D, E, W[45]);
-      F3(E, A, B, C, D, W[46]);   F3(D, E, A, B, C, W[47]);
-      F3(C, D, E, A, B, W[48]);   F3(B, C, D, E, A, W[49]);
-      F3(A, B, C, D, E, W[50]);   F3(E, A, B, C, D, W[51]);
-      F3(D, E, A, B, C, W[52]);   F3(C, D, E, A, B, W[53]);
-      F3(B, C, D, E, A, W[54]);   F3(A, B, C, D, E, W[55]);
-      F3(E, A, B, C, D, W[56]);   F3(D, E, A, B, C, W[57]);
-      F3(C, D, E, A, B, W[58]);   F3(B, C, D, E, A, W[59]);
+      F3(A, B, C, D, E, m_W[40]);   F3(E, A, B, C, D, m_W[41]);
+      F3(D, E, A, B, C, m_W[42]);   F3(C, D, E, A, B, m_W[43]);
+      F3(B, C, D, E, A, m_W[44]);   F3(A, B, C, D, E, m_W[45]);
+      F3(E, A, B, C, D, m_W[46]);   F3(D, E, A, B, C, m_W[47]);
+      F3(C, D, E, A, B, m_W[48]);   F3(B, C, D, E, A, m_W[49]);
+      F3(A, B, C, D, E, m_W[50]);   F3(E, A, B, C, D, m_W[51]);
+      F3(D, E, A, B, C, m_W[52]);   F3(C, D, E, A, B, m_W[53]);
+      F3(B, C, D, E, A, m_W[54]);   F3(A, B, C, D, E, m_W[55]);
+      F3(E, A, B, C, D, m_W[56]);   F3(D, E, A, B, C, m_W[57]);
+      F3(C, D, E, A, B, m_W[58]);   F3(B, C, D, E, A, m_W[59]);
 
-      F4(A, B, C, D, E, W[60]);   F4(E, A, B, C, D, W[61]);
-      F4(D, E, A, B, C, W[62]);   F4(C, D, E, A, B, W[63]);
-      F4(B, C, D, E, A, W[64]);   F4(A, B, C, D, E, W[65]);
-      F4(E, A, B, C, D, W[66]);   F4(D, E, A, B, C, W[67]);
-      F4(C, D, E, A, B, W[68]);   F4(B, C, D, E, A, W[69]);
-      F4(A, B, C, D, E, W[70]);   F4(E, A, B, C, D, W[71]);
-      F4(D, E, A, B, C, W[72]);   F4(C, D, E, A, B, W[73]);
-      F4(B, C, D, E, A, W[74]);   F4(A, B, C, D, E, W[75]);
-      F4(E, A, B, C, D, W[76]);   F4(D, E, A, B, C, W[77]);
-      F4(C, D, E, A, B, W[78]);   F4(B, C, D, E, A, W[79]);
+      F4(A, B, C, D, E, m_W[60]);   F4(E, A, B, C, D, m_W[61]);
+      F4(D, E, A, B, C, m_W[62]);   F4(C, D, E, A, B, m_W[63]);
+      F4(B, C, D, E, A, m_W[64]);   F4(A, B, C, D, E, m_W[65]);
+      F4(E, A, B, C, D, m_W[66]);   F4(D, E, A, B, C, m_W[67]);
+      F4(C, D, E, A, B, m_W[68]);   F4(B, C, D, E, A, m_W[69]);
+      F4(A, B, C, D, E, m_W[70]);   F4(E, A, B, C, D, m_W[71]);
+      F4(D, E, A, B, C, m_W[72]);   F4(C, D, E, A, B, m_W[73]);
+      F4(B, C, D, E, A, m_W[74]);   F4(A, B, C, D, E, m_W[75]);
+      F4(E, A, B, C, D, m_W[76]);   F4(D, E, A, B, C, m_W[77]);
+      F4(C, D, E, A, B, m_W[78]);   F4(B, C, D, E, A, m_W[79]);
 
-      A = (digest[0] += A);
-      B = (digest[1] += B);
-      C = (digest[2] += C);
-      D = (digest[3] += D);
-      E = (digest[4] += E);
+      A = (m_digest[0] += A);
+      B = (m_digest[1] += B);
+      C = (m_digest[2] += C);
+      D = (m_digest[3] += D);
+      E = (m_digest[4] += E);
 
       input += hash_block_size();
       }
@@ -17298,7 +17316,7 @@ void SHA_160::compress_n(const byte input[], size_t blocks)
 */
 void SHA_160::copy_out(byte output[])
    {
-   copy_out_vec_be(output, output_length(), digest);
+   copy_out_vec_be(output, output_length(), m_digest);
    }
 
 /*
@@ -17307,12 +17325,12 @@ void SHA_160::copy_out(byte output[])
 void SHA_160::clear()
    {
    MDx_HashFunction::clear();
-   zeroise(W);
-   digest[0] = 0x67452301;
-   digest[1] = 0xEFCDAB89;
-   digest[2] = 0x98BADCFE;
-   digest[3] = 0x10325476;
-   digest[4] = 0xC3D2E1F0;
+   zeroise(m_W);
+   m_digest[0] = 0x67452301;
+   m_digest[1] = 0xEFCDAB89;
+   m_digest[2] = 0x98BADCFE;
+   m_digest[3] = 0x10325476;
+   m_digest[4] = 0xC3D2E1F0;
    }
 
 }
@@ -17478,7 +17496,7 @@ void compress(secure_vector<u32bit>& digest,
 */
 void SHA_224::compress_n(const byte input[], size_t blocks)
    {
-   SHA2_32::compress(digest, input, blocks);
+   SHA2_32::compress(m_digest, input, blocks);
    }
 
 /*
@@ -17486,7 +17504,7 @@ void SHA_224::compress_n(const byte input[], size_t blocks)
 */
 void SHA_224::copy_out(byte output[])
    {
-   copy_out_vec_be(output, output_length(), digest);
+   copy_out_vec_be(output, output_length(), m_digest);
    }
 
 /*
@@ -17495,14 +17513,14 @@ void SHA_224::copy_out(byte output[])
 void SHA_224::clear()
    {
    MDx_HashFunction::clear();
-   digest[0] = 0xC1059ED8;
-   digest[1] = 0x367CD507;
-   digest[2] = 0x3070DD17;
-   digest[3] = 0xF70E5939;
-   digest[4] = 0xFFC00B31;
-   digest[5] = 0x68581511;
-   digest[6] = 0x64F98FA7;
-   digest[7] = 0xBEFA4FA4;
+   m_digest[0] = 0xC1059ED8;
+   m_digest[1] = 0x367CD507;
+   m_digest[2] = 0x3070DD17;
+   m_digest[3] = 0xF70E5939;
+   m_digest[4] = 0xFFC00B31;
+   m_digest[5] = 0x68581511;
+   m_digest[6] = 0x64F98FA7;
+   m_digest[7] = 0xBEFA4FA4;
    }
 
 /*
@@ -17510,7 +17528,7 @@ void SHA_224::clear()
 */
 void SHA_256::compress_n(const byte input[], size_t blocks)
    {
-   SHA2_32::compress(digest, input, blocks);
+   SHA2_32::compress(m_digest, input, blocks);
    }
 
 /*
@@ -17518,7 +17536,7 @@ void SHA_256::compress_n(const byte input[], size_t blocks)
 */
 void SHA_256::copy_out(byte output[])
    {
-   copy_out_vec_be(output, output_length(), digest);
+   copy_out_vec_be(output, output_length(), m_digest);
    }
 
 /*
@@ -17527,14 +17545,14 @@ void SHA_256::copy_out(byte output[])
 void SHA_256::clear()
    {
    MDx_HashFunction::clear();
-   digest[0] = 0x6A09E667;
-   digest[1] = 0xBB67AE85;
-   digest[2] = 0x3C6EF372;
-   digest[3] = 0xA54FF53A;
-   digest[4] = 0x510E527F;
-   digest[5] = 0x9B05688C;
-   digest[6] = 0x1F83D9AB;
-   digest[7] = 0x5BE0CD19;
+   m_digest[0] = 0x6A09E667;
+   m_digest[1] = 0xBB67AE85;
+   m_digest[2] = 0x3C6EF372;
+   m_digest[3] = 0xA54FF53A;
+   m_digest[4] = 0x510E527F;
+   m_digest[5] = 0x9B05688C;
+   m_digest[6] = 0x1F83D9AB;
+   m_digest[7] = 0x5BE0CD19;
    }
 
 }
@@ -17982,7 +18000,7 @@ SRP6_Authenticator_File::SRP6_Authenticator_File(const std::string& filename)
       else
          continue; // unknown group, ignored
 
-      entries[username] = SRP6_Data(v, salt, group_id);
+      m_entries[username] = SRP6_Data(v, salt, group_id);
       }
    }
 
@@ -17991,9 +18009,9 @@ bool SRP6_Authenticator_File::lookup_user(const std::string& username,
                                           std::vector<byte>& salt,
                                           std::string& group_id) const
    {
-   std::map<std::string, SRP6_Data>::const_iterator i = entries.find(username);
+   std::map<std::string, SRP6_Data>::const_iterator i = m_entries.find(username);
 
-   if(i == entries.end())
+   if(i == m_entries.end())
       return false;
 
    v = i->second.v;
@@ -18909,15 +18927,15 @@ size_t DataSource::discard_next(size_t n)
 */
 size_t DataSource_Memory::read(byte out[], size_t length)
    {
-   size_t got = std::min<size_t>(source.size() - offset, length);
-   copy_mem(out, source.data() + offset, got);
-   offset += got;
+   size_t got = std::min<size_t>(m_source.size() - m_offset, length);
+   copy_mem(out, m_source.data() + m_offset, got);
+   m_offset += got;
    return got;
    }
 
 bool DataSource_Memory::check_available(size_t n)
    {
-   return (n <= (source.size() - offset));
+   return (n <= (m_source.size() - m_offset));
    }
 
 /*
@@ -18926,11 +18944,11 @@ bool DataSource_Memory::check_available(size_t n)
 size_t DataSource_Memory::peek(byte out[], size_t length,
                                size_t peek_offset) const
    {
-   const size_t bytes_left = source.size() - offset;
+   const size_t bytes_left = m_source.size() - m_offset;
    if(peek_offset >= bytes_left) return 0;
 
    size_t got = std::min(bytes_left - peek_offset, length);
-   copy_mem(out, &source[offset + peek_offset], got);
+   copy_mem(out, &m_source[m_offset + peek_offset], got);
    return got;
    }
 
@@ -18939,18 +18957,18 @@ size_t DataSource_Memory::peek(byte out[], size_t length,
 */
 bool DataSource_Memory::end_of_data() const
    {
-   return (offset == source.size());
+   return (m_offset == m_source.size());
    }
 
 /*
 * DataSource_Memory Constructor
 */
 DataSource_Memory::DataSource_Memory(const std::string& in) :
-   source(reinterpret_cast<const byte*>(in.data()),
+   m_source(reinterpret_cast<const byte*>(in.data()),
           reinterpret_cast<const byte*>(in.data()) + in.length()),
-   offset(0)
+   m_offset(0)
    {
-   offset = 0;
+   m_offset = 0;
    }
 
 /*
@@ -18958,21 +18976,21 @@ DataSource_Memory::DataSource_Memory(const std::string& in) :
 */
 size_t DataSource_Stream::read(byte out[], size_t length)
    {
-   source.read(reinterpret_cast<char*>(out), length);
-   if(source.bad())
+   m_source.read(reinterpret_cast<char*>(out), length);
+   if(m_source.bad())
       throw Stream_IO_Error("DataSource_Stream::read: Source failure");
 
-   size_t got = source.gcount();
-   total_read += got;
+   size_t got = m_source.gcount();
+   m_total_read += got;
    return got;
    }
 
 bool DataSource_Stream::check_available(size_t n)
    {
-   const std::streampos orig_pos = source.tellg();
-   source.seekg(0, std::ios::end);
-   const size_t avail = source.tellg() - orig_pos;
-   source.seekg(orig_pos);
+   const std::streampos orig_pos = m_source.tellg();
+   m_source.seekg(0, std::ios::end);
+   const size_t avail = m_source.tellg() - orig_pos;
+   m_source.seekg(orig_pos);
    return (avail >= n);
    }
 
@@ -18989,23 +19007,23 @@ size_t DataSource_Stream::peek(byte out[], size_t length, size_t offset) const
    if(offset)
       {
       secure_vector<byte> buf(offset);
-      source.read(reinterpret_cast<char*>(buf.data()), buf.size());
-      if(source.bad())
+      m_source.read(reinterpret_cast<char*>(buf.data()), buf.size());
+      if(m_source.bad())
          throw Stream_IO_Error("DataSource_Stream::peek: Source failure");
-      got = source.gcount();
+      got = m_source.gcount();
       }
 
    if(got == offset)
       {
-      source.read(reinterpret_cast<char*>(out), length);
-      if(source.bad())
+      m_source.read(reinterpret_cast<char*>(out), length);
+      if(m_source.bad())
          throw Stream_IO_Error("DataSource_Stream::peek: Source failure");
-      got = source.gcount();
+      got = m_source.gcount();
       }
 
-   if(source.eof())
-      source.clear();
-   source.seekg(total_read, std::ios::beg);
+   if(m_source.eof())
+      m_source.clear();
+   m_source.seekg(m_total_read, std::ios::beg);
 
    return got;
    }
@@ -19015,7 +19033,7 @@ size_t DataSource_Stream::peek(byte out[], size_t length, size_t offset) const
 */
 bool DataSource_Stream::end_of_data() const
    {
-   return (!source.good());
+   return (!m_source.good());
    }
 
 /*
@@ -19023,7 +19041,7 @@ bool DataSource_Stream::end_of_data() const
 */
 std::string DataSource_Stream::id() const
    {
-   return identifier;
+   return m_identifier;
    }
 
 /*
@@ -19031,15 +19049,15 @@ std::string DataSource_Stream::id() const
 */
 DataSource_Stream::DataSource_Stream(const std::string& path,
                                      bool use_binary) :
-   identifier(path),
-   source_p(new std::ifstream(path,
+   m_identifier(path),
+   m_source_p(new std::ifstream(path,
                               use_binary ? std::ios::binary : std::ios::in)),
-   source(*source_p),
-   total_read(0)
+   m_source(*m_source_p),
+   m_total_read(0)
    {
-   if(!source.good())
+   if(!m_source.good())
       {
-      delete source_p;
+      delete m_source_p;
       throw Stream_IO_Error("DataSource: Failure opening file " + path);
       }
    }
@@ -19049,10 +19067,10 @@ DataSource_Stream::DataSource_Stream(const std::string& path,
 */
 DataSource_Stream::DataSource_Stream(std::istream& in,
                                      const std::string& name) :
-   identifier(name),
-   source_p(nullptr),
-   source(in),
-   total_read(0)
+   m_identifier(name),
+   m_source_p(nullptr),
+   m_source(in),
+   m_total_read(0)
    {
    }
 
@@ -19061,7 +19079,7 @@ DataSource_Stream::DataSource_Stream(std::istream& in,
 */
 DataSource_Stream::~DataSource_Stream()
    {
-   delete source_p;
+   delete m_source_p;
    }
 
 }
@@ -19362,7 +19380,7 @@ u32bit to_u32bit(const std::string& str)
 */
 u32bit timespec_to_u32bit(const std::string& timespec)
    {
-   if(timespec == "")
+   if(timespec.empty())
       return 0;
 
    const char suffix = timespec[timespec.size()-1];
@@ -19438,7 +19456,7 @@ std::vector<std::string> parse_algorithm_name(const std::string& namex)
          substring += c;
       }
 
-   if(substring != "")
+   if(!substring.empty())
       throw Invalid_Algorithm_Name(namex);
 
    return elems;
@@ -19453,14 +19471,14 @@ std::vector<std::string> split_on_pred(const std::string& str,
                                        std::function<bool (char)> pred)
    {
    std::vector<std::string> elems;
-   if(str == "") return elems;
+   if(str.empty()) return elems;
 
    std::string substr;
    for(auto i = str.begin(); i != str.end(); ++i)
       {
       if(pred(*i))
          {
-         if(substr != "")
+         if(!substr.empty())
             elems.push_back(substr);
          substr.clear();
          }
@@ -19468,7 +19486,7 @@ std::vector<std::string> split_on_pred(const std::string& str,
          substr += *i;
       }
 
-   if(substr == "")
+   if(substr.empty())
       throw Invalid_Argument("Unable to split string: " + str);
    elems.push_back(substr);
 
@@ -19506,7 +19524,7 @@ std::vector<u32bit> parse_asn1_oid(const std::string& oid)
 
       if(c == '.')
          {
-         if(substring == "")
+         if(substring.empty())
             throw Invalid_OID(oid);
          oid_elems.push_back(to_u32bit(substring));
          substring.clear();
@@ -19515,7 +19533,7 @@ std::vector<u32bit> parse_asn1_oid(const std::string& oid)
          substring += c;
       }
 
-   if(substring == "")
+   if(substring.empty())
       throw Invalid_OID(oid);
    oid_elems.push_back(to_u32bit(substring));
 
@@ -19701,12 +19719,12 @@ std::map<std::string, std::string> read_cfg(std::istream& is)
 
       ++line;
 
-      if(s == "" || s[0] == '#')
+      if(s.empty() || s[0] == '#')
          continue;
 
       s = clean_ws(s.substr(0, s.find('#')));
 
-      if(s == "")
+      if(s.empty())
          continue;
 
       auto eq = s.find("=");
@@ -19892,7 +19910,7 @@ void Win32_EntropySource::poll(Entropy_Accumulator& accum)
    First query a bunch of basic statistical stuff, though
    don't count it for much in terms of contributed entropy.
    */
-   accum.add(GetTickCount(), BOTAN_ENTROPY_ESTIMATE_SYSTEM_DATA);
+   accum.add(GetTickCount64(), BOTAN_ENTROPY_ESTIMATE_SYSTEM_DATA);
    accum.add(GetMessagePos(), BOTAN_ENTROPY_ESTIMATE_SYSTEM_DATA);
    accum.add(GetMessageTime(), BOTAN_ENTROPY_ESTIMATE_SYSTEM_DATA);
    accum.add(GetInputState(), BOTAN_ENTROPY_ESTIMATE_SYSTEM_DATA);
@@ -19904,8 +19922,8 @@ void Win32_EntropySource::poll(Entropy_Accumulator& accum)
    GetSystemInfo(&sys_info);
    accum.add(sys_info, BOTAN_ENTROPY_ESTIMATE_STATIC_SYSTEM_DATA);
 
-   MEMORYSTATUS mem_info;
-   GlobalMemoryStatus(&mem_info);
+   MEMORYSTATUSEX mem_info;
+   GlobalMemoryStatusEx(&mem_info);
    accum.add(mem_info, BOTAN_ENTROPY_ESTIMATE_SYSTEM_DATA);
 
    POINT point;

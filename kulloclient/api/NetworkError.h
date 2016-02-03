@@ -12,7 +12,7 @@ enum class NetworkError : int {
     Forbidden,
     /** Client and server protocol incompatible; should check for update */
     Protocol,
-    /** Bad login info (address + master key) */
+    /** Bad credentials (address + master key) */
     Unauthorized,
     /** Server-side error */
     Server,

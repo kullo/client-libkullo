@@ -9,7 +9,7 @@ api/ChallengeType.h
 api/Client.cpp
 api/Client.h
 api/ClientAddressExistsListener.h
-api/ClientCheckLoginListener.h
+api/ClientCheckCredentialsListener.h
 api/ClientCreateSessionListener.h
 api/ClientGenerateKeysListener.h
 api/Conversations.h

@@ -27,16 +27,18 @@ public:
 
     enum WaitAndCheckResult { OK, TIMEOUT, FAILURE };
 
+    template <class T = Kullo::Api::AsyncTask>
     static WaitAndCheckResult waitAndCheck(
-            std::shared_ptr<Kullo::Api::AsyncTask> task, const bool &flag)
+            std::shared_ptr<T> task, const bool &flag)
     {
-        return doWaitAndCheck(task, flag, asyncTimeoutMs_);
+        return doWaitAndCheck<T>(task, flag, asyncTimeoutMs_);
     }
 
+    template <class T = Kullo::Api::AsyncTask>
     static WaitAndCheckResult waitAndCheckSlow(
-            std::shared_ptr<Kullo::Api::AsyncTask> task, const bool &flag)
+            std::shared_ptr<T> task, const bool &flag)
     {
-        return doWaitAndCheck(task, flag, slowTimeoutMs_);
+        return doWaitAndCheck<T>(task, flag, slowTimeoutMs_);
     }
 
     static std::string tempPath()
@@ -79,7 +81,7 @@ public:
         assetPath_ = path;
     }
 
-    /// Dependent on time, will most probably change on each invocation
+    /// Returns a new filename with full path on each invocation
     static std::string tempDbFileName()
     {
         const auto now = std::chrono::high_resolution_clock::now();
@@ -90,8 +92,9 @@ public:
     }
 
 private:
+    template <class T = Kullo::Api::AsyncTask>
     static WaitAndCheckResult doWaitAndCheck(
-            std::shared_ptr<Kullo::Api::AsyncTask> task,
+            std::shared_ptr<T> task,
             const bool &flag,
             int32_t timeout)
     {
@@ -100,7 +103,7 @@ private:
     }
 
     static const int32_t asyncTimeoutMs_ = 5 * 1000; // 5 sec
-    static const int32_t slowTimeoutMs_ = 5 * 60 * 1000;  // 5 min
+    static const int32_t slowTimeoutMs_ = 6 * 60 * 1000;  // 6 min
 
     static int testCounter_;
     static std::string tempPath_;
