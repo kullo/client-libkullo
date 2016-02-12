@@ -1,4 +1,4 @@
-/* Copyright 2013–2015 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
 #include "kulloclient/api_impl/sessionregisterpushtokenworker.h"
 
 #include "kulloclient/api_impl/exception_conversion.h"
@@ -21,10 +21,10 @@ SessionRegisterPushTokenWorker::SessionRegisterPushTokenWorker(
         const Util::KulloAddress &address,
         const Util::MasterKey &masterKey,
         Operation operation,
-        const std::string &registrationToken)
+        const Api::PushToken &token)
     : operation_(operation)
     , pushClient_(address, masterKey)
-    , registrationToken_(registrationToken)
+    , token_(token)
 {}
 
 void SessionRegisterPushTokenWorker::work()
@@ -38,10 +38,10 @@ void SessionRegisterPushTokenWorker::work()
             switch (operation_)
             {
             case Add:
-                pushClient_.addGcmRegistrationToken(registrationToken_);
+                pushClient_.addGcmRegistrationToken(token_);
                 break;
             case Remove:
-                pushClient_.removeGcmRegistrationToken(registrationToken_);
+                pushClient_.removeGcmRegistrationToken(token_);
                 break;
             default:
                 kulloAssert(false);
@@ -56,7 +56,7 @@ void SessionRegisterPushTokenWorker::work()
         {
             Log.w() << "Timeout: " << Util::formatException(ex);
         }
-        catch (Protocol::InternalServerError &ex)
+        catch (Protocol::ServerError &ex)
         {
             Log.w() << "Server error: " << Util::formatException(ex);
         }

@@ -169,28 +169,37 @@ Http::Response FakeHttpClient::sendRequest(
         if (statusCode == 200)
         {
             auto json = readJson(requestListener->read(10*1024*1024));
-            auto token = json["registrationToken"];
-            if (token == "return_http_400")
+
+            auto environment = json["environment"];
+            if (environment != "android" && environment != "ios")
             {
                 statusCode = 400;
             }
-            else if (token == "return_http_500")
-            {
-                statusCode = 500;
-            }
-            else if (token == "return_connection_error")
-            {
-                statusCode = 0;
-                responseError = Http::ResponseError::NetworkError;
-            }
-            else if (token == "return_timeout")
-            {
-                statusCode = 0;
-                responseError = Http::ResponseError::Timeout;
-            }
             else
             {
-                responseBody = Util::to_vector("{}");
+                auto token = json["registrationToken"];
+                if (token == "return_http_400")
+                {
+                    statusCode = 400;
+                }
+                else if (token == "return_http_500")
+                {
+                    statusCode = 500;
+                }
+                else if (token == "return_connection_error")
+                {
+                    statusCode = 0;
+                    responseError = Http::ResponseError::NetworkError;
+                }
+                else if (token == "return_timeout")
+                {
+                    statusCode = 0;
+                    responseError = Http::ResponseError::Timeout;
+                }
+                else
+                {
+                    responseBody = Util::to_vector("{}");
+                }
             }
         }
     }

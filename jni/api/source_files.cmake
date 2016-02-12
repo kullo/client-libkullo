@@ -61,6 +61,10 @@ api/MessageAttachmentsSaveToListener.h
 api/Messages.cpp
 api/Messages.h
 api/NetworkError.h
+api/PushToken.cpp
+api/PushToken.h
+api/PushTokenEnvironment.h
+api/PushTokenType.h
 api/Registration.cpp
 api/Registration.h
 api/RegistrationRegisterAccountListener.cpp

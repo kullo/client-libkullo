@@ -5,9 +5,11 @@
 #include <deque>
 
 #include "kulloclient/api/AsyncTask.h"
+#include "kulloclient/api/DateTime.h"
 #include "kulloclient/api/SessionListener.h"
 #include "kulloclient/api/Syncer.h"
 #include "kulloclient/api/SyncerListener.h"
+#include "kulloclient/api/SyncMode.h"
 #include "kulloclient/api_impl/sessiondata.h"
 
 namespace Kullo {
@@ -22,6 +24,7 @@ public:
 
     void setListener(const std::shared_ptr<Api::SyncerListener> &listener)
         override;
+    boost::optional<Api::DateTime> lastFullSync() override;
     void requestSync(Api::SyncMode mode) override;
     void requestDownloadingAttachmentsForMessage(int64_t msgId) override;
     void cancel() override;
@@ -62,6 +65,8 @@ private:
     boost::optional<Api::SyncMode> enqueuedSync_;
     std::deque<id_type> messageAttachmentDownloadQueue_;
     bool running_;
+    boost::optional<Api::DateTime> lastFullSync_;
+    boost::optional<Api::SyncMode> lastSyncMode_;
 };
 
 }

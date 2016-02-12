@@ -16915,8 +16915,9 @@ class RSA_Private_Operation
 
       BigInt private_op(const BigInt& m) const
          {
-         BigInt j1 = m_powermod_d1_p(m);
+         auto future_j1 = std::async(std::launch::async, m_powermod_d1_p, m);
          BigInt j2 = m_powermod_d2_q(m);
+         BigInt j1 = future_j1.get();
 
          j1 = m_mod_p.reduce(sub_mul(j1, j2, m_c));
 

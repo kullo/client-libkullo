@@ -29,6 +29,12 @@ void SyncerImpl::setListener(
     listener_ = listener;
 }
 
+boost::optional<Api::DateTime> SyncerImpl::lastFullSync()
+{
+    std::lock_guard<std::recursive_mutex> lock(queueMutex_); K_RAII(lock);
+    return lastFullSync_;
+}
+
 void SyncerImpl::requestSync(Api::SyncMode mode)
 {
     std::lock_guard<std::recursive_mutex> lock(queueMutex_); K_RAII(lock);
@@ -172,6 +178,7 @@ void SyncerImpl::runNextJobIfIdle()
 
 std::shared_ptr<Api::AsyncTask> SyncerImpl::runAsync(Api::SyncMode mode)
 {
+    lastSyncMode_ = mode;
     return std::make_shared<AsyncTaskImpl>(
                 std::make_shared<SyncerRunWorker>(
                     sessionData_, mode, sessionListener_, taskSyncerListener_));
@@ -179,6 +186,7 @@ std::shared_ptr<Api::AsyncTask> SyncerImpl::runAsync(Api::SyncMode mode)
 
 std::shared_ptr<Api::AsyncTask> SyncerImpl::downloadAttachmentsForMessageAsync(id_type msgId)
 {
+    lastSyncMode_.reset();
     return std::make_shared<AsyncTaskImpl>(
                 std::make_shared<SyncerDownloadAttachmentsForMessageWorker>(
                     sessionData_, msgId, sessionListener_, taskSyncerListener_));
@@ -212,6 +220,12 @@ void SyncerImpl::SyncerSyncerListener::progressed(const Api::SyncProgress &progr
 void SyncerImpl::SyncerSyncerListener::finished()
 {
     std::lock_guard<std::recursive_mutex> lock(parent_.queueMutex_); K_RAII(lock);
+
+    if (parent_.lastSyncMode_ == Api::SyncMode::WithoutAttachments ||
+            parent_.lastSyncMode_ == Api::SyncMode::Everything)
+    {
+        parent_.lastFullSync_ = Api::DateTime::nowUtc();
+    }
 
     parent_.running_ = false;
     parent_.runNextJobIfIdle();

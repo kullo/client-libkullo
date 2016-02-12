@@ -31,12 +31,14 @@ set(source_files
     codec/test_messagedecryptor.cpp
     codec/test_messageencoder.cpp
     crypto/test_hasher.cpp
+    crypto/test_hashverifyingfilter.cpp
     crypto/test_hkdf.cpp
     crypto/test_symmetrickey.cpp
     crypto/test_symmetrickeygenerator.cpp
     crypto/test_symmetrickeyloader.cpp
     dao/test_attachmentdao.cpp
     dao/test_draftdao.cpp
+    dao/test_messageattachmentsink.cpp
     dao/test_messagedao.cpp
     dao/test_participantdao.cpp
     http/fake_httpclientfactory.cpp

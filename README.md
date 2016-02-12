@@ -70,6 +70,13 @@ Tips and Tricks
 Changelog
 ---------
 
+### v43 (2016-02-12)
+
+ * Store time of last sync
+ * Differentiate push notifications on Android and iOS
+ * Parallelize RSA operations on iOS
+ * Improve HTTP status handling
+
 ### v42 (2016-02-02)
 
  * Retry push token registration on server or network error

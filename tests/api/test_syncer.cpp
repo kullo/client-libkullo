@@ -3,6 +3,7 @@
 
 #include <kulloclient/registry.h>
 #include <kulloclient/api/AsyncTask.h>
+#include <kulloclient/api/DateTime.h>
 #include <kulloclient/api/Syncer.h>
 #include <kulloclient/api/SyncerListener.h>
 #include <kulloclient/api/SyncMode.h>
@@ -72,6 +73,27 @@ K_TEST_F(ApiSyncer, progressWorks)
                 Eq(TestUtil::OK));
 
     EXPECT_THAT(listener->countProgressed_, Ge(1));
+}
+
+K_TEST_F(ApiSyncer, lastFullSyncWorks)
+{
+    EXPECT_THAT(uut_->lastFullSync().is_initialized(), Eq(false));
+
+    auto start = Api::DateTime::nowUtc();
+
+    auto listener = std::make_shared<CountingSyncListener>();
+    uut_->setListener(listener);
+    uut_->requestSync(Api::SyncMode::WithoutAttachments);
+
+    ASSERT_THAT(TestUtil::waitAndCheck(uut_, listener->isFinished_),
+                Eq(TestUtil::OK));
+
+    auto stop = Api::DateTime::nowUtc();
+    auto lastFullSync = uut_->lastFullSync();
+
+    ASSERT_THAT(lastFullSync.is_initialized(), Eq(true));
+    EXPECT_THAT(*lastFullSync, Ge(start));
+    EXPECT_THAT(*lastFullSync, Le(stop));
 }
 
 K_TEST_F(ApiSyncer, idRangeWorks)

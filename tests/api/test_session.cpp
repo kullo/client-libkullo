@@ -7,6 +7,7 @@
 #include <kulloclient/api/Address.h>
 #include <kulloclient/api/AsyncTask.h>
 #include <kulloclient/api/MasterKey.h>
+#include <kulloclient/api/PushToken.h>
 #include <kulloclient/api/SessionAccountInfoListener.h>
 #include <kulloclient/api_impl/clientcreatesessionworker.h>
 #include <kulloclient/api_impl/sessionimpl.h>
@@ -55,11 +56,19 @@ public:
 protected:
     void testRegisterPushTokenWaiting(const std::string &token)
     {
-        auto task = uut->registerPushToken(token);
+        auto task = uut->registerPushToken(makeGcmAndroidToken(token));
         // wait for 11 seconds because the retry interval is 10 seconds
         ASSERT_THAT(task->waitForMs(11*1000), Eq(false));
         task->cancel();
         ASSERT_THAT(task->waitForMs(1000), Eq(true));
+    }
+
+    Api::PushToken makeGcmAndroidToken(const std::string &token)
+    {
+        return Api::PushToken(
+                    Api::PushTokenType::GCM,
+                    token,
+                    Api::PushTokenEnvironment::Android);
     }
 
     std::shared_ptr<Api::Session> uut;
@@ -133,25 +142,28 @@ K_TEST_F(ApiSession, accountInfoAsyncWorks)
 
 K_TEST_F(ApiSession, registerPushTokenFailsOnEmpty)
 {
-    EXPECT_THROW(uut->registerPushToken(""), Util::AssertionFailed);
+    EXPECT_THROW(uut->registerPushToken(makeGcmAndroidToken("")),
+                 Util::AssertionFailed);
 }
 
 K_TEST_F(ApiSession, registerPushTokenCanBeCanceled)
 {
-    auto task = uut->registerPushToken("token_123_token");
+    auto task = uut->registerPushToken(makeGcmAndroidToken("token_123_token"));
     ASSERT_THAT(task, Not(IsNull()));
     EXPECT_NO_THROW(task->cancel());
 }
 
 K_TEST_F(ApiSession, registerPushTokenWorks)
 {
-    auto task = uut->registerPushToken("token_123_token");
+    auto task = uut->registerPushToken(makeGcmAndroidToken("token_123_token"));
     task->waitUntilDone();
 }
 
 K_TEST_F(ApiSession, registerPushTokenReturnsEarlyOnClientError)
 {
-    auto task = uut->registerPushToken("return_http_400");
+    suppressErrorLogOutput();
+
+    auto task = uut->registerPushToken(makeGcmAndroidToken("return_http_400"));
     ASSERT_THAT(task->waitForMs(1000), Eq(true));
 }
 

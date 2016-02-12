@@ -19,7 +19,8 @@ public:
     {
         std::lock_guard<std::mutex> lock(mutex_); K_RAII(lock);
 
-        internalEventCounts_[std::type_index(typeid(*event))]++;
+        auto &eventRef = *event;
+        internalEventCounts_[std::type_index(typeid(eventRef))]++;
 
         if (auto session = session_.lock())
         {

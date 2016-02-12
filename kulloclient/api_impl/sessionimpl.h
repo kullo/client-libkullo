@@ -39,9 +39,9 @@ public:
     std::shared_ptr<Api::AsyncTask> accountInfoAsync(
             const std::shared_ptr<Api::SessionAccountInfoListener> &listener) override;
     std::shared_ptr<Api::AsyncTask> registerPushToken(
-            const std::string &registrationToken) override;
+            const Api::PushToken &token) override;
     std::shared_ptr<Api::AsyncTask> unregisterPushToken(
-            const std::string &registrationToken) override;
+            const Api::PushToken &token) override;
     std::vector<Api::Event> notify(
             const std::shared_ptr<Api::InternalEvent> &internalEvent) override;
 

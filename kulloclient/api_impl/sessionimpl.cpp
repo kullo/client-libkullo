@@ -6,6 +6,7 @@
 
 #include "kulloclient/api/Address.h"
 #include "kulloclient/api/MasterKey.h"
+#include "kulloclient/api/PushToken.h"
 #include "kulloclient/api_impl/asynctaskimpl.h"
 #include "kulloclient/api_impl/conversationsimpl.h"
 #include "kulloclient/api_impl/draftsimpl.h"
@@ -107,10 +108,22 @@ std::shared_ptr<Api::AsyncTask> SessionImpl::accountInfoAsync(
                     address, masterKey, listener));
 }
 
-std::shared_ptr<Api::AsyncTask> SessionImpl::registerPushToken(
-        const std::string &registrationToken)
+namespace {
+
+void validateToken(const Api::PushToken &token)
 {
-    kulloAssert(!registrationToken.empty());
+    kulloAssert(token.type == Api::PushTokenType::GCM);
+    kulloAssert(!token.token.empty());
+    kulloAssert(token.environment == Api::PushTokenEnvironment::Android ||
+                token.environment == Api::PushTokenEnvironment::IOS);
+}
+
+}
+
+std::shared_ptr<Api::AsyncTask> SessionImpl::registerPushToken(
+        const Api::PushToken &token)
+{
+    validateToken(token);
 
     auto &userSettings = sessionData_->userSettings_;
     auto address = Util::KulloAddress(userSettings->address()->toString());
@@ -119,13 +132,13 @@ std::shared_ptr<Api::AsyncTask> SessionImpl::registerPushToken(
     return std::make_shared<AsyncTaskImpl>(
         std::make_shared<SessionRegisterPushTokenWorker>(
                     address, masterKey,
-                    SessionRegisterPushTokenWorker::Add, registrationToken));
+                    SessionRegisterPushTokenWorker::Add, token));
 }
 
 std::shared_ptr<Api::AsyncTask> SessionImpl::unregisterPushToken(
-        const std::string &registrationToken)
+        const Api::PushToken &token)
 {
-    kulloAssert(!registrationToken.empty());
+    validateToken(token);
 
     auto &userSettings = sessionData_->userSettings_;
     auto address = Util::KulloAddress(userSettings->address()->toString());
@@ -134,7 +147,7 @@ std::shared_ptr<Api::AsyncTask> SessionImpl::unregisterPushToken(
     return std::make_shared<AsyncTaskImpl>(
         std::make_shared<SessionRegisterPushTokenWorker>(
                     address, masterKey,
-                    SessionRegisterPushTokenWorker::Remove, registrationToken));
+                    SessionRegisterPushTokenWorker::Remove, token));
 }
 
 std::vector<Api::Event> SessionImpl::notify(

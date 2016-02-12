@@ -10,6 +10,7 @@
 #include "InternalEvent.h"
 #include "MessageAttachments.h"
 #include "Messages.h"
+#include "PushToken.h"
 #include "Senders.h"
 #include "SessionAccountInfoListener.h"
 #include "Syncer.h"
@@ -121,22 +122,22 @@ CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_Session_00024CppProxy_nat
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, 0 /* value doesn't matter */)
 }
 
-CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_Session_00024CppProxy_native_1registerPushToken(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef, jstring j_registrationToken)
+CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_Session_00024CppProxy_native_1registerPushToken(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef, jobject j_token)
 {
     try {
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
         const auto& ref = ::djinni::objectFromHandleAddress<::Kullo::Api::Session>(nativeRef);
-        auto r = ref->registerPushToken(::djinni::String::toCpp(jniEnv, j_registrationToken));
+        auto r = ref->registerPushToken(::JNI::Kullo::Api::PushToken::toCpp(jniEnv, j_token));
         return ::djinni::release(::JNI::Kullo::Api::AsyncTask::fromCpp(jniEnv, r));
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, 0 /* value doesn't matter */)
 }
 
-CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_Session_00024CppProxy_native_1unregisterPushToken(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef, jstring j_registrationToken)
+CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_Session_00024CppProxy_native_1unregisterPushToken(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef, jobject j_token)
 {
     try {
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
         const auto& ref = ::djinni::objectFromHandleAddress<::Kullo::Api::Session>(nativeRef);
-        auto r = ref->unregisterPushToken(::djinni::String::toCpp(jniEnv, j_registrationToken));
+        auto r = ref->unregisterPushToken(::JNI::Kullo::Api::PushToken::toCpp(jniEnv, j_token));
         return ::djinni::release(::JNI::Kullo::Api::AsyncTask::fromCpp(jniEnv, r));
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, 0 /* value doesn't matter */)
 }

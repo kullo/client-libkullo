@@ -63,6 +63,7 @@ kullo_add_simple_library(
     crypto/asymmetrickeygenerator.cpp
     crypto/asymmetrickeyloader.cpp
     crypto/hasher.cpp
+    crypto/hashverifyingfilter.cpp
     crypto/hkdf.cpp
     crypto/info.cpp
     crypto/privatekey.cpp
@@ -80,6 +81,7 @@ kullo_add_simple_library(
     dao/conversationdao.cpp
     dao/deliverydao.cpp
     dao/draftdao.cpp
+    dao/messageattachmentsink.cpp
     dao/messagedao.cpp
     dao/participantdao.cpp
     dao/publickeydao.cpp

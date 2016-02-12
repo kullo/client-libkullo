@@ -19,7 +19,7 @@ Api::NetworkError toNetworkError(std::exception_ptr exptr)
     catch (Protocol::Forbidden)           {return Api::NetworkError::Forbidden;}
     catch (Protocol::ProtocolError)       {return Api::NetworkError::Protocol;}
     catch (Protocol::Unauthorized)        {return Api::NetworkError::Unauthorized;}
-    catch (Protocol::InternalServerError) {return Api::NetworkError::Server;}
+    catch (Protocol::ServerError)         {return Api::NetworkError::Server;}
     catch (Protocol::NetworkError)        {return Api::NetworkError::Connection;}
     catch (...)                           {return Api::NetworkError::Unknown;}
 

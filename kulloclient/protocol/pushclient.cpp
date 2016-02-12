@@ -1,9 +1,10 @@
-/* Copyright 2013–2015 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
 #include "kulloclient/protocol/pushclient.h"
 
 #include <boost/optional/optional_io.hpp>
 #include <jsoncpp/jsoncpp.h>
 #include "kulloclient/protocol/debug.h"
+#include "kulloclient/util/assert.h"
 #include "kulloclient/util/librarylogger.h"
 #include "kulloclient/util/urlencoding.h"
 
@@ -12,16 +13,34 @@ using namespace Kullo::Util;
 namespace Kullo {
 namespace Protocol {
 
+namespace {
+
+std::string environmentToJsonValue(Api::PushTokenEnvironment env)
+{
+    switch (env)
+    {
+    case Api::PushTokenEnvironment::Android: return "android";
+    case Api::PushTokenEnvironment::IOS: return "ios";
+    default: kulloAssert(false);
+    }
+
+    // never reached
+    return "";
+}
+
+}
+
 PushClient::PushClient(const KulloAddress &address, const MasterKey &masterKey)
 {
     setKulloAddress(address);
     setMasterKey(masterKey);
 }
 
-void PushClient::addGcmRegistrationToken(const std::string &token)
+void PushClient::addGcmRegistrationToken(const Api::PushToken &token)
 {
     Json::Value jsonBody(Json::objectValue);
-    jsonBody["registrationToken"] = token;
+    jsonBody["registrationToken"] = token.token;
+    jsonBody["environment"] = environmentToJsonValue(token.environment);
 
     auto result = sendRequest(Http::Request(
                     Http::HttpMethod::Post,
@@ -32,9 +51,9 @@ void PushClient::addGcmRegistrationToken(const std::string &token)
             << ", error: " << result.error;
 }
 
-void PushClient::removeGcmRegistrationToken(const std::string &token)
+void PushClient::removeGcmRegistrationToken(const Api::PushToken &token)
 {
-    auto encodedToken = Util::UrlEncoding::encode(token);
+    auto encodedToken = Util::UrlEncoding::encode(token.token);
     auto result = sendRequest(Http::Request(
                     Http::HttpMethod::Delete,
                     baseUserUrl() + "/push/gcm/" + encodedToken,

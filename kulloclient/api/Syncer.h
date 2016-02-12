@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <boost/optional.hpp>
 #include <cstdint>
 #include <memory>
 
@@ -10,6 +11,7 @@ namespace Kullo { namespace Api {
 
 class SyncerListener;
 enum class SyncMode;
+struct DateTime;
 
 /**
  * Handles syncing, including downloading of attachments. Prevents multiple syncs
@@ -27,6 +29,13 @@ public:
 
     /** Set or replace the SyncerListener which should receive sync events. */
     virtual void setListener(const std::shared_ptr<SyncerListener> & listener) = 0;
+
+    /**
+     * Get the finishing time of the last successful full sync.
+     * A full sync is one with "WithoutAttachments" or "Everything" sync mode.
+     * Returns null if there hasn't been a sync yet.
+     */
+    virtual boost::optional<DateTime> lastFullSync() = 0;
 
     /** Request that the data specified in mode is synced. */
     virtual void requestSync(SyncMode mode) = 0;

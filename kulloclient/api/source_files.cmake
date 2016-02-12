@@ -38,6 +38,9 @@ api/MessageAttachmentsContentListener.h
 api/MessageAttachmentsSaveToListener.h
 api/Messages.h
 api/NetworkError.h
+api/PushToken.h
+api/PushTokenEnvironment.h
+api/PushTokenType.h
 api/Registration.h
 api/RegistrationRegisterAccountListener.h
 api/Registry.h

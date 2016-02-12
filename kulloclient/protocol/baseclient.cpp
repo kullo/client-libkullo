@@ -124,27 +124,30 @@ void BaseClient::throwOnError(const Http::Response &response)
         }
     }
 
-    switch (response.statusCode)
+    auto status = response.statusCode;
+    if (status >= 200 && status < 300)
     {
-    case 200:
         // everything is okay
-        break;
-    case 400:
-        throw BadRequest();
-    case 401:
-        throw Unauthorized();
-    case 403:
-        throw Forbidden();
-    case 404:
-        throw NotFound();
-    case 409:
-        throw Conflict();
-    case 500:
-        throw InternalServerError();
-    case 502: // Bad Gateway
-        throw InternalServerError();
-    default:
-        throw HttpError();
+    }
+    else if (status >= 500)
+    {
+        throw ServerError(status);
+    }
+    else
+    {
+        switch (status)
+        {
+        case 401:
+            throw Unauthorized();
+        case 403:
+            throw Forbidden();
+        case 404:
+            throw NotFound();
+        case 409:
+            throw Conflict();
+        default:
+            throw UnhandledHttpStatus(status);
+        }
     }
 }
 

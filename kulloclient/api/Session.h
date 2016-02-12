@@ -4,7 +4,6 @@
 #pragma once
 
 #include <memory>
-#include <string>
 #include <vector>
 
 namespace Kullo { namespace Api {
@@ -21,6 +20,7 @@ class SessionAccountInfoListener;
 class Syncer;
 class UserSettings;
 struct Event;
+struct PushToken;
 
 class Session {
 public:
@@ -44,9 +44,9 @@ public:
 
     virtual std::shared_ptr<AsyncTask> accountInfoAsync(const std::shared_ptr<SessionAccountInfoListener> & listener) = 0;
 
-    virtual std::shared_ptr<AsyncTask> registerPushToken(const std::string & registrationToken) = 0;
+    virtual std::shared_ptr<AsyncTask> registerPushToken(const PushToken & token) = 0;
 
-    virtual std::shared_ptr<AsyncTask> unregisterPushToken(const std::string & registrationToken) = 0;
+    virtual std::shared_ptr<AsyncTask> unregisterPushToken(const PushToken & token) = 0;
 
     /** Notify the session of events. Only call this from the UI thread! */
     virtual std::vector<Event> notify(const std::shared_ptr<InternalEvent> & internalEvent) = 0;

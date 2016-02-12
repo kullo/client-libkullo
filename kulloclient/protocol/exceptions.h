@@ -6,19 +6,21 @@
 namespace Kullo {
 namespace Protocol {
 
+/// Base class for all HTTP exceptions
 class HttpError : public Util::BaseException
 {
-public:
+protected:
     /// @copydoc BaseException::BaseException(const std::string&)
     HttpError(const std::string &message = "") throw() : BaseException(message) {}
 };
 
-// HTTP 400 Unauthorized
-class BadRequest : public HttpError
+class UnhandledHttpStatus : public HttpError
 {
 public:
     /// @copydoc BaseException::BaseException(const std::string&)
-    BadRequest(const std::string &message = "") throw() : HttpError(message) {}
+    UnhandledHttpStatus(int32_t statusCode) throw()
+        : HttpError(std::string("HTTP ") + std::to_string(statusCode))
+    {}
 };
 
 // HTTP 401 Unauthorized
@@ -53,12 +55,14 @@ public:
     Conflict(const std::string &message = "") throw() : HttpError(message) {}
 };
 
-// HTTP 500 Internal Server Error
-class InternalServerError : public HttpError
+// HTTP 5xx Server Error
+class ServerError : public HttpError
 {
 public:
     /// @copydoc BaseException::BaseException(const std::string&)
-    InternalServerError(const std::string &message = "") throw() : HttpError(message) {}
+    ServerError(int32_t statusCode) throw()
+        : HttpError(std::string("HTTP ") + std::to_string(statusCode))
+    {}
 };
 
 class NetworkError : public Util::BaseException
