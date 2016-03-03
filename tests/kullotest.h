@@ -41,7 +41,6 @@ public:
                            LogType::Error });
     }
 
-private:
     void setupLogFunction(const std::vector<Kullo::Util::LibraryLogger::LogType> excludedTypes) {
         using LibraryLogger = Kullo::Util::LibraryLogger;
         LibraryLogger::setLogFunction(

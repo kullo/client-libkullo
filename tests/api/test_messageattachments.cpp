@@ -300,7 +300,7 @@ K_TEST_F(ApiMessageAttachments, messageRemoved)
     ASSERT_THAT(uut->size(data.msgId, data.attId), Eq(0));
 }
 
-K_TEST_F(ApiMessageAttachments, idRangeWorks)
+K_TEST_F(ApiMessageAttachments, DISABLED_idRangeWorks)
 {
     auto contentListener = std::make_shared<ContentListener>();
     auto saveToListener = std::make_shared<SaveToListener>();

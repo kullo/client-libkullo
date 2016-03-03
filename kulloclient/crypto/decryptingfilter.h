@@ -4,16 +4,17 @@
 #include <memory>
 #include <vector>
 
+#include "kulloclient/crypto/symmetrickey.h"
 #include "kulloclient/util/filterchain.h"
 
 namespace Kullo {
 namespace Crypto {
 
-class HashVerifyingFilter : public Util::Filter
+class DecryptingFilter : public Util::Filter
 {
 public:
-    HashVerifyingFilter(const std::vector<unsigned char> &expectedHash);
-    ~HashVerifyingFilter();
+    DecryptingFilter(const SymmetricKey &key);
+    ~DecryptingFilter();
 
     void write(
             Util::Sink &sink,
@@ -22,9 +23,10 @@ public:
     void close(Util::Sink &sink) override;
 
 private:
-    void finalizeHash();
-
-    const std::vector<unsigned char> expectedHash_;
+    void doWrite(
+            Util::Sink &sink,
+            const unsigned char *data,
+            std::size_t length);
 
     struct Impl;
     std::unique_ptr<Impl> impl_;

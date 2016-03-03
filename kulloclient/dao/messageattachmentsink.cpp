@@ -21,23 +21,19 @@ MessageAttachmentSink::MessageAttachmentSink(
     , attachmentSize_(attachmentSize)
 {}
 
-std::streamsize MessageAttachmentSink::write(
-        const char *buffer, std::streamsize writeSize)
+void MessageAttachmentSink::write(
+        const unsigned char *buffer, std::size_t writeSize)
 {
-    kulloAssert(writeSize >= 0);
-    auto unsignedWriteSize = static_cast<size_t>(writeSize);
-
     openIfNotOpen();
 
-    if (handle_->bytesWritten + unsignedWriteSize > attachmentSize_)
+    if (handle_->bytesWritten + writeSize > attachmentSize_)
     {
         throw Db::DatabaseIntegrityError(
-                    "MessageAttachmentSink::write: The stored size is "
-                    "smaller than the length of the data");
+                    "MessageAttachmentSink::write: The stored size is smaller "
+                    "than the stream length");
     }
-    handle_->blob.write(buffer, unsignedWriteSize, handle_->bytesWritten);
-    handle_->bytesWritten += unsignedWriteSize;
-    return writeSize;
+    handle_->blob.write(buffer, writeSize, handle_->bytesWritten);
+    handle_->bytesWritten += writeSize;
 }
 
 void MessageAttachmentSink::close()
@@ -50,8 +46,8 @@ void MessageAttachmentSink::close()
     if (bytesWritten < attachmentSize_)
     {
         throw Db::DatabaseIntegrityError(
-                    "AttachmentDao::setContent: The stored size is larger "
-                    "than the stream size");
+                    "MessageAttachmentSink::close: The stored size is larger "
+                    "than the stream length");
     }
 }
 

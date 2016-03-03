@@ -70,6 +70,11 @@ Tips and Tricks
 Changelog
 ---------
 
+### v44 (2016-03-03)
+
+* Make downloading attachments more memory-efficient through streaming
+* Increase attachment size limit for receiving to 100 MB
+
 ### v43 (2016-02-12)
 
  * Store time of last sync

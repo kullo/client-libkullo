@@ -1,17 +1,15 @@
 /* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
 #include <kulloclient/dao/messageattachmentsink.h>
 
-#include <boost/iostreams/filtering_stream.hpp>
-#include <boost/ref.hpp>
 #include <kulloclient/dao/attachmentdao.h>
 #include <kulloclient/db/exceptions.h>
 #include <kulloclient/util/binary.h>
+#include <kulloclient/util/filterchain.h>
 #include <kulloclient/util/misc.h>
 #include "tests/dbtest.h"
 
 using namespace testing;
 using namespace Kullo;
-namespace io = boost::iostreams;
 
 class MessageAttachmentSink : public DbTest
 {
@@ -51,12 +49,10 @@ public:
                     session_, data_.msgId, data_.index, data_.filesize);
     }
 
-    size_t writeDataToUut(std::vector<unsigned char>::size_type length)
+    void writeDataToUut(std::vector<unsigned char>::size_type length)
     {
-        auto bufPtr = reinterpret_cast<char*>(data_.content.data());
-        auto writeLength = static_cast<std::streamsize>(length);
-        auto bytesWritten = uut_->write(bufPtr, writeLength);
-        return static_cast<size_t>(bytesWritten);
+        kulloAssert(length <= data_.content.size());
+        uut_->write(data_.content.data(), length);
     }
 
 protected:
@@ -74,12 +70,6 @@ protected:
     std::unique_ptr<Dao::MessageAttachmentSink> uut_;
 };
 
-K_TEST_F(MessageAttachmentSink, canBeAddedToFilteringOstream)
-{
-    io::filtering_ostream out;
-    out.push(boost::ref(*uut_));
-}
-
 K_TEST_F(MessageAttachmentSink, closeThrowsWhenThereWasNoWrite)
 {
     EXPECT_THROW(uut_->close(), Db::DatabaseIntegrityError);
@@ -87,25 +77,20 @@ K_TEST_F(MessageAttachmentSink, closeThrowsWhenThereWasNoWrite)
 
 K_TEST_F(MessageAttachmentSink, closeThrowsWhenDataIsTooShort)
 {
-    auto bytesWritten = writeDataToUut(data_.content.size() - 1);
-    ASSERT_THAT(bytesWritten, Eq(data_.content.size() - 1));
-
+    writeDataToUut(data_.content.size() - 1);
     EXPECT_THROW(uut_->close(), Db::DatabaseIntegrityError);
 }
 
 K_TEST_F(MessageAttachmentSink, writeThrowsWhenDataIsTooLong)
 {
-    auto bytesWritten = writeDataToUut(data_.content.size());
-    ASSERT_THAT(bytesWritten, Eq(data_.content.size()));
-
-    EXPECT_THROW(uut_->write("A", 1), Db::DatabaseIntegrityError);
+    writeDataToUut(data_.content.size());
+    unsigned char input = 'a';
+    EXPECT_THROW(uut_->write(&input, 1), Db::DatabaseIntegrityError);
 }
 
 K_TEST_F(MessageAttachmentSink, writeSucceedsWhenDataHasTheCorrectLenght)
 {
-    auto bytesWritten = writeDataToUut(data_.content.size());
-    EXPECT_THAT(bytesWritten, Eq(data_.content.size()));
-
+    writeDataToUut(data_.content.size());
     uut_->close();
 
     auto dao = Dao::AttachmentDao::load(

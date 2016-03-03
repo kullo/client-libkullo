@@ -103,7 +103,7 @@ private:
     }
 
     static const int32_t asyncTimeoutMs_ = 5 * 1000; // 5 sec
-    static const int32_t slowTimeoutMs_ = 6 * 60 * 1000;  // 6 min
+    static const int32_t slowTimeoutMs_ = 15 * 60 * 1000;  // 15 min
 
     static int testCounter_;
     static std::string tempPath_;

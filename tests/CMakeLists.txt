@@ -27,9 +27,12 @@ set(source_files
     api/test_syncer.cpp
     api/test_usersettings.cpp
     api_impl/test_deliveryimpl.cpp
+    codec/test_attachmentsplittingsink.cpp
     codec/test_messagedecoder.cpp
     codec/test_messagedecryptor.cpp
     codec/test_messageencoder.cpp
+    codec/test_sizelimitingfilter.cpp
+    crypto/test_decryptingfilter.cpp
     crypto/test_hasher.cpp
     crypto/test_hashverifyingfilter.cpp
     crypto/test_hkdf.cpp
@@ -49,8 +52,10 @@ set(source_files
     util/test_events.cpp
     util/test_exceptions.cpp
     util/test_filesystem.cpp
+    util/test_filterchain.cpp
     util/test_formatstring.cpp
     util/test_gzip.cpp
+    util/test_gzipdecompressingfilter.cpp
     util/test_hex.cpp
     util/test_kulloaddress.cpp
     util/test_masterkey.cpp

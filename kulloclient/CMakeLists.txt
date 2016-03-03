@@ -53,15 +53,19 @@ kullo_add_simple_library(
     api_impl/taskimpl.cpp
     api_impl/usersettingsimpl.cpp
     api_impl/worker.cpp
+    codec/attachmentprocessingstreamfactory.cpp
+    codec/attachmentsplittingsink.cpp
     codec/messagecompressor.cpp
     codec/messagedecoder.cpp
     codec/messagedecryptor.cpp
     codec/messageencoder.cpp
     codec/messageencryptor.cpp
     codec/privatekeyprovider.cpp
+    codec/sizelimitingfilter.cpp
     crypto/asymmetriccryptor.cpp
     crypto/asymmetrickeygenerator.cpp
     crypto/asymmetrickeyloader.cpp
+    crypto/decryptingfilter.cpp
     crypto/hasher.cpp
     crypto/hashverifyingfilter.cpp
     crypto/hkdf.cpp
@@ -118,8 +122,10 @@ kullo_add_simple_library(
     util/delivery.cpp
     util/exceptions.cpp
     util/filesystem.cpp
+    util/filterchain.cpp
     util/formatstring.cpp
     util/gzip.cpp
+    util/gzipdecompressingfilter.cpp
     util/hex.cpp
     util/jsonhelper.cpp
     util/kulloaddress.cpp

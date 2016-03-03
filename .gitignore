@@ -19,6 +19,7 @@ moc_*
 /*.pro.user
 /*.pro.user.*
 /coverage_settings
+/.idea/
 
 # tmp files
 *.tmp

@@ -49,14 +49,6 @@ public:
             int64_t msgId, std::shared_ptr<std::atomic<bool>> shouldCancel);
 
 private:
-    std::vector<unsigned char> decodeAttachments(
-            const Dao::MessageDao &message,
-            const std::vector<unsigned char> &attachments);
-    void storeAttachments(
-            const Dao::MessageDao &message,
-            std::vector<std::unique_ptr<Dao::AttachmentDao>> attachments,
-            const std::vector<unsigned char> &content);
-
     Db::SharedSessionPtr session_;
     std::unique_ptr<Protocol::MessagesClient> client_;
 

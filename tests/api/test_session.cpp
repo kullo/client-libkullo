@@ -60,7 +60,7 @@ protected:
         // wait for 11 seconds because the retry interval is 10 seconds
         ASSERT_THAT(task->waitForMs(11*1000), Eq(false));
         task->cancel();
-        ASSERT_THAT(task->waitForMs(1000), Eq(true));
+        ASSERT_THAT(task->waitForMs(2000), Eq(true));
     }
 
     Api::PushToken makeGcmAndroidToken(const std::string &token)

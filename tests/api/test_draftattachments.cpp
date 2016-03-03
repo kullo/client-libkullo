@@ -578,7 +578,7 @@ K_TEST_F(ApiDraftAttachments, draftAttachmentAddedAndDraftRemoved)
     ASSERT_THAT(uut->allForDraft(42).size(), Eq(0u));
 }
 
-K_TEST_F(ApiDraftAttachments, idRangeWorks)
+K_TEST_F(ApiDraftAttachments, DISABLED_idRangeWorks)
 {
     auto addAsyncListener = std::make_shared<AddListener>();
     auto contentListener = std::make_shared<ContentListener>();

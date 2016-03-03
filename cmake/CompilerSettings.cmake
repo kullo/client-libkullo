@@ -2,7 +2,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    set(warn_flags "-Wall -Wextra -Wpedantic -Wcast-qual -Wformat=2 -Winit-self -Wlogical-op -Wmissing-include-dirs -Wswitch-default -Wuninitialized")
+    set(warn_flags "-Wall -Wextra -Wpedantic -Wcast-qual -Wformat=2 -Wlogical-op -Wmissing-include-dirs -Wswitch-default -Wno-maybe-uninitialized")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -pthread ${warn_flags}")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -pthread ${warn_flags} -Woverloaded-virtual")
 

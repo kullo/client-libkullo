@@ -1,17 +1,14 @@
 /* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
-#include <boost/iostreams/filtering_stream.hpp>
-#include <boost/iostreams/device/array.hpp>
-#include <boost/iostreams/device/null.hpp>
 #include <kulloclient/crypto/exceptions.h>
 #include <kulloclient/crypto/hashverifyingfilter.h>
 #include <kulloclient/util/binary.h>
+#include <kulloclient/util/assert.h>
+#include <kulloclient/util/misc.h>
 
 #include "tests/kullotest.h"
 
 using namespace testing;
 using namespace Kullo;
-
-namespace io = boost::iostreams;
 
 namespace {
 
@@ -46,53 +43,67 @@ const std::vector<unsigned char> SHA_512_HELLO_UNSIGNED(
 
 }
 
-class HashVerifyingFilter : public KulloTest
-{
-protected:
-    io::filtering_ostream stream_;
-};
+class HashVerifyingFilter : public KulloTest {};
 
 K_TEST_F(HashVerifyingFilter, doesntModifyData)
 {
-    std::vector<char> output(HELLO.size());
+    std::vector<unsigned char> output;
 
-    Crypto::HashVerifyingFilter uut(SHA_512_HELLO_UNSIGNED);
-    stream_.push(boost::ref(uut));
-    stream_.push(io::array_sink(output.data(), output.size()));
-    stream_.write(HELLO.data(), static_cast<std::streamsize>(HELLO.size()));
-    stream_.pop();
+    auto uut = make_unique<Crypto::HashVerifyingFilter>(SHA_512_HELLO_UNSIGNED);
+    Util::FilterChain stream(make_unique<Util::BackInsertingSink>(output));
+    stream.pushFilter(std::move(uut));
 
-    EXPECT_THAT(output, Eq(std::vector<char>(HELLO.begin(), HELLO.end())));
+    stream.write(reinterpret_cast<const unsigned char *>(HELLO.data()),
+                 HELLO.size());
+    stream.close();
+
+    EXPECT_THAT(output, Eq(Util::to_vector(HELLO)));
 }
 
-K_TEST_F(HashVerifyingFilter, calculatesHashForEmptyInput)
+K_TEST_F(HashVerifyingFilter, doesntThrowForCorrectEmptyInput)
 {
-    Crypto::HashVerifyingFilter uut(SHA_512_EMPTY_UNSIGNED);
-    stream_.push(boost::ref(uut));
-    stream_.push(io::null_sink());
-    stream_.pop();
+    auto uut = make_unique<Crypto::HashVerifyingFilter>(SHA_512_EMPTY_UNSIGNED);
+    Util::FilterChain stream(make_unique<Util::NullSink>());
+    stream.pushFilter(std::move(uut));
 
-    EXPECT_THAT(uut.hash(), Eq(SHA_512_EMPTY_UNSIGNED));
+    EXPECT_NO_THROW(stream.close());
 }
 
-K_TEST_F(HashVerifyingFilter, calculatesHashForNonemptyInput)
+K_TEST_F(HashVerifyingFilter, doesntThrowForCorrectNonemptyInput)
 {
-    Crypto::HashVerifyingFilter uut(SHA_512_HELLO_UNSIGNED);
-    stream_.push(boost::ref(uut));
-    stream_.push(io::null_sink());
-    stream_.write(HELLO.data(), static_cast<std::streamsize>(HELLO.size()));
-    stream_.pop();
+    auto uut = make_unique<Crypto::HashVerifyingFilter>(SHA_512_HELLO_UNSIGNED);
+    Util::FilterChain stream(make_unique<Util::NullSink>());
+    stream.pushFilter(std::move(uut));
 
-    EXPECT_THAT(uut.hash(), Eq(SHA_512_HELLO_UNSIGNED));
+    stream.write(reinterpret_cast<const unsigned char *>(HELLO.data()),
+                 HELLO.size());
+    EXPECT_NO_THROW(stream.close());
 }
 
-K_TEST_F(HashVerifyingFilter, throwsOnWrongHash)
+K_TEST_F(HashVerifyingFilter, throwsOnBadHashLength)
+{
+    EXPECT_THROW(Crypto::HashVerifyingFilter({1, 2, 3}), Util::AssertionFailed);
+}
+
+K_TEST_F(HashVerifyingFilter, throwsOnWrongHashAndEmptyInput)
+{
+    auto uut = make_unique<Crypto::HashVerifyingFilter>(SHA_512_HELLO_UNSIGNED);
+
+    Util::FilterChain stream(make_unique<Util::NullSink>());
+    stream.pushFilter(std::move(uut));
+
+    EXPECT_THROW(stream.close(), Crypto::HashDoesntMatch);
+}
+
+K_TEST_F(HashVerifyingFilter, throwsOnWrongHashAndNonemptyInput)
 {
     std::string goodbye = "goodbye";
+    auto uut = make_unique<Crypto::HashVerifyingFilter>(SHA_512_HELLO_UNSIGNED);
 
-    Crypto::HashVerifyingFilter uut(SHA_512_HELLO_UNSIGNED);
-    stream_.push(boost::ref(uut));
-    stream_.push(io::null_sink());
-    stream_.write(goodbye.data(), static_cast<std::streamsize>(goodbye.length()));
-    EXPECT_THROW(stream_.pop(), Crypto::HashDoesntMatch);
+    Util::FilterChain stream(make_unique<Util::NullSink>());
+    stream.pushFilter(std::move(uut));
+
+    stream.write(reinterpret_cast<const unsigned char *>(goodbye.data()),
+                 goodbye.length());
+    EXPECT_THROW(stream.close(), Crypto::HashDoesntMatch);
 }

@@ -30,30 +30,32 @@ HashVerifyingFilter::HashVerifyingFilter(
         const std::vector<unsigned char> &expectedHash)
     : expectedHash_(expectedHash)
     , impl_(make_unique<Impl>())
-{}
+{
+    kulloAssert(expectedHash_.size() == impl_->hashFun->output_length());
+}
 
 HashVerifyingFilter::~HashVerifyingFilter()
 {}
 
-std::vector<unsigned char> HashVerifyingFilter::hash() const
+void HashVerifyingFilter::write(
+        Util::Sink &sink, const unsigned char *data, std::size_t length)
 {
-    return hash_;
+    impl_->hashFun->update(data, length);
+    sink.write(data, length);
 }
 
-void HashVerifyingFilter::updateHash(const char *data, std::streamsize length)
+void HashVerifyingFilter::close(Util::Sink &sink)
 {
-    kulloAssert(length >= 0);
-    impl_->hashFun->update(
-                reinterpret_cast<const unsigned char*>(data),
-                static_cast<size_t>(length));
+    K_UNUSED(sink);
+    finalizeHash();
 }
 
 void HashVerifyingFilter::finalizeHash()
 {
-    hash_.resize(impl_->hashFun->output_length());
-    impl_->hashFun->final(hash_.data());
+    std::vector<unsigned char> hash(impl_->hashFun->output_length());
+    impl_->hashFun->final(hash.data());
 
-    if (hash_ != expectedHash_)
+    if (hash != expectedHash_)
     {
         throw HashDoesntMatch();
     }

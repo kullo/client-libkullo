@@ -252,6 +252,17 @@ void MessageDecoder::parseAttachments(const Json::Value &attachmentsIndex, id_ty
         FWD_NESTED(att->setHash(CheckedConverter::toHexString(attJson["hash"])),
                 ConversionException,
                 InvalidContentFormat("attachment hash invalid"));
+        // 512 bit / 8 bit/byte * 2 chars/byte
+        auto hashLength = att->hash().length();
+        auto expectedHashLength = 512u / 8 * 2;
+        if (hashLength != expectedHashLength)
+        {
+            throw InvalidContentFormat(
+                        std::string("attachment hash has invalid length: ")
+                        + std::to_string(hashLength)
+                        + ", should be "
+                        + std::to_string(expectedHashLength));
+        }
         attachments_.push_back(std::move(att));
     }
 }

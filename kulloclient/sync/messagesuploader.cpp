@@ -204,19 +204,19 @@ bool MessagesUploader::ensureSizeLimitCompliance(
     kulloAssert(sendableMsg.keySafe.size() <= MESSAGE_KEY_SAFE_MAX_BYTES);
 
     auto attachmentsSize = sendableMsg.attachments.size();
-    if (attachmentsSize > MESSAGE_ATTACHMENTS_MAX_BYTES)
+    if (attachmentsSize > MESSAGE_ATTACHMENTS_SEND_MAX_BYTES)
     {
         Log.w() << "Attachments are too large. Size: "
                 << Util::FormatString::formatIntegerWithCommas(attachmentsSize)
                 << " (allowed: "
-                << Util::FormatString::formatIntegerWithCommas(MESSAGE_ATTACHMENTS_MAX_BYTES)
+                << Util::FormatString::formatIntegerWithCommas(MESSAGE_ATTACHMENTS_SEND_MAX_BYTES)
                 << ")";
         draft.setState(DraftState::Editing);
         draft.save();
         EMIT(events.draftAttachmentsTooBig,
              draft.conversationId(),
              attachmentsSize,
-             MESSAGE_ATTACHMENTS_MAX_BYTES);
+             MESSAGE_ATTACHMENTS_SEND_MAX_BYTES);
         EMIT(events.draftModified, draft.conversationId());
         return false;
     }
