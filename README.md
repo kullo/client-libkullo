@@ -70,10 +70,19 @@ Tips and Tricks
 Changelog
 ---------
 
+### v45 (not yet released)
+
+ * Increase attachment size limit for sending to 100 MB
+ * Calculate Conversations.lastMessageTime from receiving time on the server
+ * Implement http mime multipart for sending messages with attachments
+ * Update SmartSqlite v8
+ * Update Botan 1.11.29
+
 ### v44 (2016-03-03)
 
-* Make downloading attachments more memory-efficient through streaming
-* Increase attachment size limit for receiving to 100 MB
+ * Make downloading attachments more memory-efficient through streaming
+ * Increase attachment size limit for receiving to 100 MB
+ * Update SmartSqlite v6 (version list shows v5 because of missing version bumb)
 
 ### v43 (2016-02-12)
 

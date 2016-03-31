@@ -12,6 +12,7 @@
 #include "kulloclient/protocol/responselistener.h"
 #include "kulloclient/util/assert.h"
 #include "kulloclient/util/base64.h"
+#include "kulloclient/util/binary.h"
 #include "kulloclient/util/kulloaddress.h"
 #include "kulloclient/util/librarylogger.h"
 #include "kulloclient/util/masterkey.h"
@@ -108,7 +109,21 @@ Http::Response BaseClient::sendRequest(const Http::Request &request)
 Http::Response BaseClient::sendRequest(
         const Http::Request &request, const Json::Value &reqJson)
 {
-    return doSendRequest(request, &reqJson);
+    Json::StreamWriterBuilder wBuilder;
+    wBuilder["commentStyle"] = "None";
+    wBuilder["indentation"] = "";
+    std::unique_ptr<Json::StreamWriter> writer(wBuilder.newStreamWriter());
+    std::ostringstream reqStream;
+    writer->write(reqJson, &reqStream);
+
+    auto reqBody = reqStream.str();
+    return doSendRequest(request, &reqBody);
+}
+
+Http::Response BaseClient::sendRequest(
+        const Http::Request &request, const std::string &reqBody)
+{
+    return doSendRequest(request, &reqBody);
 }
 
 void BaseClient::throwOnError(const Http::Response &response)
@@ -165,24 +180,15 @@ Json::Value BaseClient::parseJsonBody()
 }
 
 Http::Response BaseClient::doSendRequest(
-        const Http::Request &request, const Json::Value *reqJson)
+        const Http::Request &request, const std::string *reqBody)
 {
     canceled_ = false;
 
     std::shared_ptr<RequestListener> reqL;
-    std::string reqBody;
-    size_t reqBodyCharsRead = 0;
+    size_t reqBodyBytesRead = 0;
 
-    if (reqJson)
+    if (reqBody)
     {
-        Json::StreamWriterBuilder wBuilder;
-        wBuilder["commentStyle"] = "None";
-        wBuilder["indentation"] = "";
-        std::unique_ptr<Json::StreamWriter> writer(wBuilder.newStreamWriter());
-        std::ostringstream reqStream;
-        writer->write(*reqJson, &reqStream);
-        reqBody = reqStream.str();
-
         reqL = std::make_shared<RequestListener>();
         reqL->setRead([&](int64_t maxSizeSigned)
         {
@@ -192,16 +198,16 @@ Http::Response BaseClient::doSendRequest(
             // address space...
             auto maxSize = static_cast<size_t>(maxSizeSigned);
 
-            kulloAssert(reqBody.begin() + reqBodyCharsRead <= reqBody.end());
+            kulloAssert(reqBody->begin() + reqBodyBytesRead <= reqBody->end());
             auto chunkSize = std::min(
-                        reqBody.size() - reqBodyCharsRead,
+                        reqBody->size() - reqBodyBytesRead,
                         maxSize);
             std::vector<uint8_t> result;
             result.reserve(chunkSize);
-            std::copy(reqBody.begin() + reqBodyCharsRead,
-                      reqBody.begin() + reqBodyCharsRead + chunkSize,
+            std::copy(reqBody->begin() + reqBodyBytesRead,
+                      reqBody->begin() + reqBodyBytesRead + chunkSize,
                       std::back_inserter(result));
-            reqBodyCharsRead += chunkSize;
+            reqBodyBytesRead += chunkSize;
             return result;
         });
     }

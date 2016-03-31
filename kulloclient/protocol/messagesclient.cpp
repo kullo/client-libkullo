@@ -9,6 +9,7 @@
 #include "kulloclient/util/assert.h"
 #include "kulloclient/util/base64.h"
 #include "kulloclient/util/checkedconverter.h"
+#include "kulloclient/util/mimemultipart.h"
 #include "kulloclient/util/version.h"
 
 using namespace Kullo::Util;
@@ -171,17 +172,21 @@ Kullo::Protocol::MessageSent MessagesClient::doSendMessage(
 
     auto auth = (toSelf) ? Authenticated::True : Authenticated::False;
 
-    Json::Value jsonBody(Json::objectValue);
-    jsonBody["keySafe"]     = Base64::encode(message.keySafe);
-    jsonBody["content"]     = Base64::encode(message.content);
-    jsonBody["attachments"] = Base64::encode(message.attachments);
-    if (!meta.empty()) jsonBody["meta"] = Base64::encode(meta);
+    Util::MimeMultipart multipart;
+    multipart.addPart("keySafe", message.keySafe);
+    multipart.addPart("keySafe", message.keySafe);
+    multipart.addPart("content", message.content);
+    if (!meta.empty()) multipart.addPart("meta", meta);
+    multipart.addPart("attachments", message.attachments);
 
+    auto contentType = std::string("multipart/form-data; boundary=\"")
+            + multipart.boundary()
+            + "\"";
     sendRequest(Http::Request(
                     Http::HttpMethod::Post,
                     baseUserUrl(recipient) + "/messages",
-                    makeHeaders(auth)),
-                jsonBody);
+                    makeHeaders(auth, contentType)),
+                multipart.toString());
 
     MessageSent msgSent;
     if (toSelf)

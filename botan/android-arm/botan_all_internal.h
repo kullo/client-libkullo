@@ -209,7 +209,7 @@ class Algo_Registry
    };
 
 template<typename T> T*
-make_a(const typename T::Spec& spec, const std::string provider = "")
+make_a(const typename T::Spec& spec, const std::string& provider = "")
    {
    return Algo_Registry<T>::global_registry().make(spec, provider);
    }
@@ -254,7 +254,7 @@ make_new_T_1str_req(const typename Algo_Registry<T>::Spec& spec)
 template<typename T, typename X> T*
 make_new_T_1X(const typename Algo_Registry<T>::Spec& spec)
    {
-   std::unique_ptr<X> x(Algo_Registry<X>::global_registry().make(spec.arg(0)));
+   std::unique_ptr<X> x(Algo_Registry<X>::global_registry().make(Botan::SCAN_Name(spec.arg(0))));
    if(!x)
       throw Exception(spec.arg(0));
    return new T(x.release());
@@ -535,7 +535,11 @@ inline void unpoison(const T* p, size_t n)
 template<typename T>
 inline void unpoison(T& p)
    {
-   unpoison(&p, 1);
+#if defined(BOTAN_HAS_VALGRIND)
+   VALGRIND_MAKE_MEM_DEFINED(&p, sizeof(T));
+#else
+   BOTAN_UNUSED(p);
+#endif
    }
 
 /*
@@ -562,6 +566,12 @@ template<typename T>
 inline T select(T mask, T from0, T from1)
    {
    return (from0 & mask) | (from1 & ~mask);
+   }
+
+template<typename PredT, typename ValT>
+inline ValT val_or_zero(PredT pred_val, ValT val)
+   {
+   return select(CT::expand_mask<ValT>(pred_val), val, static_cast<ValT>(0));
    }
 
 template<typename T>
@@ -591,12 +601,28 @@ inline void conditional_copy_mem(T value,
                                  T* to,
                                  const T* from0,
                                  const T* from1,
-                                 size_t bytes)
+                                 size_t elems)
    {
    const T mask = CT::expand_mask(value);
 
-   for(size_t i = 0; i != bytes; ++i)
+   for(size_t i = 0; i != elems; ++i)
+      {
       to[i] = CT::select(mask, from0[i], from1[i]);
+      }
+   }
+
+template<typename T>
+inline void cond_zero_mem(T cond,
+                          T* array,
+                          size_t elems)
+   {
+   const T mask = CT::expand_mask(cond);
+   const T zero(0);
+
+   for(size_t i = 0; i != elems; ++i)
+      {
+      array[i] = CT::select(mask, zero, array[i]);
+      }
    }
 
 template<typename T>
@@ -619,20 +645,24 @@ inline T min(T a, T b)
    return select(expand_top_bit(b), b, a);
    }
 
-template<typename T, typename Alloc>
-std::vector<T, Alloc> strip_leading_zeros(const std::vector<T, Alloc>& input)
+inline secure_vector<uint8_t> strip_leading_zeros(const uint8_t in[], size_t length)
    {
    size_t leading_zeros = 0;
 
    uint8_t only_zeros = 0xFF;
 
-   for(size_t i = 0; i != input.size(); ++i)
+   for(size_t i = 0; i != length; ++i)
       {
-      only_zeros &= CT::is_zero(input[i]);
+      only_zeros &= CT::is_zero(in[i]);
       leading_zeros += CT::select<uint8_t>(only_zeros, 1, 0);
       }
 
-   return secure_vector<byte>(input.begin() + leading_zeros, input.end());
+   return secure_vector<byte>(in + leading_zeros, in + length);
+   }
+
+inline secure_vector<byte> strip_leading_zeros(const secure_vector<uint8_t>& in)
+   {
+   return strip_leading_zeros(in.data(), in.size());
    }
 
 }
@@ -805,8 +835,8 @@ inline u64bit carry_shift(const donna128& a, size_t shift)
    return (a >> shift).lo();
    }
 
-inline u64bit combine_lower(const donna128 a, size_t s1,
-                            const donna128 b, size_t s2)
+inline u64bit combine_lower(const donna128& a, size_t s1,
+                            const donna128& b, size_t s2)
    {
    donna128 z = (a >> s1) | (b << s2);
    return z.lo();
@@ -1224,6 +1254,36 @@ namespace Botan {
 */
 const size_t MP_WORD_BITS = BOTAN_MP_WORD_BITS;
 
+/*
+* If cond == 0, does nothing.
+* If cond > 0, swaps x[0:size] with y[0:size]
+* Runs in constant time
+*/
+BOTAN_DLL
+void bigint_cnd_swap(word cnd, word x[], word y[], size_t size);
+
+/*
+* If cond > 0 adds x[0:size] to y[0:size] and returns carry
+* Runs in constant time
+*/
+BOTAN_DLL
+word bigint_cnd_add(word cnd, word x[], const word y[], size_t size);
+
+/*
+* If cond > 0 subs x[0:size] to y[0:size] and returns borrow
+* Runs in constant time
+*/
+BOTAN_DLL
+word bigint_cnd_sub(word cnd, word x[], const word y[], size_t size);
+
+/*
+* 2s complement absolute value
+* If cond > 0 sets x to ~x + 1
+* Runs in constant time
+*/
+BOTAN_DLL
+void bigint_cnd_abs(word cnd, word x[], size_t size);
+
 /**
 * Two operand addition
 * @param x the first operand (and output)
@@ -1372,6 +1432,26 @@ namespace Botan {
 
 namespace OS {
 
+/**
+* Returns the OS assigned process ID, if available. Otherwise returns 0.
+*/
+uint32_t get_process_id();
+
+/**
+* Returns the value of the hardware cycle counter, if available.
+* Returns 0 if not available. On Windows uses QueryPerformanceCounter.
+* On other platforms reads the native cycle counter directly.
+* The epoch and update rate are arbitrary and may not be constant
+* (depending on the hardware).
+*/
+uint64_t get_processor_timestamp();
+
+/**
+* Returns the value of the system clock with best resolution available,
+* normalized to nanoseconds resolution.
+*/
+uint64_t get_system_timestamp_ns();
+
 /*
 * Returns the maximum amount of memory (in bytes) we could/should
 * hyptothetically allocate. Reads "BOTAN_MLOCK_POOL_SIZE" from
@@ -1380,9 +1460,9 @@ namespace OS {
 size_t get_memory_locking_limit();
 
 /*
-* Request so many bytes of page-aligned RAM locked into memory OS
-* calls (mlock, VirtualLock, or similar). Returns null on failure. The
-* memory returned is zeroed. Free it with free_locked_pages.
+* Request so many bytes of page-aligned RAM locked into memory using
+* mlock, VirtualLock, or similar. Returns null on failure. The memory
+* returned is zeroed. Free it with free_locked_pages.
 */
 void* allocate_locked_pages(size_t length);
 
@@ -1452,7 +1532,7 @@ class Encryption_with_EME : public Encryption
 
       ~Encryption_with_EME();
    protected:
-      Encryption_with_EME(const std::string& eme);
+      explicit Encryption_with_EME(const std::string& eme);
    private:
       virtual size_t max_raw_input_bits() const = 0;
 
@@ -1466,11 +1546,12 @@ class Decryption_with_EME : public Decryption
    public:
       size_t max_input_bits() const override;
 
-      secure_vector<byte> decrypt(const byte msg[], size_t msg_len) override;
+      secure_vector<byte> decrypt(byte& valid_mask,
+                                  const byte msg[], size_t msg_len) override;
 
       ~Decryption_with_EME();
    protected:
-      Decryption_with_EME(const std::string& eme);
+      explicit Decryption_with_EME(const std::string& eme);
    private:
       virtual size_t max_raw_input_bits() const = 0;
       virtual secure_vector<byte> raw_decrypt(const byte msg[], size_t len) = 0;
@@ -1488,7 +1569,7 @@ class Verification_with_EMSA : public Verification
 
    protected:
 
-      Verification_with_EMSA(const std::string& emsa);
+      explicit Verification_with_EMSA(const std::string& emsa);
       ~Verification_with_EMSA();
 
       /**
@@ -1534,7 +1615,7 @@ class Signature_with_EMSA : public Signature
 
       secure_vector<byte> sign(RandomNumberGenerator& rng) override;
    protected:
-      Signature_with_EMSA(const std::string& emsa);
+      explicit Signature_with_EMSA(const std::string& emsa);
       ~Signature_with_EMSA();
    private:
 
@@ -1561,7 +1642,7 @@ class Key_Agreement_with_KDF : public Key_Agreement
                                 const byte salt[], size_t salt_len) override;
 
    protected:
-      Key_Agreement_with_KDF(const std::string& kdf);
+      explicit Key_Agreement_with_KDF(const std::string& kdf);
       ~Key_Agreement_with_KDF();
    private:
       virtual secure_vector<byte> raw_agree(const byte w[], size_t w_len) = 0;
@@ -1583,7 +1664,7 @@ class KEM_Encryption_with_KDF : public KEM_Encryption
                                    secure_vector<byte>& raw_shared_key,
                                    Botan::RandomNumberGenerator& rng) = 0;
 
-      KEM_Encryption_with_KDF(const std::string& kdf);
+      explicit KEM_Encryption_with_KDF(const std::string& kdf);
       ~KEM_Encryption_with_KDF();
    private:
       std::unique_ptr<KDF> m_kdf;
@@ -1602,7 +1683,7 @@ class KEM_Decryption_with_KDF : public KEM_Decryption
       virtual secure_vector<byte>
       raw_kem_decrypt(const byte encap_key[], size_t len) = 0;
 
-      KEM_Decryption_with_KDF(const std::string& kdf);
+      explicit KEM_Decryption_with_KDF(const std::string& kdf);
       ~KEM_Decryption_with_KDF();
    private:
       std::unique_ptr<KDF> m_kdf;
@@ -1701,7 +1782,7 @@ namespace Botan {
 class Semaphore
    {
    public:
-      Semaphore(int value = 0) : m_value(value), m_wakeups(0) {}
+      explicit Semaphore(int value = 0) : m_value(value), m_wakeups(0) {}
 
       void acquire();
 

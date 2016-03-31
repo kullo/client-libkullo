@@ -36,9 +36,11 @@ void MessageAdder::emitSignals()
 {
     kulloAssert(addMessageHasBeenRun_);
 
+    // sender must be available when message is added, so senderAdded must be
+    // emitted before messageAdded
+    EMIT(events.senderAdded, convId_, msgId_);
     EMIT(events.participantAddedOrModified, senderAddr_);
     EMIT(events.messageAdded, convId_, msgId_);
-    EMIT(events.senderAdded, convId_, msgId_);
 
     if (newConversation_)
     {

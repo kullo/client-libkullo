@@ -4,9 +4,12 @@
 #include <stdexcept>
 
 #include "kulloclient/api/DraftState.h"
+#include "kulloclient/api/Event.h"
+#include "kulloclient/api/EventType.h"
 #include "kulloclient/dao/attachmentdao.h"
 #include "kulloclient/db/exceptions.h"
 #include "kulloclient/event/draftremovedevent.h"
+#include "kulloclient/event/sendapieventsevent.h"
 #include "kulloclient/util/assert.h"
 
 namespace Kullo {
@@ -36,12 +39,17 @@ std::string DraftsImpl::text(int64_t convId)
 void DraftsImpl::setText(int64_t convId, const std::string &text)
 {
     kulloAssert(convId >= Kullo::ID_MIN && convId <= Kullo::ID_MAX);
+    bool changed = false;
 
     auto draftIter = drafts_.find(convId);
     if (draftIter != drafts_.end())
     {
-        draftIter->second.setText(text);
-        draftIter->second.save();
+        if (draftIter->second.text() != text)
+        {
+            draftIter->second.setText(text);
+            draftIter->second.save();
+            changed = true;
+        }
     }
     else
     {
@@ -50,6 +58,13 @@ void DraftsImpl::setText(int64_t convId, const std::string &text)
         dao.setText(text);
         dao.save();
         drafts_.emplace(convId, std::move(dao));
+        changed = true;
+    }
+    if (changed)
+    {
+        Api::Event event(Api::EventType::DraftTextChanged, convId, -1, -1);
+        sessionListener_->internalEvent(
+                    std::make_shared<Event::SendApiEventsEvent>(event));
     }
 }
 

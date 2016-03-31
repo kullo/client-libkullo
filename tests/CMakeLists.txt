@@ -59,6 +59,7 @@ set(source_files
     util/test_hex.cpp
     util/test_kulloaddress.cpp
     util/test_masterkey.cpp
+    util/test_mimemultipart.cpp
     util/test_stacktrace.cpp
     util/test_urlencoding.cpp
     util/test_usersettings.cpp

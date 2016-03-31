@@ -82,7 +82,9 @@ public:
 private:
     std::unique_ptr<Dao::ConversationDao> loadConversation(
             id_type conversationId);
-    void deleteDraftAttachmentsAndClearDraft(Dao::DraftDao &draft);
+    void clearDraft(
+            Dao::DraftDao &draft,
+            const std::vector<std::unique_ptr<Dao::AttachmentDao>> &attachments);
     std::vector<Util::Delivery> makeDelivery(const Dao::ConversationDao &conv);
     Protocol::SendableMessage makeSendableMessage(
             const Codec::EncodedMessage &encodedMessage);

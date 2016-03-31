@@ -36,8 +36,9 @@ protected:
 
     Http::Response sendRequest(const Http::Request &request);
     Http::Response sendRequest(
-            const Http::Request &request,
-            const Json::Value &reqJson);
+            const Http::Request &request, const Json::Value &reqJson);
+    Http::Response sendRequest(
+            const Http::Request &request, const std::string &reqBody);
 
     void throwOnError(const Http::Response &response);
     Json::Value parseJsonBody();
@@ -50,8 +51,7 @@ protected:
 
 private:
     Http::Response doSendRequest(
-            const Http::Request &request,
-            const Json::Value *reqJson);
+            const Http::Request &request, const std::string *reqBody);
 };
 
 }

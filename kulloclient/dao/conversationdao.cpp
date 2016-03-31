@@ -51,7 +51,7 @@ std::unique_ptr<ConversationResult> ConversationDao::all(SharedSessionPtr sessio
 
 std::string ConversationDao::loadLastMessageTime()
 {
-    std::string sql = "SELECT coalesce(max(strftime('%Y-%m-%dT%H:%M:%SZ', sent)), '') AS last_message_time "
+    std::string sql = "SELECT coalesce(max(strftime('%Y-%m-%dT%H:%M:%SZ', received)), '') AS last_message_time "
                       "FROM messages "
                       "WHERE conversation_id = :conversation_id AND deleted = 0 AND old = 0";
     auto stmt = session_->prepare(sql);

@@ -150,6 +150,42 @@ bool AttachmentDao::save()
     return true;
 }
 
+void AttachmentDao::convertToMessageAttachment(id_type msgId)
+{
+    kulloAssert(draft_);
+    kulloAssert(storedInDb_);
+    kulloAssert(!dirty_);
+
+    // save for SQL query before overwriting it
+    auto convId = messageId_;
+
+    draft_ = false;
+    messageId_ = msgId;
+
+    {
+        std::string sql = "UPDATE attachments "
+                "SET draft = 0, message_id = :message_id "
+                "WHERE draft = 1 AND message_id = :conv_id AND idx = :index ";
+
+        auto stmt = session_->prepare(sql);
+        stmt.bind(":message_id", messageId_);
+        stmt.bind(":conv_id", convId);
+        stmt.bind(":index", index_);
+        stmt.execWithoutResult();
+    }
+
+    {
+        std::string sql = "UPDATE attachments_content "
+            "SET draft = 0, message_id = :message_id "
+            "WHERE draft = 1 AND message_id = :conv_id AND idx = :index ";
+        auto stmt = session_->prepare(sql);
+        stmt.bind(":message_id", messageId_);
+        stmt.bind(":conv_id", convId);
+        stmt.bind(":index", index_);
+        stmt.execWithoutResult();
+    }
+}
+
 bool AttachmentDao::draft() const
 {
     return draft_;

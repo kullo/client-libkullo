@@ -86,6 +86,11 @@ void ConversationsImpl::remove(int64_t convId)
     if (daoIter != conversations_.end())
     {
         auto &dao = daoIter->second;
+
+        const auto participants = dao.participants();
+        auto countErased = convForParticipants_.erase(participants);
+        kulloAssert(countErased > 0);
+
         dao.deletePermanently();
         conversations_.erase(daoIter);
 

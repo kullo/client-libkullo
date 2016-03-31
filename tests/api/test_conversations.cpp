@@ -36,6 +36,7 @@ public:
 
         messageData_.id = 0;
         messageData_.dateSent = Api::DateTime(2015, 6, 23, 16, 06, 00, 120);
+        messageData_.dateReceived = Api::DateTime(2015, 6, 23, 16, 06, 01, 120);
 
         dbSession_ = Db::makeSession(dbPath_);
         Db::migrate(dbSession_);
@@ -54,6 +55,7 @@ public:
         messageDao.setConversationId(data_.id);
         messageDao.setId(messageData_.id);
         messageDao.setDateSent(messageData_.dateSent->toString());
+        messageDao.setDateReceived(messageData_.dateReceived->toString());
         messageDao.save(Dao::CreateOld::No);
 
         makeSession();
@@ -79,6 +81,7 @@ protected:
     {
         int64_t id;
         boost::optional<Api::DateTime> dateSent;
+        boost::optional<Api::DateTime> dateReceived;
     } messageData_;
 
     Db::SharedSessionPtr dbSession_;
@@ -292,10 +295,10 @@ K_TEST_F(ApiConversations, latestMessageTimestampWorks)
                 Eq(Api::Conversations::emptyConversationTimestamp()));
 
     EXPECT_THAT(uut_->latestMessageTimestamp(data_.id),
-                Eq(messageData_.dateSent));
+                Eq(messageData_.dateReceived));
 
     EXPECT_THAT(uut_->latestMessageTimestamp(42),
-                Not(Eq(messageData_.dateSent)));
+                Not(Eq(messageData_.dateReceived)));
 }
 
 K_TEST_F(ApiConversations, idRangeWorks)

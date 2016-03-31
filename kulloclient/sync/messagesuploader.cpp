@@ -105,27 +105,13 @@ void MessagesUploader::run(std::shared_ptr<std::atomic<bool>> shouldCancel)
                     session_);
         while (auto attachmentDao = result->next())
         {
-            attachmentDao->setDraft(false);
-            attachmentDao->setMessageId(message.id());
+            attachmentDao->convertToMessageAttachment(message.id());
             messageAttachments.emplace_back(std::move(attachmentDao));
         }
 
         // save message
         msgAdder_.addMessage(message, *conv, sender, messageAttachments);
         Dao::DeliveryDao(session_).insertDelivery(msgSent.id, delivery);
-
-        // copy attachment contents from draft attachment to message attachment
-        for (auto &messageAttachment : messageAttachments)
-        {
-            auto draftAttachment = AttachmentDao::load(
-                        IsDraft::Yes,
-                        conv->id(),
-                        messageAttachment->index(),
-                        session_);
-            kulloAssert(draftAttachment);
-            auto content = draftAttachment->content();
-            messageAttachment->setContent(content);
-        }
 
         tx.commit();
 
@@ -134,7 +120,7 @@ void MessagesUploader::run(std::shared_ptr<std::atomic<bool>> shouldCancel)
              draft->conversationId(),
              msgSent.id);
 
-        deleteDraftAttachmentsAndClearDraft(*draft);
+        clearDraft(*draft, messageAttachments);
     }
 }
 
@@ -151,14 +137,13 @@ std::unique_ptr<ConversationDao> MessagesUploader::loadConversation(
     return conv;
 }
 
-void MessagesUploader::deleteDraftAttachmentsAndClearDraft(Dao::DraftDao &draft)
+void MessagesUploader::clearDraft(
+        Dao::DraftDao &draft,
+        const std::vector<std::unique_ptr<Dao::AttachmentDao>> &attachments)
 {
-    auto deletedAttachments =
-            AttachmentDao::deleteAttachmentsForDraft(
-                draft.conversationId(), session_);
-    for (auto attId : deletedAttachments)
+    for (const auto &att : attachments)
     {
-        EMIT(events.draftAttachmentDeleted, draft.conversationId(), attId);
+        EMIT(events.draftAttachmentDeleted, draft.conversationId(), att->index());
     }
 
     draft.clear();

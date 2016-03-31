@@ -131,6 +131,7 @@ kullo_add_simple_library(
     util/kulloaddress.cpp
     util/librarylogger.cpp
     util/masterkey.cpp
+    util/mimemultipart.cpp
     util/scopedbenchmark.cpp
     util/stacktrace.cpp
     util/stltaskrunner.cpp

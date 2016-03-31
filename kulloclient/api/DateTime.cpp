@@ -4,9 +4,11 @@
 #include <cmath>
 #include <iostream>
 #include <stdexcept>
+#include <boost/optional.hpp>
 
 #include "kulloclient/api/InternalDateTimeUtils.h"
 #include "kulloclient/util/datetime.h"
+#include "kulloclient/util/exceptions.h"
 
 namespace Kullo {
 namespace Api {
@@ -19,6 +21,18 @@ DateTime::DateTime(
     , dateTime_(year, month, day, hour, minute, second, tzOffsetMinutes * 60)
 {
     if (dateTime_.isNull()) throw std::invalid_argument("DateTime");
+}
+
+boost::optional<DateTime> DateTime::fromRfc3339(const std::string &timeStr)
+{
+    try
+    {
+        return DateTime(Util::DateTime(timeStr));
+    }
+    catch (Util::InvalidDateTime &)
+    {
+        return boost::none;
+    }
 }
 
 DateTime::DateTime(const Util::DateTime &dateTime)
@@ -44,6 +58,16 @@ bool DateTime::operator==(const DateTime &rhs) const
 bool DateTime::operator<(const DateTime &rhs) const
 {
     return dateTime_ < rhs.dateTime_;
+}
+
+DateTime operator+(const DateTime &lhs, std::chrono::seconds rhs)
+{
+    return DateTime(lhs.dateTime_ + rhs);
+}
+
+DateTime operator+(std::chrono::seconds lhs, const DateTime &rhs)
+{
+    return DateTime(lhs + rhs.dateTime_);
 }
 
 std::ostream &operator<<(std::ostream &lhs, const DateTime &rhs)

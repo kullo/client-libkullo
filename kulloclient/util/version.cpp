@@ -18,7 +18,7 @@
     #define KULLO_OS "Windows"
 #elif defined __APPLE__ && __MACH__
     #include "TargetConditionals.h"
-    #if defined TARGET_OS_IPHONE
+    #if TARGET_OS_IPHONE
         #define KULLO_OS "iOS"
     #else
         #define KULLO_OS "OSX"
@@ -31,7 +31,7 @@ namespace Kullo {
 namespace Util {
 
 namespace {
-const std::string LIBKULLO_VERSION = "v44";
+const std::string LIBKULLO_VERSION = "v45";
 const std::string LIBKULLO_USER_AGENT = "libkulloclient/" + LIBKULLO_VERSION + " (" KULLO_OS ")";
 }
 

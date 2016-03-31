@@ -71,6 +71,8 @@ public:
      */
     bool save();
 
+    void convertToMessageAttachment(id_type msgId);
+
     bool draft() const;
 
     bool setDraft(bool draft);

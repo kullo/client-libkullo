@@ -240,6 +240,14 @@ void MessageDecryptor::checkSize() const
                     std::string("content too large: ") +
                     std::to_string(message_.content.size()));
     }
+
+    if (static_cast<size_t>(message_.meta.size())
+            > Util::MESSAGE_META_MAX_BYTES)
+    {
+        throw InvalidContentFormat(
+                    std::string("meta too large: ") +
+                    std::to_string(message_.meta.size()));
+    }
 }
 
 }
