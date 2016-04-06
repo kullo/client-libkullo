@@ -21,6 +21,7 @@ Api::NetworkError toNetworkError(std::exception_ptr exptr)
     catch (Protocol::Unauthorized)        {return Api::NetworkError::Unauthorized;}
     catch (Protocol::ServerError)         {return Api::NetworkError::Server;}
     catch (Protocol::NetworkError)        {return Api::NetworkError::Connection;}
+    catch (Protocol::Timeout)             {return Api::NetworkError::Connection;}
     catch (...)                           {return Api::NetworkError::Unknown;}
 
     // cannot happen, but make compiler happy

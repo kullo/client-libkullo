@@ -108,6 +108,10 @@ void DraftsImpl::prepareToSend(int64_t convId)
         dao.setSenderAvatar(userSettings->avatar());
         dao.setSenderAvatarMimeType(userSettings->avatarMimeType());
         dao.save();
+
+        Api::Event event(Api::EventType::DraftStateChanged, convId, -1, -1);
+        sessionListener_->internalEvent(
+                    std::make_shared<Event::SendApiEventsEvent>(event));
     }
 }
 

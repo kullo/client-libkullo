@@ -1,6 +1,7 @@
 /* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
 #include "kulloclient/protocol/baseclient.h"
 
+#include <iterator>
 #include <sstream>
 #include <jsoncpp/jsoncpp.h>
 
@@ -21,6 +22,8 @@
 namespace {
 const auto KULLO_DEVELOPMENT_DOMAIN = std::string{"kullo.dev"};
 const auto KULLO_DEVELOPMENT_PORT = 8001;
+
+const std::int32_t DEFAULT_TIMEOUT_MS = 60 * 1000;
 }
 
 namespace Kullo {
@@ -225,7 +228,7 @@ Http::Response BaseClient::doSendRequest(
     });
 
     Log.i() << request;
-    auto response = client_->sendRequest(request, 0, reqL, respL);
+    auto response = client_->sendRequest(request, DEFAULT_TIMEOUT_MS, reqL, respL);
     throwOnError(response);
     return response;
 }

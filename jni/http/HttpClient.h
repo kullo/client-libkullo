@@ -33,14 +33,14 @@ private:
         JavaProxy(JniType j);
         ~JavaProxy();
 
-        ::Kullo::Http::Response sendRequest(const ::Kullo::Http::Request & request, int64_t timeout, const std::shared_ptr<::Kullo::Http::RequestListener> & requestListener, const std::shared_ptr<::Kullo::Http::ResponseListener> & responseListener) override;
+        ::Kullo::Http::Response sendRequest(const ::Kullo::Http::Request & request, int32_t timeoutMs, const std::shared_ptr<::Kullo::Http::RequestListener> & requestListener, const std::shared_ptr<::Kullo::Http::ResponseListener> & responseListener) override;
 
     private:
         friend ::djinni::JniInterface<::Kullo::Http::HttpClient, ::JNI::Kullo::Http::HttpClient>;
     };
 
     const ::djinni::GlobalRef<jclass> clazz { ::djinni::jniFindClass("net/kullo/libkullo/http/HttpClient") };
-    const jmethodID method_sendRequest { ::djinni::jniGetMethodID(clazz.get(), "sendRequest", "(Lnet/kullo/libkullo/http/Request;JLnet/kullo/libkullo/http/RequestListener;Lnet/kullo/libkullo/http/ResponseListener;)Lnet/kullo/libkullo/http/Response;") };
+    const jmethodID method_sendRequest { ::djinni::jniGetMethodID(clazz.get(), "sendRequest", "(Lnet/kullo/libkullo/http/Request;ILnet/kullo/libkullo/http/RequestListener;Lnet/kullo/libkullo/http/ResponseListener;)Lnet/kullo/libkullo/http/Response;") };
 };
 
 } } }  // namespace JNI::Kullo::Http

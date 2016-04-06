@@ -8,6 +8,7 @@
 #include "kulloclient/api_impl/deliveryimpl.h"
 #include "kulloclient/dao/deliverydao.h"
 #include "kulloclient/db/exceptions.h"
+#include "kulloclient/event/conversationmodifiedevent.h"
 #include "kulloclient/event/messagemodifiedevent.h"
 #include "kulloclient/event/messageremovedevent.h"
 #include "kulloclient/event/sendapieventsevent.h"
@@ -51,7 +52,6 @@ int64_t MessagesImpl::latestForSender(const std::shared_ptr<Api::Address> &addre
     kulloAssert(address);
     const auto addressString = address->toString();
 
-    Util::DateTime latest = Util::DateTime::epoch();
     int64_t latestId = -1;
 
     for (auto itr = messages_.rbegin(); itr != messages_.rend(); ++itr)
@@ -59,10 +59,10 @@ int64_t MessagesImpl::latestForSender(const std::shared_ptr<Api::Address> &addre
         auto &dao = itr->second;
         if (dao.sender() == addressString)
         {
-            if (Util::DateTime(dao.dateSent()) > latest)
+            auto id = dao.id();
+            if (id > latestId)
             {
-                latest = Util::DateTime(dao.dateSent());
-                latestId = dao.id();
+                latestId = id;
             }
         }
     }
@@ -328,6 +328,9 @@ void MessagesImpl::setState(MessagesImpl::MessageState state, int64_t msgId, boo
             dao.setState(daoStateType,value);
             dao.save(Dao::CreateOld::Yes);
 
+            sessionListener_->internalEvent(
+                        std::make_shared<Event::ConversationModifiedEvent>(
+                            conversationId));
             sessionListener_->internalEvent(
                         std::make_shared<Event::SendApiEventsEvent>(
                             Event::ApiEvents{

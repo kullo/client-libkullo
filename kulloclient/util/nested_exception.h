@@ -2,7 +2,7 @@
 #pragma once
 
 // This is a re-implementation of C++11 nested exceptions, made necessary by MSVC++ 2013
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && _MSC_VER == 1800
 
 #include <exception>
 #include <type_traits>
@@ -80,4 +80,4 @@ void rethrow_if_nested(const E &e)
 
 }
 
-#endif // _MSC_VER
+#endif // is MSVC++ 2013

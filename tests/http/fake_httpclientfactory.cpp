@@ -73,9 +73,8 @@ int32_t validateAuth(const std::vector<Http::HttpHeader> headers)
 }
 }
 
-Http::Response FakeHttpClient::sendRequest(
-        const Kullo::Http::Request &request,
-        int64_t /*timeout*/,
+Http::Response FakeHttpClient::sendRequest(const Kullo::Http::Request &request,
+        int32_t /*timeoutMs*/,
         const std::shared_ptr<Http::RequestListener> &requestListener,
         const std::shared_ptr<Http::ResponseListener> &responseListener)
 {

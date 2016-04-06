@@ -22,11 +22,11 @@ public:
      * Synchronously send the given request.
      * Not thread-safe! Use a separate HttpClient instance per thread.
      *
-     * * timeout is measured in milliseconds
+     * * timeout in milliseconds or 0 for no timeout
      * * requestListener must be non-null if method is PATCH, POST or PUT
      * * responseListener may be null
      */
-    virtual Response sendRequest(const Request & request, int64_t timeout, const std::shared_ptr<RequestListener> & requestListener, const std::shared_ptr<ResponseListener> & responseListener) = 0;
+    virtual Response sendRequest(const Request & request, int32_t timeoutMs, const std::shared_ptr<RequestListener> & requestListener, const std::shared_ptr<ResponseListener> & responseListener) = 0;
 };
 
 } }  // namespace Kullo::Http

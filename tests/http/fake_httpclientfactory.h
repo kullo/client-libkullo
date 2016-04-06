@@ -12,7 +12,7 @@ class FakeHttpClient : public Kullo::Http::HttpClient
 public:
     Kullo::Http::Response sendRequest(
             const Kullo::Http::Request &request,
-            int64_t timeout,
+            int32_t timeoutMs,
             const std::shared_ptr<Kullo::Http::RequestListener> &requestListener,
             const std::shared_ptr<Kullo::Http::ResponseListener> &responseListener
             ) override;

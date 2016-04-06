@@ -2,6 +2,7 @@
 #include "kulloclient/crypto/decryptingfilter.h"
 
 #include <algorithm>
+#include <iterator>
 #include <limits>
 
 #include <botan/botan.h>

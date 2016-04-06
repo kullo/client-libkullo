@@ -18,13 +18,13 @@ HttpClient::JavaProxy::JavaProxy(JniType j) : Handle(::djinni::jniGetThreadEnv()
 
 HttpClient::JavaProxy::~JavaProxy() = default;
 
-::Kullo::Http::Response HttpClient::JavaProxy::sendRequest(const ::Kullo::Http::Request & c_request, int64_t c_timeout, const std::shared_ptr<::Kullo::Http::RequestListener> & c_requestListener, const std::shared_ptr<::Kullo::Http::ResponseListener> & c_responseListener) {
+::Kullo::Http::Response HttpClient::JavaProxy::sendRequest(const ::Kullo::Http::Request & c_request, int32_t c_timeoutMs, const std::shared_ptr<::Kullo::Http::RequestListener> & c_requestListener, const std::shared_ptr<::Kullo::Http::ResponseListener> & c_responseListener) {
     auto jniEnv = ::djinni::jniGetThreadEnv();
     ::djinni::JniLocalScope jscope(jniEnv, 10);
     const auto& data = ::djinni::JniClass<::JNI::Kullo::Http::HttpClient>::get();
     auto jret = jniEnv->CallObjectMethod(Handle::get().get(), data.method_sendRequest,
                                          ::djinni::get(::JNI::Kullo::Http::Request::fromCpp(jniEnv, c_request)),
-                                         ::djinni::get(::djinni::I64::fromCpp(jniEnv, c_timeout)),
+                                         ::djinni::get(::djinni::I32::fromCpp(jniEnv, c_timeoutMs)),
                                          ::djinni::get(::djinni::Optional<boost::optional, ::JNI::Kullo::Http::RequestListener>::fromCpp(jniEnv, c_requestListener)),
                                          ::djinni::get(::djinni::Optional<boost::optional, ::JNI::Kullo::Http::ResponseListener>::fromCpp(jniEnv, c_responseListener)));
     ::djinni::jniExceptionCheck(jniEnv);

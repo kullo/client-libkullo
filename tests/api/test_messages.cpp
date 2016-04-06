@@ -10,6 +10,7 @@
 #include <kulloclient/api_impl/debug.h>
 #include <kulloclient/api_impl/deliveryimpl.h>
 #include <kulloclient/api_impl/messagesimpl.h>
+#include <kulloclient/dao/conversationdao.h>
 #include <kulloclient/dao/deliverydao.h>
 #include <kulloclient/dao/messagedao.h>
 #include <kulloclient/event/messageremovedevent.h>
@@ -30,7 +31,6 @@ public:
 
         // – All messages (id 23, 24, 25) from one sender
         // – Sent times 2015-06-23, 2015-06-25, 2015-06-24 (i.e. id 24 is latest)
-        data1_.convId = 1;
         data1_.id = 23;
         data1_.read = true;
         data1_.done = true;
@@ -40,28 +40,33 @@ public:
         data1_.text = "Hello, world.";
         data1_.footer = "Bye, world.";
 
-        data2_.convId = 1;
         data2_.id = 24;
         data2_.read = true;
         data2_.done = true;
         data2_.address = "recipient#example.com";
-        data2_.dateSent     = Api::DateTime(2015, 6, 25, 16, 06, 00, 120);
-        data2_.dateReceived = Api::DateTime(2015, 6, 25, 16, 06, 02, 120);
+        data2_.dateSent     = Api::DateTime(2015, 6, 24, 16, 06, 00, 120);
+        data2_.dateReceived = Api::DateTime(2015, 6, 24, 16, 06, 02, 120);
         data2_.text = "Are you okay?";
         data2_.footer = "It's me again";
 
-        data3_.convId = 1;
         data3_.id = 25;
         data3_.read = true;
         data3_.done = true;
         data3_.address = "recipient#example.com";
-        data3_.dateSent     = Api::DateTime(2015, 6, 24, 16, 06, 00, 120);
-        data3_.dateReceived = Api::DateTime(2015, 6, 24, 16, 06, 02, 120);
+        data3_.dateSent     = Api::DateTime(2015, 6, 25, 16, 06, 00, 120);
+        data3_.dateReceived = Api::DateTime(2015, 6, 25, 16, 06, 02, 120);
         data3_.text = "Are you okay?";
         data3_.footer = "It's me again";
 
         dbSession_ = Db::makeSession(dbPath_);
         Db::migrate(dbSession_);
+
+        Dao::ConversationDao convDao(dbSession_);
+        convDao.setParticipants(data1_.address);
+        convDao.save();
+        data1_.convId = convDao.id();
+        data2_.convId = convDao.id();
+        data3_.convId = convDao.id();
 
         for (const auto &d : std::vector<SampleData>{data1_, data2_, data3_})
         {
@@ -119,7 +124,7 @@ K_TEST_F(ApiMessages, allForConversationWorks)
 K_TEST_F(ApiMessages, latestForSenderWorks)
 {
     EXPECT_THAT(uut->latestForSender(Api::Address::create(data1_.address)),
-                Eq(data2_.id));
+                Eq(data3_.id));
 
     EXPECT_THAT(uut->latestForSender(Api::Address::create("noone#example.com")),
                 Eq(-1));
@@ -202,7 +207,8 @@ K_TEST_F(ApiMessages, setReadWorks)
         // Events
         auto result = sessionListener_->externalEvents();
         Event::ApiEvents expectedResult = {
-            Api::Event(Api::EventType::MessageStateChanged, data1_.convId, data1_.id, -1)
+            Api::Event(Api::EventType::MessageStateChanged, data1_.convId, data1_.id, -1),
+            Api::Event(Api::EventType::ConversationChanged, data1_.convId, -1, -1)
         };
         EXPECT_THAT(result, Eq(expectedResult));
 
@@ -217,7 +223,8 @@ K_TEST_F(ApiMessages, setReadWorks)
         // Events
         auto result = sessionListener_->externalEvents();
         Event::ApiEvents expectedResult = {
-            Api::Event(Api::EventType::MessageStateChanged, data1_.convId, data1_.id, -1)
+            Api::Event(Api::EventType::MessageStateChanged, data1_.convId, data1_.id, -1),
+            Api::Event(Api::EventType::ConversationChanged, data1_.convId, -1, -1)
         };
         EXPECT_THAT(result, Eq(expectedResult));
 
@@ -262,7 +269,8 @@ K_TEST_F(ApiMessages, setDoneWorks)
         // Events
         auto result = sessionListener_->externalEvents();
         Event::ApiEvents expectedResult = {
-            Api::Event(Api::EventType::MessageStateChanged, data1_.convId, data1_.id, -1)
+            Api::Event(Api::EventType::MessageStateChanged, data1_.convId, data1_.id, -1),
+            Api::Event(Api::EventType::ConversationChanged, data1_.convId, -1, -1)
         };
         EXPECT_THAT(result, Eq(expectedResult));
 
@@ -277,7 +285,8 @@ K_TEST_F(ApiMessages, setDoneWorks)
         // Events
         auto result = sessionListener_->externalEvents();
         Event::ApiEvents expectedResult = {
-            Api::Event(Api::EventType::MessageStateChanged, data1_.convId, data1_.id, -1)
+            Api::Event(Api::EventType::MessageStateChanged, data1_.convId, data1_.id, -1),
+            Api::Event(Api::EventType::ConversationChanged, data1_.convId, -1, -1)
         };
         EXPECT_THAT(result, Eq(expectedResult));
 

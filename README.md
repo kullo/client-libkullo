@@ -70,7 +70,13 @@ Tips and Tricks
 Changelog
 ---------
 
-### v45 (not yet released)
+### v46 (2016-04-06)
+
+ * Fix some signals
+ * Minor changes for network timeout
+ * Add MSVC 2015 compatibility
+
+### v45 (2016-03-31)
 
  * Increase attachment size limit for sending to 100 MB
  * Calculate Conversations.lastMessageTime from receiving time on the server
