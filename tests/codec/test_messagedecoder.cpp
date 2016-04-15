@@ -7,9 +7,11 @@
 #include <kulloclient/codec/exceptions.h>
 #include <kulloclient/codec/messagedecoder.h>
 #include <kulloclient/codec/messagedecryptor.h>
+#include <kulloclient/crypto/hasher.h>
 #include <kulloclient/crypto/symmetrickey.h>
 #include <kulloclient/db/exceptions.h>
 #include <kulloclient/protocol/exceptions.h>
+#include <kulloclient/util/base64.h>
 #include <kulloclient/util/binary.h>
 #include <kulloclient/util/checkedconverter.h>
 #include <kulloclient/util/datetime.h>
@@ -173,6 +175,7 @@ K_TEST_F(MessageDecoder, validMax)
     auto &convDao = decoder.conversation();
     auto &attDaos = decoder.attachments();
     auto &senderDao = decoder.sender();
+    auto &avatar = decoder.avatar();
 
     // conversation contents
     EXPECT_THAT(convDao.id(), Eq(id_type{0}));
@@ -222,7 +225,12 @@ K_TEST_F(MessageDecoder, validMax)
     EXPECT_THAT(senderDao.address().toString(), Eq(sender_["address"].asString()));
     EXPECT_THAT(senderDao.organization(), Eq(sender_["organization"].asString()));
     EXPECT_THAT(senderDao.avatarMimeType(), Eq(senderAvatar_["mimeType"].asString()));
-    EXPECT_THAT(senderDao.avatar(), Eq(Util::to_vector("Hello, world.")));
+    auto expectedAvatar = Util::Base64::decode(senderAvatar_["data"].asString());
+    auto expectedAvatarHash = Crypto::Hasher::eightByteHash(expectedAvatar);
+    ASSERT_THAT(senderDao.avatarHash().is_initialized(), Eq(true));
+    EXPECT_THAT(*senderDao.avatarHash(), Eq(expectedAvatarHash));
+
+    EXPECT_THAT(avatar, Eq(expectedAvatar));
 }
 
 bool compareElementsInParticipantsSet(const std::shared_ptr<Dao::ParticipantDao> &lhs, const std::shared_ptr<Dao::ParticipantDao> &rhs)
@@ -250,7 +258,7 @@ K_TEST_F(MessageDecoder, validMin)
     decoder.makeConversation();
 
     // things that should be empty
-    EXPECT_TRUE(decoder.attachments().empty());
+    EXPECT_THAT(decoder.attachments(), IsEmpty());
 
     // things that should be non-empty
     Dao::ParticipantDao &senderDao = decoder.sender();
@@ -258,13 +266,13 @@ K_TEST_F(MessageDecoder, validMin)
     // Only check stuff that might be affected by removing optional stuff.
     // Everything else is checked in validMax.
 
-    EXPECT_TRUE(senderDao.organization().empty());
-    EXPECT_TRUE(senderDao.avatarMimeType().empty());
-    EXPECT_TRUE(senderDao.avatar().empty());
+    EXPECT_THAT(senderDao.organization(), IsEmpty());
+    EXPECT_THAT(senderDao.avatarMimeType(), IsEmpty());
+    EXPECT_THAT(senderDao.avatarHash(), Eq(boost::none));
 
     auto &msgDao = decoder.message();
-    EXPECT_TRUE(msgDao.text().empty());
-    EXPECT_TRUE(msgDao.footer().empty());
+    EXPECT_THAT(msgDao.text(), IsEmpty());
+    EXPECT_THAT(msgDao.footer(), IsEmpty());
 }
 
 K_TEST_F(MessageDecoder, optionalAttachmentNote)
@@ -285,9 +293,9 @@ K_TEST_F(MessageDecoder, optionalAttachmentNote)
     decoder.makeConversation();
 
     std::vector<std::unique_ptr<Dao::AttachmentDao>> &attDaos = decoder.attachments();
-    ASSERT_EQ(size_t{2}, attDaos.size());
+    ASSERT_THAT(attDaos.size(), Eq(2u));
 
-    EXPECT_TRUE(attDaos[0]->note().empty());
+    EXPECT_THAT(attDaos[0]->note(), IsEmpty());
 }
 
 K_TEST_F(MessageDecoder, runDecodeTwice)

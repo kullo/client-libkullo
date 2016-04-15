@@ -14,7 +14,7 @@ namespace Dao {
 
 namespace {
 // for each address that is a sender:
-//     select the participant record from the newest message
+//     select the sender record from the newest message
 const std::string SQL_SELECT_SENDERS =
         "WITH latest_senders AS ( "
         "  SELECT id, MAX(received) "
@@ -22,9 +22,9 @@ const std::string SQL_SELECT_SENDERS =
         "  WHERE sender != '' AND old = 0 "
         "  GROUP BY sender "
         ") "
-        "SELECT p.* "
-        "FROM participants p "
-        "JOIN latest_senders ON p.message_id = latest_senders.id";
+        "SELECT s.* "
+        "FROM senders s "
+        "JOIN latest_senders ON s.message_id = latest_senders.id";
 }
 
 ParticipantDao::ParticipantDao(const KulloAddress &address, Db::SharedSessionPtr session)
@@ -39,7 +39,7 @@ std::unique_ptr<ParticipantDao> ParticipantDao::load(id_type messageId, SharedSe
     kulloAssert(session);
 
     auto stmt = session->prepare(
-                "SELECT * FROM participants WHERE message_id = :message_id");
+                "SELECT * FROM senders WHERE message_id = :message_id");
     stmt.bind(":message_id", messageId);
 
     return ParticipantResult(std::move(stmt), session).next();
@@ -51,7 +51,7 @@ std::unique_ptr<ParticipantDao> ParticipantDao::load(
     kulloAssert(session);
 
     std::string sql;
-    sql = SQL_SELECT_SENDERS + " WHERE p.address = :address";
+    sql = SQL_SELECT_SENDERS + " WHERE s.address = :address";
     auto stmt = session->prepare(sql);
     stmt.bind(":address", address.toString());
     return ParticipantResult(std::move(stmt), session).next();
@@ -71,7 +71,7 @@ std::unique_ptr<ParticipantResult> ParticipantDao::all(SharedSessionPtr session)
 {
     kulloAssert(session);
 
-    auto stmt = session->prepare("SELECT * FROM participants p "
+    auto stmt = session->prepare("SELECT * FROM senders s "
                                  "ORDER BY message_id");
     return make_unique<ParticipantResult>(std::move(stmt), session);
 }
@@ -83,16 +83,23 @@ bool ParticipantDao::save()
     kulloAssert(!storedInDb_); // UPDATE has not been implemented
 
     auto stmt = session_->prepare(
-                "INSERT INTO participants VALUES ("
+                "INSERT INTO senders VALUES ("
                 ":message_id, :name, :address, :organization, "
-                ":avatar_mime_type, :avatar)");
+                ":avatar_mime_type, :avatar_hash)");
 
     stmt.bind(":message_id", messageId_);
     stmt.bind(":name", name_);
     stmt.bind(":address", address_.toString());
     stmt.bind(":organization", organization_);
     stmt.bind(":avatar_mime_type", avatarMimeType_);
-    stmt.bind(":avatar", avatar_);
+    if (avatarHash())
+    {
+        stmt.bind(":avatar_hash", *avatarHash_);
+    }
+    else
+    {
+        stmt.bindNull(":avatar_hash");
+    }
     stmt.execWithoutResult();
 
     storedInDb_ = true;
@@ -102,7 +109,7 @@ bool ParticipantDao::save()
 
 void ParticipantDao::deletePermanently()
 {
-    auto stmt = session_->prepare("DELETE FROM participants WHERE message_id = :message_id");
+    auto stmt = session_->prepare("DELETE FROM senders WHERE message_id = :message_id");
     stmt.bind(":message_id", messageId_);
     stmt.execWithoutResult();
 
@@ -165,14 +172,14 @@ bool ParticipantDao::setAvatarMimeType(const std::string &avatarMimeType)
     return assignAndUpdateDirty(avatarMimeType_, avatarMimeType, dirty_);
 }
 
-std::vector<unsigned char> ParticipantDao::avatar() const
+boost::optional<int64_t> ParticipantDao::avatarHash() const
 {
-    return avatar_;
+    return avatarHash_;
 }
 
-bool ParticipantDao::setAvatar(const std::vector<unsigned char> &avatar)
+bool ParticipantDao::setAvatarHash(boost::optional<std::int64_t> avatarHash)
 {
-    return assignAndUpdateDirty(avatar_, avatar, dirty_);
+    return assignAndUpdateDirty(avatarHash_, avatarHash, dirty_);
 }
 
 std::unique_ptr<ParticipantDao> ParticipantDao::loadFromDb(const SmartSqlite::Row &row, SharedSessionPtr session)
@@ -184,7 +191,8 @@ std::unique_ptr<ParticipantDao> ParticipantDao::loadFromDb(const SmartSqlite::Ro
     dao->name_ = row.get<std::string>("name");
     dao->organization_ = row.get<std::string>("organization");
     dao->avatarMimeType_ = row.get<std::string>("avatar_mime_type");
-    dao->avatar_ = row.get<std::vector<unsigned char>>("avatar");
+    auto hash = row.getNullable<std::int64_t>("avatar_hash");
+    dao->avatarHash_ = (hash) ? boost::make_optional<std::int64_t>(*hash) : boost::none;
     dao->dirty_ = false;
     dao->storedInDb_ = true;
     return dao;

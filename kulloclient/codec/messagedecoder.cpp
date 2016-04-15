@@ -7,6 +7,7 @@
 
 #include "kulloclient/codec/exceptions.h"
 #include "kulloclient/crypto/asymmetrickeyloader.h"
+#include "kulloclient/crypto/hasher.h"
 #include "kulloclient/crypto/signer.h"
 #include "kulloclient/crypto/symmetrickeygenerator.h"
 #include "kulloclient/crypto/symmetrickeyloader.h"
@@ -131,6 +132,18 @@ const ParticipantDao &MessageDecoder::sender() const
 {
     kulloAssert(contentDecoded_); // decode() must be called before this function
     return *sender_;
+}
+
+std::vector<unsigned char> &MessageDecoder::avatar()
+{
+    kulloAssert(contentDecoded_); // decode() must be called before this function
+    return avatar_;
+}
+
+const std::vector<unsigned char> &MessageDecoder::avatar() const
+{
+    kulloAssert(contentDecoded_); // decode() must be called before this function
+    return avatar_;
 }
 
 id_type MessageDecoder::signatureKeyId() const
@@ -304,9 +317,10 @@ void MessageDecoder::parseSender(const Json::Value &sender, id_type messageId)
             FWD_NESTED(sender_->setAvatarMimeType(CheckedConverter::toString(avatarJson["mimeType"])),
                     ConversionException,
                     InvalidContentFormat("avatar mimeType invalid"));
-            FWD_NESTED(sender_->setAvatar(CheckedConverter::toVector(avatarJson["data"])),
+            FWD_NESTED(avatar_ = CheckedConverter::toVector(avatarJson["data"]),
                     ConversionException,
                     InvalidContentFormat("avatar data invalid"));
+            sender_->setAvatarHash(Crypto::Hasher::eightByteHash(avatar_));
         }
         else
         {

@@ -8,18 +8,33 @@
 #include <smartsqlite/connection.h>
 #include <smartsqlite/scopedtransaction.h>
 
+#include "kulloclient/crypto/hasher.h"
 #include "kulloclient/db/exceptions.h"
 #include "kulloclient/util/assert.h"
 #include "kulloclient/util/librarylogger.h"
+#include "kulloclient/util/misc.h"
+
+// Set this to 1 to print each SQL statement to the debug log, 0 to disable
+#define KULLO_SQL_TRACING 0
 
 using namespace Kullo::Util;
 
 namespace Kullo {
 namespace Db {
 
-const unsigned int CURRENT_DB_VERSION(7);
+const unsigned int CURRENT_DB_VERSION(8);
 
-static void profilingCallback(void *, const char *sql, std::uint64_t durationNanos)
+namespace {
+
+#if KULLO_SQL_TRACING
+void tracingCallback(void *extraArg, const char *sql)
+{
+    K_UNUSED(extraArg);
+    Log.d() << "[SQL] " << sql;
+}
+#endif
+
+void profilingCallback(void *, const char *sql, std::uint64_t durationNanos)
 {
     std::uint64_t durationMillis = durationNanos / (1000 * 1000);
     if (durationMillis > 500)
@@ -42,14 +57,80 @@ static void profilingCallback(void *, const char *sql, std::uint64_t durationNan
     }
 }
 
+}
+
 SharedSessionPtr makeSession(const std::string &dbFileName)
 {
     SharedSessionPtr session = std::make_shared<SmartSqlite::Connection>(dbFileName);
 
     session->setBusyTimeout(3000);
+#if KULLO_SQL_TRACING
+    session->setTracingCallback(&tracingCallback);
+#endif
     session->setProfilingCallback(&profilingCallback);
     session->exec("PRAGMA journal_mode=WAL");
     return session;
+}
+
+namespace {
+
+void migrateTo8(SharedSessionPtr session)
+{
+    // create schema
+    session->exec(
+                "CREATE TABLE avatars ("
+                "hash INTEGER PRIMARY KEY,"
+                "avatar BLOB NOT NULL)");
+    session->exec(
+                "CREATE TABLE senders ("
+                "message_id INTEGER PRIMARY KEY,"
+                "name TEXT NOT NULL,"
+                "address TEXT NOT NULL,"
+                "organization TEXT NOT NULL,"
+                "avatar_mime_type TEXT NOT NULL,"
+                "avatar_hash INTEGER)");
+
+    // migrate everything but avatar data
+    session->exec(
+                "INSERT INTO senders "
+                "SELECT message_id, name, address, organization, "
+                "avatar_mime_type, NULL "
+                "FROM participants");
+
+    // migrate avatar data
+    auto stmt = session->prepare("SELECT message_id, avatar FROM participants");
+    for (auto row : stmt)
+    {
+        auto avatar = row.get<std::vector<unsigned char>>("avatar");
+        if (!avatar.empty())
+        {
+            auto hash = Crypto::Hasher::eightByteHash(avatar);
+
+            {
+                auto avatarStmt = session->prepare(
+                            "INSERT OR IGNORE INTO avatars (hash, avatar) "
+                            "VALUES (:hash, :avatar)");
+                avatarStmt.bind(":hash", hash);
+                avatarStmt.bind(":avatar", avatar);
+                avatarStmt.execWithoutResult();
+            }
+
+            {
+                auto sendersStmt = session->prepare(
+                            "UPDATE senders "
+                            "SET avatar_hash=:avatar_hash "
+                            "WHERE message_id=:message_id");
+                sendersStmt.bind(":avatar_hash", hash);
+                sendersStmt.bind(":message_id", row.get<int64_t>("message_id"));
+                sendersStmt.execWithoutResult();
+            }
+        }
+    }
+
+    // drop participants table
+    session->exec("DROP TABLE participants");
+}
+
 }
 
 void migrate(SharedSessionPtr session)
@@ -302,6 +383,10 @@ void migrate(SharedSessionPtr session)
             session->exec(
                         "CREATE INDEX attachments__message_id "
                         "ON attachments (message_id);");
+            break;
+
+        case 7:
+            migrateTo8(session);
             break;
 
         default:

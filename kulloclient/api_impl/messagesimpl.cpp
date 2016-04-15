@@ -104,6 +104,9 @@ void MessagesImpl::remove(int64_t msgId)
         removedDao->save(Dao::CreateOld::Yes);
 
         sessionListener_->internalEvent(
+                    std::make_shared<Event::ConversationModifiedEvent>(
+                        conversationId));
+        sessionListener_->internalEvent(
                     std::make_shared<Event::SendApiEventsEvent>(
                         Event::ApiEvents{
                             Api::Event(Api::EventType::MessageRemoved,

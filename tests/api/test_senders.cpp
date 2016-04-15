@@ -3,8 +3,10 @@
 
 #include <kulloclient/api/Senders.h>
 #include <kulloclient/api_impl/addressimpl.h>
+#include <kulloclient/crypto/hasher.h>
 #include <kulloclient/dao/messagedao.h>
 #include <kulloclient/dao/participantdao.h>
+#include <kulloclient/dao/avatardao.h>
 #include <kulloclient/util/binary.h>
 
 using namespace testing;
@@ -29,12 +31,14 @@ public:
         dbSession_ = Db::makeSession(dbPath_);
         Db::migrate(dbSession_);
 
+        auto avatarHash = Dao::AvatarDao::store(data.avatar, dbSession_);
+
         Dao::ParticipantDao dao(address, dbSession_);
         dao.setMessageId(data.msgId);
         dao.setName(data.name);
         dao.setOrganization(data.organization);
         dao.setAvatarMimeType(data.avatarMimeType);
-        dao.setAvatar(data.avatar);
+        dao.setAvatarHash(avatarHash);
         dao.save();
 
         Dao::MessageDao messageDao(dbSession_);

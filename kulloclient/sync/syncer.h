@@ -32,9 +32,6 @@ public:
         std::function<void(SyncProgress progress)>
         finished;
 
-        std::function<void(std::string address)>
-        participantAddedOrModified;
-
         std::function<void(id_type conversationId)>
         conversationAdded;
 

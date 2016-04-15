@@ -82,6 +82,7 @@ kullo_add_simple_library(
     crypto/symmetrickeyloader.cpp
     dao/asymmetrickeypairdao.cpp
     dao/attachmentdao.cpp
+    dao/avatardao.cpp
     dao/conversationdao.cpp
     dao/deliverydao.cpp
     dao/draftdao.cpp

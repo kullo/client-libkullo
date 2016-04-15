@@ -45,6 +45,7 @@ private:
     std::shared_ptr<SessionData> sessionData_;
     std::shared_ptr<Api::SessionListener> sessionListener_;
     std::map<int64_t, Dao::ParticipantDao> senders_;
+    std::map<int64_t, std::vector<unsigned char>> avatars_;
 };
 
 }

@@ -9,6 +9,7 @@
 #include "kulloclient/codec/messageencryptor.h"
 #include "kulloclient/codec/privatekeyprovider.h"
 #include "kulloclient/crypto/asymmetrickeyloader.h"
+#include "kulloclient/crypto/hasher.h"
 #include "kulloclient/dao/asymmetrickeypairdao.h"
 #include "kulloclient/dao/attachmentdao.h"
 #include "kulloclient/dao/conversationdao.h"
@@ -39,7 +40,6 @@ MessagesUploader::MessagesUploader(
 {
     msgAdder_.events.conversationAdded = forwardEvent(events.conversationAdded);
     msgAdder_.events.conversationModified = forwardEvent(events.conversationModified);
-    msgAdder_.events.participantAddedOrModified = forwardEvent(events.participantAddedOrModified);
     msgAdder_.events.messageAdded = forwardEvent(events.messageAdded);
     msgAdder_.events.senderAdded = forwardEvent(events.senderAdded);
 
@@ -110,7 +110,10 @@ void MessagesUploader::run(std::shared_ptr<std::atomic<bool>> shouldCancel)
         }
 
         // save message
-        msgAdder_.addMessage(message, *conv, sender, messageAttachments);
+        msgAdder_.addMessage(
+                    message, *conv,
+                    sender, draft->senderAvatar(),
+                    messageAttachments, session_);
         Dao::DeliveryDao(session_).insertDelivery(msgSent.id, delivery);
 
         tx.commit();
@@ -240,7 +243,7 @@ ParticipantDao MessagesUploader::makeSender(
     sender.setMessageId(message.id());
     sender.setName(draft.senderName());
     sender.setOrganization(draft.senderOrganization());
-    sender.setAvatar(draft.senderAvatar());
+    sender.setAvatarHash(Crypto::Hasher::eightByteHash(draft.senderAvatar()));
     sender.setAvatarMimeType(draft.senderAvatarMimeType());
     return sender;
 }

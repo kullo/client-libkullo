@@ -16,17 +16,7 @@ namespace {
         const std::string organization = "Smith&Smith Ltd.";
         const id_type messageId = 42;
         const std::string avatarMimeType = "image/png";
-        // cat test-avatar.png | hexdump -v -e '/1 "%02X"'; echo
-        const std::vector<unsigned char> avatar = Util::Hex::decode(
-                "89504E470D0A1A0A0000000D4948445200000050000000500802000000017"
-                "365FA000000097048597300000B1300000B1301009A9C180000000774494D"
-                "4507DF0105100F35E80FA6440000001974455874436F6D6D656E740043726"
-                "56174656420776974682047494D5057810E17000000674944415478DAEDCF"
-                "31010000040030DAAAE7954E0FB606CBA98E4F52585858585858585858585"
-                "8585858585858585858585858585858585858585858585858585858585858"
-                "5858585858585858585858585858585858585858585858585858585858585"
-                "8F892058218924163BADE480000000049454E44AE426082"
-                );
+        const int64_t avatarHash = 1337;
     };
 }
 
@@ -52,14 +42,14 @@ K_TEST_F(ParticipantDao, doesntModifySetData)
     dao.setOrganization(data.organization);
     dao.setMessageId(data.messageId);
     dao.setAvatarMimeType(data.avatarMimeType);
-    dao.setAvatar(data.avatar);
+    dao.setAvatarHash(data.avatarHash);
 
     EXPECT_THAT(dao.address(), Eq(Util::KulloAddress(data.address)));
     EXPECT_THAT(dao.name(), Eq(data.name));
     EXPECT_THAT(dao.organization(), Eq(data.organization));
     EXPECT_THAT(dao.messageId(), Eq(data.messageId));
     EXPECT_THAT(dao.avatarMimeType(), Eq(data.avatarMimeType));
-    EXPECT_THAT(dao.avatar(), Eq(data.avatar));
+    EXPECT_THAT(dao.avatarHash(), Eq(data.avatarHash));
 }
 
 K_TEST_F(ParticipantDao, loadedParticipantIsNotDirty)

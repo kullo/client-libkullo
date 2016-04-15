@@ -70,6 +70,11 @@ Tips and Tricks
 Changelog
 ---------
 
+### v47 (2016-04-14)
+
+ * Deduplicate avatars to speed up creating a session
+ * Update SmartSqlite v9
+
 ### v46 (2016-04-06)
 
  * Fix some signals

@@ -47,13 +47,16 @@ private:
     static EncodedMessage encodeMessage(
             id_type conversationId,
             const Dao::ParticipantDao &sender,
+            const std::vector<unsigned char> &avatar,
             const std::string &dateSent,
             const std::string &text,
             const std::string &footer,
             std::unique_ptr<Dao::AttachmentResult> attachments,
             Db::SharedSessionPtr session);
 
-    static Json::Value encodeSender(const Dao::ParticipantDao &sender);
+    static Json::Value encodeSender(
+            const Dao::ParticipantDao &sender,
+            const std::vector<unsigned char> &avatar);
 
     static Json::Value encodeAttachments(
             EncodedMessage &msg,

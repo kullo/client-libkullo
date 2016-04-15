@@ -222,11 +222,17 @@ Event::ApiEvents ConversationsImpl::conversationModified(uint64_t convId)
         conversations_.emplace(convId, *dao);
     }
 
-    // Simple hack: throw away cache data causing latestMessageTimestamp()
-    // to reload next time it is called
+    auto oldTimestamp = latestMessageTimestamp(convId);
     latestMessageTimestampsCache_.erase(convId);
+    auto newTimestamp = latestMessageTimestamp(convId);
 
-    return {Api::Event(Api::EventType::ConversationChanged, convId, -1, -1)};
+    Event::ApiEvents events;
+    events.emplace(Api::EventType::ConversationChanged, convId, -1, -1);
+    if (oldTimestamp != newTimestamp)
+    {
+        events.emplace(Api::EventType::LatestSenderChanged, convId, -1, -1);
+    }
+    return events;
 }
 
 Event::ApiEvents ConversationsImpl::messageAdded(int64_t convId, int64_t msgId)

@@ -1,9 +1,12 @@
 /* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
 #pragma once
 
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
+
+#include <boost/optional.hpp>
 
 #include "kulloclient/kulloclient-forwards.h"
 #include "kulloclient/dao/enums.h"
@@ -91,11 +94,11 @@ public:
     /// Set the MIME type of the avatar
     bool setAvatarMimeType(const std::string &avatarMimeType);
 
-    /// Get the binary avatar file contents
-    std::vector<unsigned char> avatar() const;
+    /// Get the avatar hash
+    boost::optional<std::int64_t> avatarHash() const;
 
-    /// Set the binary avatar file contents
-    bool setAvatar(const std::vector<unsigned char> &avatar);
+    /// Set the avatar hash
+    bool setAvatarHash(boost::optional<int64_t> avatarHash);
 
 private:
     static std::unique_ptr<ParticipantDao> loadFromDb(const SmartSqlite::Row &row, Db::SharedSessionPtr session);
@@ -105,8 +108,8 @@ private:
     id_type messageId_ = 0;
     Util::KulloAddress address_;
     std::string name_, organization_;
-    std::vector<unsigned char> avatar_;
     std::string avatarMimeType_;
+    boost::optional<std::int64_t> avatarHash_;
 
     friend class Result<ParticipantDao>;
 };

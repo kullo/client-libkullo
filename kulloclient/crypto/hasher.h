@@ -1,6 +1,7 @@
 /* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
 #pragma once
 
+#include <cstdint>
 #include <iosfwd>
 #include <string>
 #include <vector>
@@ -24,6 +25,9 @@ public:
 
     static std::string sha512Hex(const std::vector<unsigned char> &data);
     static std::string sha512Hex(std::istream &input);
+
+    /// SHA256, shortened to 8 bytes. Not safe for cryptography!
+    static std::int64_t eightByteHash(const std::vector<unsigned char> &data);
 };
 
 }

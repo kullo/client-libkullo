@@ -26,9 +26,6 @@ public:
         std::function<void(id_type conversationId)>
         conversationModified;
 
-        std::function<void(std::string address)>
-        participantAddedOrModified;
-
         std::function<void(id_type conversationId, id_type messageId)>
         messageAdded;
 
@@ -39,7 +36,9 @@ public:
     void addMessage(Dao::MessageDao &message,
             Dao::ConversationDao &conversation,
             Dao::ParticipantDao &sender,
-            const std::vector<std::unique_ptr<Dao::AttachmentDao>> &attachments);
+            const std::vector<unsigned char> &avatar,
+            const std::vector<std::unique_ptr<Dao::AttachmentDao>> &attachments,
+            const Db::SharedSessionPtr &session);
 
     void emitSignals();
 

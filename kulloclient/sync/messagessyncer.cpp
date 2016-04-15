@@ -48,7 +48,6 @@ MessagesSyncer::MessagesSyncer(const UserSettings &settings,
 
     msgAdder_.events.conversationAdded = forwardEvent(events.conversationAdded);
     msgAdder_.events.conversationModified = forwardEvent(events.conversationModified);
-    msgAdder_.events.participantAddedOrModified = forwardEvent(events.participantAddedOrModified);
     msgAdder_.events.messageAdded = forwardEvent(events.messageAdded);
     msgAdder_.events.senderAdded = forwardEvent(events.senderAdded);
 }
@@ -165,7 +164,9 @@ void MessagesSyncer::handleNewMessage(const Protocol::Message &httpMsg)
                 remote,
                 decoder->conversation(),
                 decoder->sender(),
-                decoder->attachments());
+                decoder->avatar(),
+                decoder->attachments(),
+                session_);
 
     // trigger upgrade of the meta format if it is smaller than supported
     if (remote.metaVersion() < Codec::LATEST_META_VERSION)

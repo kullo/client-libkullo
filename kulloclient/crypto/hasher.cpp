@@ -56,5 +56,21 @@ std::string Hasher::sha512Hex(std::istream &input)
     }
 }
 
+std::int64_t Hasher::eightByteHash(const std::vector<unsigned char> &data)
+{
+    auto hash = sha256(data);
+    std::int64_t result = 0;
+    // big endian
+    result |= (std::int64_t{hash[0]} << 56);
+    result |= (std::int64_t{hash[1]} << 48);
+    result |= (std::int64_t{hash[2]} << 40);
+    result |= (std::int64_t{hash[3]} << 32);
+    result |= (std::int64_t{hash[4]} << 24);
+    result |= (std::int64_t{hash[5]} << 16);
+    result |= (std::int64_t{hash[6]} <<  8);
+    result |= (std::int64_t{hash[7]} <<  0);
+    return result;
+}
+
 }
 }

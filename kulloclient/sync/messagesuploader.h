@@ -33,9 +33,6 @@ public:
         std::function<void(id_type conversationId)>
         conversationModified;
 
-        std::function<void(std::string address)>
-        participantAddedOrModified;
-
         std::function<void(id_type conversationId, id_type messageId)>
         messageAdded;
 

@@ -5,6 +5,7 @@
 
 #include "kulloclient/codec/exceptions.h"
 #include "kulloclient/dao/attachmentdao.h"
+#include "kulloclient/dao/avatardao.h"
 #include "kulloclient/dao/conversationdao.h"
 #include "kulloclient/db/exceptions.h"
 #include "kulloclient/util/base64.h"
@@ -29,7 +30,6 @@ EncodedMessage MessageEncoder::encodeMessage(
     sender.setName(draft.senderName());
     sender.setOrganization(draft.senderOrganization());
     sender.setAvatarMimeType(draft.senderAvatarMimeType());
-    sender.setAvatar(draft.senderAvatar());
 
     auto attachments = AttachmentDao::allForMessage(
                 IsDraft::Yes, draft.conversationId(), session);
@@ -37,6 +37,7 @@ EncodedMessage MessageEncoder::encodeMessage(
     return encodeMessage(
                 draft.conversationId(),
                 sender,
+                draft.senderAvatar(),
                 dateSent.toString(),
                 draft.text(),
                 draft.footer(),
@@ -54,12 +55,18 @@ EncodedMessage MessageEncoder::encodeMessage(
                     "MessageEncoder::encodeMessage(): "
                     "couldn't find sender for message");
     }
+    std::vector<unsigned char> avatar;
+    if (sender->avatarHash())
+    {
+        avatar = Dao::AvatarDao::load(*sender->avatarHash(), session);
+    }
     auto attachments = AttachmentDao::allForMessage(
                 IsDraft::No, messageDao.id(), session);
 
     return encodeMessage(
                 messageDao.conversationId(),
                 *sender,
+                avatar,
                 messageDao.dateSent(),
                 messageDao.text(),
                 messageDao.footer(),
@@ -116,6 +123,7 @@ std::vector<unsigned char> MessageEncoder::encodeMeta(
 EncodedMessage MessageEncoder::encodeMessage(
         id_type conversationId,
         const ParticipantDao &sender,
+        const std::vector<unsigned char> &avatar,
         const std::string &dateSent,
         const std::string &text,
         const std::string &footer,
@@ -125,7 +133,7 @@ EncodedMessage MessageEncoder::encodeMessage(
     EncodedMessage message;
 
     Json::Value messageContentJson(Json::objectValue);
-    messageContentJson["sender"] = encodeSender(sender);
+    messageContentJson["sender"] = encodeSender(sender, avatar);
 
     auto conv = ConversationDao::load(conversationId, session);
     if (!conv)
@@ -155,7 +163,9 @@ EncodedMessage MessageEncoder::encodeMessage(
     return message;
 }
 
-Json::Value MessageEncoder::encodeSender(const Dao::ParticipantDao &sender)
+Json::Value MessageEncoder::encodeSender(
+        const Dao::ParticipantDao &sender,
+        const std::vector<unsigned char> &avatar)
 {
     Json::Value senderJson(Json::objectValue);
     senderJson["address"]      = sender.address().toString();
@@ -163,10 +173,10 @@ Json::Value MessageEncoder::encodeSender(const Dao::ParticipantDao &sender)
     senderJson["organization"] = sender.organization();
 
     Json::Value avatarJson(Json::objectValue);
-    if (!(sender.avatarMimeType().empty() || sender.avatar().empty()))
+    if (!(sender.avatarMimeType().empty() || avatar.empty()))
     {
         avatarJson["mimeType"] = sender.avatarMimeType();
-        avatarJson["data"]     = Base64::encode(sender.avatar());
+        avatarJson["data"]     = Base64::encode(avatar);
     }
     senderJson["avatar"] = avatarJson;
 

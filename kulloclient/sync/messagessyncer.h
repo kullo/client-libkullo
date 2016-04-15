@@ -32,13 +32,6 @@ class MessagesSyncer
 public:
     struct {
         /**
-         * @brief Emitted when a participant was added or modified by the syncer.
-         * @param address The participant's address
-         */
-        std::function<void(std::string address)>
-        participantAddedOrModified;
-
-        /**
          * @brief Emitted when a new message has been added by the syncer.
          * @param conversationId The message's conversation ID
          * @param id The message's ID

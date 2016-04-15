@@ -1,6 +1,7 @@
 /* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
 #include "kulloclient/sync/messageadder.h"
 
+#include "kulloclient/dao/avatardao.h"
 #include "kulloclient/util/assert.h"
 #include "kulloclient/util/events.h"
 
@@ -11,7 +12,9 @@ void MessageAdder::addMessage(
         Dao::MessageDao &message,
         Dao::ConversationDao &conversation,
         Dao::ParticipantDao &sender,
-        const std::vector<std::unique_ptr<Dao::AttachmentDao>> &attachments)
+        const std::vector<unsigned char> &avatar,
+        const std::vector<std::unique_ptr<Dao::AttachmentDao>> &attachments,
+        const Db::SharedSessionPtr &session)
 {
     reset();
 
@@ -20,6 +23,8 @@ void MessageAdder::addMessage(
     msgId_ = message.id();
     message.setConversationId(convId_);
 
+    auto avatarHash = Dao::AvatarDao::store(avatar, session);
+    sender.setAvatarHash(avatarHash);
     sender.save();
     senderAddr_ = sender.address().toString();
 
@@ -39,7 +44,6 @@ void MessageAdder::emitSignals()
     // sender must be available when message is added, so senderAdded must be
     // emitted before messageAdded
     EMIT(events.senderAdded, convId_, msgId_);
-    EMIT(events.participantAddedOrModified, senderAddr_);
     EMIT(events.messageAdded, convId_, msgId_);
 
     if (newConversation_)

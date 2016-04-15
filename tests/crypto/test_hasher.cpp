@@ -159,3 +159,9 @@ K_TEST_F(HasherTest, sha512)
         EXPECT_THAT(Crypto::Hasher::sha512(in), Eq(expectedOutRaw));
     }
 }
+
+K_TEST_F(HasherTest, eightByteHash)
+{
+    auto in = Util::Hex::decode(SHA_256_TEST_VECTORS[0]);
+    EXPECT_THAT(Crypto::Hasher::eightByteHash(in), Eq(-2039914840885289964));
+}

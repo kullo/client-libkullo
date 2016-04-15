@@ -50,8 +50,6 @@ void Syncer::run(
     messagesSender_ = make_unique<MessagesSender>(
                 settings_, privKeyProvider_, session);
 
-    messagesUploader_->events.participantAddedOrModified =
-            forwardEvent(events.participantAddedOrModified);
     messagesUploader_->events.conversationAdded =
             forwardEvent(events.conversationAdded);
     messagesUploader_->events.conversationModified =
@@ -80,8 +78,6 @@ void Syncer::run(
         messagesSyncer_ = make_unique<MessagesSyncer>(
                     settings_, privKeyProvider_, session);
 
-        messagesSyncer_->events.participantAddedOrModified =
-            forwardEvent(events.participantAddedOrModified);
         messagesSyncer_->events.messageAdded =
             forwardEvent(events.messageAdded);
         messagesSyncer_->events.messageModified =

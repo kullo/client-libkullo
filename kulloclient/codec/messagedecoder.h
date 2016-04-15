@@ -96,10 +96,17 @@ public:
      * @brief Return the parsed sender.
      *
      * decode() must be called before this function.
-     * @return 0, iff message is deleted.
      */
     Dao::ParticipantDao &sender();
     const Dao::ParticipantDao &sender() const;
+
+    /**
+     * @brief Return the parsed sender's avatar.
+     *
+     * decode() must be called before this function.
+     */
+    std::vector<unsigned char> &avatar();
+    const std::vector<unsigned char> &avatar() const;
 
     id_type signatureKeyId() const;
 
@@ -122,6 +129,7 @@ private:
     std::vector<Util::Delivery> delivery_;
     std::vector<std::unique_ptr<Dao::AttachmentDao>> attachments_;
     std::shared_ptr<Dao::ParticipantDao> sender_;
+    std::vector<unsigned char> avatar_;
     bool contentDecoded_ = false;
     bool madeConversation_ = false;
 };
