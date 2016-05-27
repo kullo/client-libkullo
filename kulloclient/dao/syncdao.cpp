@@ -39,6 +39,7 @@ std::string SyncDao::dataTypeToString(SyncDao::DataType type)
     switch (type)
     {
     case Message: return "messages";
+    case Profile: return "usersettings";
 
     default:
         kulloAssert(false);

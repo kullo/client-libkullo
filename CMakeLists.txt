@@ -48,37 +48,10 @@ endif()
 
 ### END feature checks
 
-
 ### BEGIN external libs
 
-# boost
 add_subdirectory("../boost" "external/boost")
-
-# gmock
-set(gtest_force_shared_crt ON)
-add_subdirectory("../google-test/gmock" "external/gmock")
-include_directories("${gtest_SOURCE_DIR}/include" "${gmock_SOURCE_DIR}/include")
-if(CMAKE_CXX_COMPILER_ID STREQUAL GNU)
-    target_compile_options(gtest PRIVATE -Wno-switch-default)
-    target_compile_options(gmock PRIVATE -Wno-switch-default)
-    target_compile_options(gmock_main PRIVATE -Wno-switch-default)
-endif()
-
-#install(FILES "$<TARGET_FILE:gmock>" "$<TARGET_FILE:gmock_main>" DESTINATION lib)
-# Use the previous line instead of the following as soon as we can drop old CMake versions
-install(
-    FILES
-    "${CMAKE_CURRENT_BINARY_DIR}/external/gmock/${CMAKE_STATIC_LIBRARY_PREFIX}gmock${CMAKE_STATIC_LIBRARY_SUFFIX}"
-    "${CMAKE_CURRENT_BINARY_DIR}/external/gmock/${CMAKE_STATIC_LIBRARY_PREFIX}gmock_main${CMAKE_STATIC_LIBRARY_SUFFIX}"
-    DESTINATION lib
-)
-install(
-    DIRECTORY "${gtest_SOURCE_DIR}/include/" "${gmock_SOURCE_DIR}/include/"
-    DESTINATION include
-    FILES_MATCHING PATTERN "*.h"
-)
-
-# smartsqlite
+add_subdirectory("../google-test" "external/google-test")
 add_subdirectory("../smartsqlite/src" "external/smartsqlite/src")
 
 ### END external libs
@@ -115,3 +88,5 @@ if(NOT TESTS_AS_STATIC_LIB)
         "tests/libkullo_tests" --assets "${CMAKE_CURRENT_SOURCE_DIR}/tests/assets"
     )
 endif()
+
+install(DIRECTORY cmake/ DESTINATION cmake)

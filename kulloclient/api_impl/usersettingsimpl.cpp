@@ -15,26 +15,28 @@ namespace Kullo {
 namespace ApiImpl {
 
 UserSettingsImpl::UserSettingsImpl(
+        const Db::SharedSessionPtr &dbSession,
         const std::shared_ptr<Api::Address> &address,
         const std::shared_ptr<Api::MasterKey> &masterKey)
+    : userSettings_(
+          Util::UserSettings(
+              Util::Credentials(
+                  std::make_shared<Util::KulloAddress>(address->toString()),
+                  std::make_shared<Util::MasterKey>(masterKey->dataBlocks()))))
+    , dao_(dbSession)
 {
-    kulloAssert(address);
-    kulloAssert(masterKey);
-    userSettings_.address =
-            std::make_shared<Util::KulloAddress>(address->toString());
-    userSettings_.masterKey =
-            std::make_shared<Util::MasterKey>(masterKey->dataBlocks());
+    dao_.load(userSettings_);
 }
 
 std::shared_ptr<Api::Address> UserSettingsImpl::address()
 {
-    return Api::Address::create(userSettings_.address->toString());
+    return Api::Address::create(userSettings_.credentials.address->toString());
 }
 
 std::shared_ptr<Api::MasterKey> UserSettingsImpl::masterKey()
 {
     return Api::MasterKey::createFromDataBlocks(
-                userSettings_.masterKey->dataBlocks());
+                userSettings_.credentials.masterKey->dataBlocks());
 }
 
 std::string UserSettingsImpl::name()
@@ -45,6 +47,7 @@ std::string UserSettingsImpl::name()
 void UserSettingsImpl::setName(const std::string &name)
 {
     userSettings_.name = name;
+    dao_.setName(name);
 }
 
 std::string UserSettingsImpl::organization()
@@ -55,6 +58,7 @@ std::string UserSettingsImpl::organization()
 void UserSettingsImpl::setOrganization(const std::string &organization)
 {
     userSettings_.organization = organization;
+    dao_.setOrganization(organization);
 }
 
 std::string UserSettingsImpl::footer()
@@ -65,6 +69,7 @@ std::string UserSettingsImpl::footer()
 void UserSettingsImpl::setFooter(const std::string &footer)
 {
     userSettings_.footer = footer;
+    dao_.setFooter(footer);
 }
 
 std::string UserSettingsImpl::avatarMimeType()
@@ -75,6 +80,7 @@ std::string UserSettingsImpl::avatarMimeType()
 void UserSettingsImpl::setAvatarMimeType(const std::string &mimeType)
 {
     userSettings_.avatarMimeType = mimeType;
+    dao_.setAvatarMimeType(mimeType);
 }
 
 std::vector<uint8_t> UserSettingsImpl::avatar()
@@ -85,43 +91,47 @@ std::vector<uint8_t> UserSettingsImpl::avatar()
 void UserSettingsImpl::setAvatar(const std::vector<uint8_t> &avatar)
 {
     userSettings_.avatarData = avatar;
+    dao_.setAvatarData(avatar);
 }
 
-bool UserSettingsImpl::keyBackupConfirmed()
+boost::optional<Api::DateTime> UserSettingsImpl::nextMasterKeyBackupReminder()
 {
-    return userSettings_.masterKeyBackupConfirmed();
-}
+    if (!userSettings_.nextMasterKeyBackupReminder) return boost::none;
 
-void UserSettingsImpl::setKeyBackupConfirmed()
-{
-    userSettings_.setMasterKeyBackupConfirmed();
-}
-
-boost::optional<Api::DateTime> UserSettingsImpl::keyBackupDontRemindBefore()
-{
-    const auto &dt = userSettings_.masterKeyBackupDontRemindBefore();
+    const auto &dt = *userSettings_.nextMasterKeyBackupReminder;
     if (dt.isNull()) return boost::none;
+
     return Api::DateTime(
                 dt.year(), dt.month(), dt.day(),
                 dt.hour(), dt.minute(), dt.second(),
-                std::round(dt.tzOffset() / 60.0)
-    );
+                std::round(dt.tzOffset() / 60.0));
 }
 
-void UserSettingsImpl::setKeyBackupDontRemindBefore(
-        const boost::optional<Api::DateTime> &dontRemindBefore)
+void UserSettingsImpl::setNextMasterKeyBackupReminder(
+        const boost::optional<Api::DateTime> &reminderDate)
 {
-    Util::DateTime result;
-    if (dontRemindBefore)
+    if (!reminderDate)
     {
-        auto &drb = *dontRemindBefore;
-        result = Util::DateTime(
-            drb.year, drb.month, drb.day,
-            drb.hour, drb.minute, drb.second,
-            drb.tzOffsetMinutes * 60
-        );
+        userSettings_.nextMasterKeyBackupReminder = boost::none;
+        dao_.setNextMasterKeyBackupReminder(boost::none);
+        return;
     }
-    userSettings_.setMasterKeyBackupDontRemindBefore(result);
+
+    Util::DateTime result;
+    auto &date = *reminderDate;
+    result = Util::DateTime(
+        date.year, date.month, date.day,
+        date.hour, date.minute, date.second,
+        date.tzOffsetMinutes * 60
+    );
+    userSettings_.nextMasterKeyBackupReminder = result;
+    dao_.setNextMasterKeyBackupReminder(result);
+}
+
+Event::ApiEvents UserSettingsImpl::userSettingModified(const std::string &key)
+{
+    dao_.load(userSettings_, key);
+    return {{}};
 }
 
 Util::UserSettings UserSettingsImpl::userSettings() const

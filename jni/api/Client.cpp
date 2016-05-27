@@ -11,7 +11,6 @@
 #include "ClientGenerateKeysListener.h"
 #include "MasterKey.h"
 #include "SessionListener.h"
-#include "UserSettings.h"
 #include "jni/support-lib/jni/Marshal.hpp"
 
 namespace JNI { namespace Kullo { namespace Api {
@@ -38,12 +37,13 @@ CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_Client_create(JNIEnv* jni
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, 0 /* value doesn't matter */)
 }
 
-CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_Client_00024CppProxy_native_1createSessionAsync(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef, jobject j_settings, jstring j_dbFilePath, jobject j_sessionListener, jobject j_listener)
+CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_Client_00024CppProxy_native_1createSessionAsync(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef, jobject j_address, jobject j_masterKey, jstring j_dbFilePath, jobject j_sessionListener, jobject j_listener)
 {
     try {
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
         const auto& ref = ::djinni::objectFromHandleAddress<::Kullo::Api::Client>(nativeRef);
-        auto r = ref->createSessionAsync(::JNI::Kullo::Api::UserSettings::toCpp(jniEnv, j_settings),
+        auto r = ref->createSessionAsync(::JNI::Kullo::Api::Address::toCpp(jniEnv, j_address),
+                                         ::JNI::Kullo::Api::MasterKey::toCpp(jniEnv, j_masterKey),
                                          ::djinni::String::toCpp(jniEnv, j_dbFilePath),
                                          ::JNI::Kullo::Api::SessionListener::toCpp(jniEnv, j_sessionListener),
                                          ::JNI::Kullo::Api::ClientCreateSessionListener::toCpp(jniEnv, j_listener));

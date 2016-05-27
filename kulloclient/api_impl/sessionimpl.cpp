@@ -31,10 +31,13 @@ namespace ApiImpl {
 SessionImpl::SessionImpl(
         const std::string &dbPath,
         Db::SharedSessionPtr dbSession,
-        std::shared_ptr<UserSettingsImpl> userSettings,
+        const std::shared_ptr<Api::Address> &address,
+        const std::shared_ptr<Api::MasterKey> &masterKey,
         std::shared_ptr<Api::SessionListener> listener)
     : sessionData_(
-          std::make_shared<SessionData>(dbPath, dbSession, userSettings))
+          std::make_shared<SessionData>(
+              dbPath, dbSession,
+              std::make_shared<UserSettingsImpl>(dbSession, address, masterKey)))
     , conversations_(
           std::make_shared<ConversationsImpl>(sessionData_, listener))
     , messages_(
@@ -192,6 +195,11 @@ Event::DraftsEventListener &SessionImpl::draftsEventListener() const
 Event::DraftAttachmentsEventListener &SessionImpl::draftAttachmentsEventListener() const
 {
     return *draftAttachments_;
+}
+
+Event::UserSettingsEventListener &SessionImpl::userSettingsEventListener() const
+{
+    return *sessionData_->userSettings_;
 }
 
 Event::RemovalEventListener &SessionImpl::removalEventListener() const

@@ -3,7 +3,7 @@
 #include <kulloclient/api/DateTime.h>
 #include <kulloclient/util/assert.h>
 
-#include "tests/kullotest.h"
+#include "tests/api/apimodeltest.h"
 #include "tests/api/mock_address.h"
 #include "tests/api/mock_masterkey.h"
 
@@ -19,59 +19,32 @@ const std::vector<std::string> VALID_DATA_BLOCKS {
 };
 }
 
-K_TEST(ApiUserSettingsStatic, createThrowsOnNullptr)
-{
-    std::shared_ptr<Api::Address> addr(new MockAddress());
-    std::shared_ptr<Api::MasterKey> key(new MockMasterKey());
-
-    EXPECT_THROW(Api::UserSettings::create(nullptr, nullptr),
-                 Util::AssertionFailed);
-    EXPECT_THROW(Api::UserSettings::create(addr, nullptr),
-                 Util::AssertionFailed);
-    EXPECT_THROW(Api::UserSettings::create(nullptr, key),
-                 Util::AssertionFailed);
-}
-
-K_TEST(ApiUserSettingsStatic, createReturnsNonNull)
-{
-    auto addr = std::make_shared<NiceMock<MockAddress>>();
-    auto key = std::make_shared<NiceMock<MockMasterKey>>();
-    ON_CALL(*addr, toString())
-            .WillByDefault(Return("example#kullo.net"));
-    ON_CALL(*key, dataBlocks())
-            .WillByDefault(Return(VALID_DATA_BLOCKS));
-
-    EXPECT_THAT(Api::UserSettings::create(addr, key), Not(IsNull()));
-}
-
-class ApiUserSettings : public KulloTest
+class ApiUserSettings : public ApiModelTest
 {
 protected:
     ApiUserSettings()
-        : address(Api::Address::create("example#kullo.net"))
-        , masterKey(Api::MasterKey::createFromDataBlocks(VALID_DATA_BLOCKS))
-        , uut(Api::UserSettings::create(address, masterKey))
-    {}
+    {
+        makeSession();
+        uut = session_->userSettings();
+    }
 
-    std::shared_ptr<Api::Address> address;
-    std::shared_ptr<Api::MasterKey> masterKey;
     std::shared_ptr<Api::UserSettings> uut;
 };
 
 K_TEST_F(ApiUserSettings, addressWorks)
 {
-    EXPECT_THAT(uut->address()->isEqualTo(address), Eq(true));
+    EXPECT_THAT(uut->address()->isEqualTo(address_), Eq(true));
 }
 
 K_TEST_F(ApiUserSettings, masterKeyWorks)
 {
-    EXPECT_THAT(uut->masterKey()->isEqualTo(masterKey), Eq(true));
+    EXPECT_THAT(uut->masterKey()->isEqualTo(masterKey_), Eq(true));
 }
 
 K_TEST_F(ApiUserSettings, nameWorks)
 {
     std::string name = "Arno Nyhm";
-    EXPECT_THAT(uut->name(), StrEq(""));
+    EXPECT_THAT(uut->name(), Not(StrEq(name)));
     EXPECT_NO_THROW(uut->setName(name));
     EXPECT_THAT(uut->name(), StrEq(name));
 }
@@ -108,20 +81,12 @@ K_TEST_F(ApiUserSettings, avatarWorks)
     EXPECT_THAT(uut->avatar(), Eq(avatar));
 }
 
-K_TEST_F(ApiUserSettings, keyBackupConfirmedWorks)
-{
-    EXPECT_THAT(uut->keyBackupConfirmed(), Eq(false));
-    EXPECT_NO_THROW(uut->setKeyBackupConfirmed());
-    EXPECT_THAT(uut->keyBackupConfirmed(), Eq(true));
-    EXPECT_THAT(uut->keyBackupDontRemindBefore().is_initialized(), Eq(false));
-}
-
 K_TEST_F(ApiUserSettings, keyBackupDontRemindBeforeWorks)
 {
     auto keyBackupDontRemindBefore = Api::DateTime::nowUtc();
-    EXPECT_THAT(uut->keyBackupDontRemindBefore(),
+    EXPECT_THAT(uut->nextMasterKeyBackupReminder(),
                 Lt(keyBackupDontRemindBefore));
-    EXPECT_NO_THROW(uut->setKeyBackupDontRemindBefore(keyBackupDontRemindBefore));
-    EXPECT_THAT(uut->keyBackupDontRemindBefore(),
+    EXPECT_NO_THROW(uut->setNextMasterKeyBackupReminder(keyBackupDontRemindBefore));
+    EXPECT_THAT(uut->nextMasterKeyBackupReminder(),
                 Eq(keyBackupDontRemindBefore));
 }

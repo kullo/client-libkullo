@@ -42,23 +42,21 @@ ClientImpl::ClientImpl()
 }
 
 std::shared_ptr<Api::AsyncTask> ClientImpl::createSessionAsync(
-        const std::shared_ptr<Api::UserSettings> &settings,
+        const std::shared_ptr<Api::Address> &address,
+        const std::shared_ptr<Api::MasterKey> &masterKey,
         const std::string &dbFilePath,
         const std::shared_ptr<Api::SessionListener> &sessionListener,
         const std::shared_ptr<Api::ClientCreateSessionListener> &listener)
 {
-    kulloAssert(settings);
+    kulloAssert(address);
+    kulloAssert(masterKey);
     kulloAssert(!dbFilePath.empty());
     kulloAssert(sessionListener);
     kulloAssert(listener);
 
-    auto userSettingsImpl =
-            std::dynamic_pointer_cast<UserSettingsImpl>(settings);
-    kulloAssert(userSettingsImpl);
-
     return std::make_shared<AsyncTaskImpl>(
         std::make_shared<ClientCreateSessionWorker>(
-                    userSettingsImpl, dbFilePath, sessionListener, listener));
+                    address, masterKey, dbFilePath, sessionListener, listener));
 }
 
 std::shared_ptr<Api::AsyncTask> ClientImpl::addressExistsAsync(

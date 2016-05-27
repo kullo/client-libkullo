@@ -14,7 +14,12 @@ endfunction()
 #
 # Usage: kullo_install_lib(mylib)
 function(kullo_install_lib target_name)
-    install(TARGETS ${target_name} ARCHIVE DESTINATION lib)
+    install(TARGETS ${target_name}
+        EXPORT ${CMAKE_PROJECT_NAME}
+        ARCHIVE DESTINATION lib
+        INCLUDES DESTINATION include
+    )
+    install(EXPORT ${CMAKE_PROJECT_NAME} DESTINATION cmake/${CMAKE_PROJECT_NAME})
 endfunction()
 
 

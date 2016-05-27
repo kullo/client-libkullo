@@ -34,9 +34,9 @@ public:
      * This doesn't automatically start sending. Call run() to start sending.
      */
     explicit MessagesSender(
-            const Util::UserSettings &settings,
-            std::shared_ptr<Codec::PrivateKeyProvider> privKeyProvider,
-            Db::SharedSessionPtr session);
+            const Util::Credentials &settings,
+            const std::shared_ptr<Codec::PrivateKeyProvider> &privKeyProvider,
+            const Db::SharedSessionPtr &session);
     ~MessagesSender();
 
     /// Start the syncer.
@@ -54,7 +54,6 @@ private:
             const Util::KulloAddress &currentRecipient);
 
     Db::SharedSessionPtr session_;
-    Util::UserSettings settings_;
     Protocol::PublicKeysClient keysClient_;
     std::unique_ptr<Protocol::MessagesClient> messagesClient_;
     std::shared_ptr<Codec::PrivateKeyProvider> privKeyProvider_;

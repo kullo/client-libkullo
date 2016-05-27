@@ -3,7 +3,6 @@
 
 #include <kulloclient/api/Session.h>
 #include <kulloclient/api/SessionListener.h>
-#include <kulloclient/api/UserSettings.h>
 #include <kulloclient/db/dbsession.h>
 #include <kulloclient/types.h>
 
@@ -30,7 +29,6 @@ protected:
         -1, -100, 9007199254740993ll};
 
     std::string dbPath_;
-    std::shared_ptr<Kullo::Api::UserSettings> settings_;
     std::shared_ptr<Kullo::Api::Session> session_;
     std::shared_ptr<StubSessionListener> sessionListener_;
 };

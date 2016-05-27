@@ -87,7 +87,7 @@ MessagesClient::GetMessagesResult MessagesClient::getMessages(
     return result;
 }
 
-Kullo::Protocol::MessageAttachments MessagesClient::getMessageAttachments(
+MessageAttachments MessagesClient::getMessageAttachments(
         id_type id)
 {
     auto url = baseUserUrl()
@@ -107,7 +107,7 @@ Kullo::Protocol::MessageAttachments MessagesClient::getMessageAttachments(
     return attachments;
 }
 
-Kullo::Protocol::IdLastModified MessagesClient::modifyMeta(
+IdLastModified MessagesClient::modifyMeta(
         const IdLastModified &idlm,
         const std::vector<unsigned char> &meta)
 {
@@ -137,7 +137,7 @@ Kullo::Protocol::IdLastModified MessagesClient::modifyMeta(
     }
 }
 
-Kullo::Protocol::IdLastModified MessagesClient::deleteMessage(
+IdLastModified MessagesClient::deleteMessage(
         const IdLastModified &idlm)
 {
     auto url = baseUserUrl()
@@ -162,7 +162,7 @@ Kullo::Protocol::IdLastModified MessagesClient::deleteMessage(
     }
 }
 
-Kullo::Protocol::MessageSent MessagesClient::doSendMessage(
+MessageSent MessagesClient::doSendMessage(
         const KulloAddress *recipient,
         const SendableMessage &message,
         const std::vector<unsigned char> &meta)

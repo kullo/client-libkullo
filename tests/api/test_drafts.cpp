@@ -73,7 +73,7 @@ K_TEST_F(ApiDrafts, stateWorks)
 
 K_TEST_F(ApiDrafts, prepareToSendThrowsOnEmptySenderName)
 {
-    settings_->setName("");
+    session_->userSettings()->setName("");
     EXPECT_THROW(uut->prepareToSend(data.convId), std::exception);
 }
 

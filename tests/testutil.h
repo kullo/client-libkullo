@@ -1,6 +1,7 @@
 /* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
 #pragma once
 
+#include <atomic>
 #include <chrono>
 #include <cstdint>
 #include <iostream>
@@ -84,7 +85,7 @@ public:
     /// Returns a new filename with full path on each invocation
     static std::string tempDbFileName()
     {
-        const auto now = std::chrono::high_resolution_clock::now();
+        const auto now = std::chrono::system_clock::now();
         const auto time = std::chrono::duration_cast<std::chrono::seconds>(
                     now.time_since_epoch()).count();
         return tempPath() + "/kullotest_" + std::to_string(time)
@@ -105,7 +106,7 @@ private:
     static const int32_t asyncTimeoutMs_ = 5 * 1000; // 5 sec
     static const int32_t slowTimeoutMs_ = 15 * 60 * 1000;  // 15 min
 
-    static int testCounter_;
+    static std::atomic<int> testCounter_;
     static std::string tempPath_;
     static std::string assetPath_;
 };

@@ -125,12 +125,6 @@ protected:
         Registry::setHttpClientFactory(httpClientFactory);
 
         dbPath = TestUtil::tempDbFileName();
-
-        auto address = Api::Address::create("exists#example.com");
-        auto masterKey = Api::MasterKey::createFromDataBlocks(
-                    MasterKeyData::VALID_DATA_BLOCKS);
-        settings = Api::UserSettings::create(address, masterKey);
-
         uut = Api::Client::create();
     }
 
@@ -164,7 +158,6 @@ protected:
     }
 
     std::string dbPath;
-    std::shared_ptr<Api::UserSettings> settings;
     std::shared_ptr<Api::Client> uut;
 };
 
@@ -173,15 +166,17 @@ K_TEST_F(ApiClient, createSessionAsyncFailsOnNull)
     auto sessionListener = std::make_shared<StubSessionListener>();
     auto listener = std::make_shared<LoginListener>();
 
-    EXPECT_THROW(uut->createSessionAsync(nullptr, "", nullptr, nullptr),
+    EXPECT_THROW(uut->createSessionAsync(nullptr, nullptr, "", nullptr, nullptr),
                  Util::AssertionFailed);
-    EXPECT_THROW(uut->createSessionAsync(nullptr, dbPath, sessionListener, listener),
+    EXPECT_THROW(uut->createSessionAsync(nullptr, masterKey_, dbPath, sessionListener, listener),
                  Util::AssertionFailed);
-    EXPECT_THROW(uut->createSessionAsync(settings, "", sessionListener, listener),
+    EXPECT_THROW(uut->createSessionAsync(address_, nullptr, dbPath, sessionListener, listener),
                  Util::AssertionFailed);
-    EXPECT_THROW(uut->createSessionAsync(settings, dbPath, nullptr, listener),
+    EXPECT_THROW(uut->createSessionAsync(address_, masterKey_, "", sessionListener, listener),
                  Util::AssertionFailed);
-    EXPECT_THROW(uut->createSessionAsync(settings, dbPath, sessionListener, nullptr),
+    EXPECT_THROW(uut->createSessionAsync(address_, masterKey_, dbPath, nullptr, listener),
+                 Util::AssertionFailed);
+    EXPECT_THROW(uut->createSessionAsync(address_, masterKey_, dbPath, sessionListener, nullptr),
                  Util::AssertionFailed);
 }
 
@@ -189,7 +184,7 @@ K_TEST_F(ApiClient, createSessionAsyncCanBeCanceled)
 {
     auto sessionListener = std::make_shared<StubSessionListener>();
     auto listener = std::make_shared<LoginListener>();
-    auto task = uut->createSessionAsync(settings, dbPath, sessionListener, listener);
+    auto task = uut->createSessionAsync(address_, masterKey_, dbPath, sessionListener, listener);
     ASSERT_THAT(task, Not(IsNull()));
     EXPECT_NO_THROW(task->cancel());
 }
@@ -198,7 +193,7 @@ K_TEST_F(ApiClient, createSessionAsyncWorks)
 {
     auto sessionListener = std::make_shared<StubSessionListener>();
     auto listener = std::make_shared<LoginListener>();
-    auto task = uut->createSessionAsync(settings, dbPath, sessionListener, listener);
+    auto task = uut->createSessionAsync(address_, masterKey_, dbPath, sessionListener, listener);
 
     ASSERT_THAT(TestUtil::waitAndCheck(task, listener->isFinished_),
                 Eq(TestUtil::OK));

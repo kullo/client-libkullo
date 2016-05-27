@@ -22,7 +22,7 @@ using namespace Kullo::Util;
 namespace Kullo {
 namespace Db {
 
-const unsigned int CURRENT_DB_VERSION(8);
+const unsigned int CURRENT_DB_VERSION(9);
 
 namespace {
 
@@ -387,6 +387,15 @@ void migrate(SharedSessionPtr session)
 
         case 7:
             migrateTo8(session);
+            break;
+
+        case 8:
+            session->exec(
+                        "CREATE TABLE usersettings ("
+                        "key TEXT UNIQUE,"
+                        "remote_value TEXT,"
+                        "local_value TEXT,"
+                        "last_modified INTEGER DEFAULT 0)");
             break;
 
         default:

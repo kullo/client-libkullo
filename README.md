@@ -70,6 +70,12 @@ Tips and Tricks
 Changelog
 ---------
 
+### v48 (2016-05-27)
+
+ * Sync user settings
+ * Update SmartSqlite v10
+ * Update Boost 1.61.0
+
 ### v47 (2016-04-14)
 
  * Deduplicate avatars to speed up creating a session

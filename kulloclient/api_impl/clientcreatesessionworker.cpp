@@ -22,11 +22,14 @@ namespace fs = boost::filesystem;
 namespace Kullo {
 namespace ApiImpl {
 
-ClientCreateSessionWorker::ClientCreateSessionWorker(std::shared_ptr<UserSettingsImpl> settings,
+ClientCreateSessionWorker::ClientCreateSessionWorker(
+        const std::shared_ptr<Api::Address> &address,
+        const std::shared_ptr<Api::MasterKey> &masterKey,
         const std::string &dbFilePath,
         std::shared_ptr<Api::SessionListener> sessionListener,
         std::shared_ptr<Api::ClientCreateSessionListener> listener)
-    : settings_(settings)
+    : address_(address)
+    , masterKey_(masterKey)
     , dbFilePath_(dbFilePath)
     , sessionListener_(sessionListener)
     , listener_(listener)
@@ -66,7 +69,7 @@ void ClientCreateSessionWorker::work()
         std::lock_guard<std::mutex> lock(mutex_); K_RAII(lock);
         if (listener_)
         {
-            listener_->error(settings_->address(), Api::LocalError::Filesystem);
+            listener_->error(address_, Api::LocalError::Filesystem);
         }
     }
     catch (std::exception &ex)
@@ -76,7 +79,7 @@ void ClientCreateSessionWorker::work()
         std::lock_guard<std::mutex> lock(mutex_); K_RAII(lock);
         if (listener_)
         {
-            listener_->error(settings_->address(), Api::LocalError::Unknown);
+            listener_->error(address_, Api::LocalError::Unknown);
         }
     }
 }
@@ -97,7 +100,7 @@ std::shared_ptr<Api::Session> ClientCreateSessionWorker::makeSession() const
     kulloAssert(Db::hasCurrentSchema(dbSession));
 
     return std::make_shared<SessionImpl>(
-                dbFilePath_, dbSession, settings_, sessionListener_);
+                dbFilePath_, dbSession, address_, masterKey_, sessionListener_);
 }
 
 }

@@ -23,16 +23,15 @@ namespace Kullo {
 namespace Sync {
 
 MessagesSender::MessagesSender(
-        const UserSettings &settings,
-        std::shared_ptr<Codec::PrivateKeyProvider> privKeyProvider,
-        Db::SharedSessionPtr session)
+        const Credentials &credentials,
+        const std::shared_ptr<Codec::PrivateKeyProvider> &privKeyProvider,
+        const Db::SharedSessionPtr &session)
     : session_(session),
-      settings_(settings),
       privKeyProvider_(privKeyProvider)
 {
     messagesClient_.reset(new Protocol::MessagesClient(
-                             *settings_.address,
-                             *settings_.masterKey));
+                             *credentials.address,
+                             *credentials.masterKey));
 }
 
 MessagesSender::~MessagesSender()

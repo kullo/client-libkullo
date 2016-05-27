@@ -11,6 +11,7 @@ namespace Event {
 class DraftAttachmentsEventListener
 {
 public:
+    virtual ~DraftAttachmentsEventListener() = default;
     virtual ApiEvents draftAttachmentAdded(const Data::DraftAttachment &attachment) = 0;
     virtual ApiEvents draftAttachmentRemoved(id_type convId, id_type attId) = 0;
 };

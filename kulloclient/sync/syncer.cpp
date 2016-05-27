@@ -9,6 +9,7 @@
 #include "kulloclient/sync/messagessender.h"
 #include "kulloclient/sync/messagessyncer.h"
 #include "kulloclient/sync/messagesuploader.h"
+#include "kulloclient/sync/profilesyncer.h"
 #include "kulloclient/util/assert.h"
 #include "kulloclient/util/events.h"
 #include "kulloclient/util/formatstring.h"
@@ -41,14 +42,14 @@ void Syncer::run(
     kulloAssert(Db::hasCurrentSchema(session));
 
     // sync keys
-    keysSyncer_.reset(new KeysSyncer(settings_, session));
+    keysSyncer_.reset(new KeysSyncer(settings_.credentials, session));
     keysSyncer_->run(shouldCancel);
 
     // sync outgoing messages
     messagesUploader_ = make_unique<MessagesUploader>(
                 settings_, privKeyProvider_, session);
     messagesSender_ = make_unique<MessagesSender>(
-                settings_, privKeyProvider_, session);
+                settings_.credentials, privKeyProvider_, session);
 
     messagesUploader_->events.conversationAdded =
             forwardEvent(events.conversationAdded);
@@ -75,9 +76,13 @@ void Syncer::run(
     // sync inbox
     if (mode != SyncMode::SendOnly)
     {
+        profileSyncer_ = make_unique<ProfileSyncer>(
+                    settings_.credentials, session);
         messagesSyncer_ = make_unique<MessagesSyncer>(
-                    settings_, privKeyProvider_, session);
+                    settings_.credentials, privKeyProvider_, session);
 
+        profileSyncer_->events.profileModified =
+            forwardEvent(events.profileModified);
         messagesSyncer_->events.messageAdded =
             forwardEvent(events.messageAdded);
         messagesSyncer_->events.messageModified =
@@ -103,12 +108,14 @@ void Syncer::run(
             progress_.messages = progress;
         };
 
+        profileSyncer_->run(shouldCancel);
         messagesSyncer_->run(shouldCancel);
 
         // sync attachments
         if (mode == SyncMode::Everything)
         {
-            attachmentSyncer_.reset(new AttachmentSyncer(settings_, session));
+            attachmentSyncer_.reset(
+                        new AttachmentSyncer(settings_.credentials, session));
 
             attachmentSyncer_->events.messageAttachmentsDownloaded =
                 forwardEvent(events.messageAttachmentsDownloaded);
@@ -135,7 +142,8 @@ void Syncer::downloadAttachmentsForMessage(
     Db::SharedSessionPtr session = Db::makeSession(dbFile_);
     kulloAssert(Db::hasCurrentSchema(session));
 
-    attachmentSyncer_.reset(new AttachmentSyncer(settings_, session));
+    attachmentSyncer_.reset(
+                new AttachmentSyncer(settings_.credentials, session));
     attachmentSyncer_->events.messageAttachmentsDownloaded =
         forwardEvent(events.messageAttachmentsDownloaded);
     attachmentSyncer_->downloadForMessage(msgId, shouldCancel);

@@ -78,7 +78,8 @@ K_TEST_F(ApiSession, userSettingsWorks)
 {
     auto result = uut->userSettings();
     ASSERT_THAT(result, Not(IsNull()));
-    EXPECT_THAT(result, Eq(settings_));
+    EXPECT_THAT(result->address()->isEqualTo(address_), Eq(true));
+    EXPECT_THAT(result->masterKey()->isEqualTo(masterKey_), Eq(true));
 }
 
 K_TEST_F(ApiSession, conversationsWorks)

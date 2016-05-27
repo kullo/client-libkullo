@@ -5,7 +5,6 @@
 #include "Address.h"
 #include "DateTime.h"
 #include "MasterKey.h"
-#include "UserSettings.h"
 #include "jni/support-lib/jni/Marshal.hpp"
 
 namespace JNI { namespace Kullo { namespace Api {
@@ -21,16 +20,6 @@ CJNIEXPORT void JNICALL Java_net_kullo_libkullo_api_UserSettings_00024CppProxy_n
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
         delete reinterpret_cast<djinni::CppProxyHandle<::Kullo::Api::UserSettings>*>(nativeRef);
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, )
-}
-
-CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_UserSettings_create(JNIEnv* jniEnv, jobject /*this*/, jobject j_address, jobject j_masterKey)
-{
-    try {
-        DJINNI_FUNCTION_PROLOGUE0(jniEnv);
-        auto r = ::Kullo::Api::UserSettings::create(::JNI::Kullo::Api::Address::toCpp(jniEnv, j_address),
-                                                    ::JNI::Kullo::Api::MasterKey::toCpp(jniEnv, j_masterKey));
-        return ::djinni::release(::JNI::Kullo::Api::UserSettings::fromCpp(jniEnv, r));
-    } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, 0 /* value doesn't matter */)
 }
 
 CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_UserSettings_00024CppProxy_native_1address(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef)
@@ -148,41 +137,22 @@ CJNIEXPORT void JNICALL Java_net_kullo_libkullo_api_UserSettings_00024CppProxy_n
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, )
 }
 
-CJNIEXPORT jboolean JNICALL Java_net_kullo_libkullo_api_UserSettings_00024CppProxy_native_1keyBackupConfirmed(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef)
+CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_UserSettings_00024CppProxy_native_1nextMasterKeyBackupReminder(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef)
 {
     try {
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
         const auto& ref = ::djinni::objectFromHandleAddress<::Kullo::Api::UserSettings>(nativeRef);
-        auto r = ref->keyBackupConfirmed();
-        return ::djinni::release(::djinni::Bool::fromCpp(jniEnv, r));
-    } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, 0 /* value doesn't matter */)
-}
-
-CJNIEXPORT void JNICALL Java_net_kullo_libkullo_api_UserSettings_00024CppProxy_native_1setKeyBackupConfirmed(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef)
-{
-    try {
-        DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
-        const auto& ref = ::djinni::objectFromHandleAddress<::Kullo::Api::UserSettings>(nativeRef);
-        ref->setKeyBackupConfirmed();
-    } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, )
-}
-
-CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_UserSettings_00024CppProxy_native_1keyBackupDontRemindBefore(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef)
-{
-    try {
-        DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
-        const auto& ref = ::djinni::objectFromHandleAddress<::Kullo::Api::UserSettings>(nativeRef);
-        auto r = ref->keyBackupDontRemindBefore();
+        auto r = ref->nextMasterKeyBackupReminder();
         return ::djinni::release(::djinni::Optional<boost::optional, ::JNI::Kullo::Api::DateTime>::fromCpp(jniEnv, r));
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, 0 /* value doesn't matter */)
 }
 
-CJNIEXPORT void JNICALL Java_net_kullo_libkullo_api_UserSettings_00024CppProxy_native_1setKeyBackupDontRemindBefore(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef, jobject j_dontRemindBefore)
+CJNIEXPORT void JNICALL Java_net_kullo_libkullo_api_UserSettings_00024CppProxy_native_1setNextMasterKeyBackupReminder(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef, jobject j_reminderDate)
 {
     try {
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
         const auto& ref = ::djinni::objectFromHandleAddress<::Kullo::Api::UserSettings>(nativeRef);
-        ref->setKeyBackupDontRemindBefore(::djinni::Optional<boost::optional, ::JNI::Kullo::Api::DateTime>::toCpp(jniEnv, j_dontRemindBefore));
+        ref->setNextMasterKeyBackupReminder(::djinni::Optional<boost::optional, ::JNI::Kullo::Api::DateTime>::toCpp(jniEnv, j_reminderDate));
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, )
 }
 

@@ -90,9 +90,9 @@ public:
      * This doesn't automatically start the syncer. Call start() to start syncing.
      */
     explicit MessagesSyncer(
-            const Util::UserSettings &settings,
-            std::shared_ptr<Codec::PrivateKeyProvider> privKeyProvider,
-            Db::SharedSessionPtr session);
+            const Util::Credentials &settings,
+            const std::shared_ptr<Codec::PrivateKeyProvider> &privKeyProvider,
+            const Db::SharedSessionPtr &session);
 
     ~MessagesSyncer();
 
@@ -133,7 +133,7 @@ private:
     std::unique_ptr<Protocol::MessagesClient> client_;
     Protocol::PublicKeysClient pubKeysClient_;
     Db::SharedSessionPtr session_;
-    Util::UserSettings settings_;
+    Util::Credentials credentials_;
 
     MessageAdder msgAdder_;
     std::shared_ptr<Codec::PrivateKeyProvider> privKeyProvider_;

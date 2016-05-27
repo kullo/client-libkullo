@@ -5,9 +5,10 @@
 
 #include <cstdint>
 #include <utility>
-struct DateTime; // Requiring extended class
 
 namespace Kullo { namespace Api {
+
+struct DateTime; // Requiring extended class
 
 struct DateTimeBase {
     int16_t year;

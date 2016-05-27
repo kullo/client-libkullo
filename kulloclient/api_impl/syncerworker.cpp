@@ -14,6 +14,7 @@
 #include "kulloclient/event/messagemodifiedevent.h"
 #include "kulloclient/event/messageremovedevent.h"
 #include "kulloclient/event/senderaddedevent.h"
+#include "kulloclient/event/usersettingmodifiedevent.h"
 #include "kulloclient/sync/exceptions.h"
 #include "kulloclient/util/assert.h"
 #include "kulloclient/util/librarylogger.h"
@@ -163,6 +164,12 @@ void SyncerWorker::setupEvents()
             K_UNUSED(sizeAllowed);
             listener_->draftAttachmentsTooBig(conversationId);
         }
+    };
+
+    syncer_.events.profileModified =
+            [this](const std::string &key)
+    {
+        sendEvent(std::make_shared<Event::UserSettingModifiedEvent>(key));
     };
 
     syncer_.events.progressed =

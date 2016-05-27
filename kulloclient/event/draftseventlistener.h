@@ -9,6 +9,7 @@ namespace Event {
 class DraftsEventListener
 {
 public:
+    virtual ~DraftsEventListener() = default;
     virtual ApiEvents draftModified(uint64_t convId) = 0;
 };
 

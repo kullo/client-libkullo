@@ -21,12 +21,12 @@ namespace Kullo {
 namespace Codec {
 
 EncodedMessage MessageEncoder::encodeMessage(
-        const Util::UserSettings &settings,
+        const Util::Credentials &credentials,
         const Dao::DraftDao &draft,
         const Util::DateTime &dateSent,
         Db::SharedSessionPtr session)
 {
-    auto sender = Dao::ParticipantDao(*settings.address, session);
+    auto sender = Dao::ParticipantDao(*credentials.address, session);
     sender.setName(draft.senderName());
     sender.setOrganization(draft.senderOrganization());
     sender.setAvatarMimeType(draft.senderAvatarMimeType());

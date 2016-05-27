@@ -196,7 +196,7 @@ K_TEST_F(ApiConversations, addEmitsEvent)
 
 K_TEST_F(ApiConversations, addDoesntAcceptCurrentUser)
 {
-    const auto currentUserAddressString = settings_->address()->toString();
+    const auto currentUserAddressString = address_->toString();
 
     std::unordered_set<std::shared_ptr<Api::Address>> participants1;
     participants1.emplace(Api::Address::create(currentUserAddressString));

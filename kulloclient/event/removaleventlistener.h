@@ -10,6 +10,8 @@ namespace Event {
 class RemovalEventListener
 {
 public:
+    virtual ~RemovalEventListener() = default;
+
     // "{{}}" forces initializer list constructor
     // http://stackoverflow.com/questions/26947704/implicit-conversion-failure-from-initializer-list
     virtual ApiEvents conversationRemoved(int64_t convId)

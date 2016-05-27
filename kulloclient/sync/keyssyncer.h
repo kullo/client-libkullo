@@ -16,8 +16,8 @@ class KeysSyncer
 {
 public:
     explicit KeysSyncer(
-            const Util::UserSettings &settings,
-            Db::SharedSessionPtr session);
+            const Util::Credentials &credentials,
+            const Db::SharedSessionPtr &session);
     ~KeysSyncer();
 
     /**
@@ -32,7 +32,7 @@ private:
 
     Db::SharedSessionPtr session_;
     std::unique_ptr<Protocol::KeysClient> client_;
-    Util::UserSettings settings_;
+    Util::Credentials credentials_;
 
     K_DISABLE_COPY(KeysSyncer);
 };

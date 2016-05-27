@@ -20,8 +20,6 @@ class UserSettings {
 public:
     virtual ~UserSettings() {}
 
-    static std::shared_ptr<UserSettings> create(const std::shared_ptr<Address> & address, const std::shared_ptr<MasterKey> & masterKey);
-
     /** Kullo address (e.g. "john.doe#kullo.net") */
     virtual std::shared_ptr<Address> address() = 0;
 
@@ -55,19 +53,13 @@ public:
 
     virtual void setAvatar(const std::vector<uint8_t> & avatar) = 0;
 
-    /** Whether the masterKey has been backed up by the user. Defaults to false. */
-    virtual bool keyBackupConfirmed() = 0;
-
-    /** Sets keyBackupConfirmed to true and nulls keyBackupDontRemindBefore. */
-    virtual void setKeyBackupConfirmed() = 0;
-
     /**
      * When to show the next backup reminder. Returns null if no reminder date
      * is set. Defaults to a date in the past.
      */
-    virtual boost::optional<DateTime> keyBackupDontRemindBefore() = 0;
+    virtual boost::optional<DateTime> nextMasterKeyBackupReminder() = 0;
 
-    virtual void setKeyBackupDontRemindBefore(const boost::optional<DateTime> & dontRemindBefore) = 0;
+    virtual void setNextMasterKeyBackupReminder(const boost::optional<DateTime> & reminderDate) = 0;
 };
 
 } }  // namespace Kullo::Api

@@ -18,14 +18,14 @@ namespace Kullo {
 namespace Sync {
 
 KeysSyncer::KeysSyncer(
-        const Util::UserSettings &settings,
-        Db::SharedSessionPtr session)
+        const Credentials &credentials,
+        const Db::SharedSessionPtr &session)
     : session_(session),
-      settings_(settings)
+      credentials_(credentials)
 {
     client_.reset(new Protocol::KeysClient(
-                     *settings_.address,
-                     *settings_.masterKey));
+                     *credentials_.address,
+                     *credentials_.masterKey));
 }
 
 KeysSyncer::~KeysSyncer()
@@ -49,7 +49,7 @@ void KeysSyncer::storePrivateDataKey(const Protocol::SymmetricKeys &symmKeys)
     Crypto::SymmetricCryptor cryptor;
     auto privateDataKey = cryptor.decrypt(
                 symmKeys.privateDataKey,
-                Crypto::SymmetricKeyLoader::fromMasterKey(*settings_.masterKey),
+                Crypto::SymmetricKeyLoader::fromMasterKey(*credentials_.masterKey),
                 cryptor.RANDOM_IV_BYTES);
 
     // save

@@ -68,6 +68,9 @@ public:
                 std::size_t size,
                 std::size_t sizeAllowed)>
         draftAttachmentsTooBig;
+
+        std::function<void(const std::string &key)>
+        profileModified;
     } events;
 
     /**
@@ -97,6 +100,7 @@ private:
     std::unique_ptr<KeysSyncer> keysSyncer_;
     std::unique_ptr<MessagesUploader> messagesUploader_;
     std::unique_ptr<MessagesSender> messagesSender_;
+    std::unique_ptr<ProfileSyncer> profileSyncer_;
     std::unique_ptr<MessagesSyncer> messagesSyncer_;
     std::unique_ptr<AttachmentSyncer> attachmentSyncer_;
     SyncProgress progress_;

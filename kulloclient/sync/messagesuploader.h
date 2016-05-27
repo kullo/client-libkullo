@@ -69,8 +69,8 @@ public:
      */
     explicit MessagesUploader(
             const Util::UserSettings &settings,
-            std::shared_ptr<Codec::PrivateKeyProvider> privKeyProvider,
-            Db::SharedSessionPtr session);
+            const std::shared_ptr<Codec::PrivateKeyProvider> &privKeyProvider,
+            const Db::SharedSessionPtr &session);
     ~MessagesUploader();
 
     /// Start the syncer.

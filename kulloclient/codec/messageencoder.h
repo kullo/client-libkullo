@@ -30,7 +30,7 @@ public:
      * @throw IntegrityException if the data structures from DB fail the integrity check.
      */
     static EncodedMessage encodeMessage(
-            const Util::UserSettings &settings,
+            const Util::Credentials &credentials,
             const Dao::DraftDao &draft,
             const Util::DateTime &dateSent,
             Db::SharedSessionPtr session);

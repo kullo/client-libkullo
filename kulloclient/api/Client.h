@@ -17,7 +17,6 @@ class ClientCreateSessionListener;
 class ClientGenerateKeysListener;
 class MasterKey;
 class SessionListener;
-class UserSettings;
 
 /** A Client is the entry point to most of libkullo. */
 class Client {
@@ -48,7 +47,7 @@ public:
      *
      * Attention: Don't ever re-use the same DB file for multiple accounts!
      */
-    virtual std::shared_ptr<AsyncTask> createSessionAsync(const std::shared_ptr<UserSettings> & settings, const std::string & dbFilePath, const std::shared_ptr<SessionListener> & sessionListener, const std::shared_ptr<ClientCreateSessionListener> & listener) = 0;
+    virtual std::shared_ptr<AsyncTask> createSessionAsync(const std::shared_ptr<Address> & address, const std::shared_ptr<MasterKey> & masterKey, const std::string & dbFilePath, const std::shared_ptr<SessionListener> & sessionListener, const std::shared_ptr<ClientCreateSessionListener> & listener) = 0;
 
     /** Check whether an address exists. */
     virtual std::shared_ptr<AsyncTask> addressExistsAsync(const std::shared_ptr<Address> & address, const std::shared_ptr<ClientAddressExistsListener> & listener) = 0;

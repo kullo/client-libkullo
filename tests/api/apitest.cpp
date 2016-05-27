@@ -3,12 +3,17 @@
 
 #include <kulloclient/api/Registry.h>
 
+#include "tests/testdata.h"
 #include "tests/testutil.h"
 
 using namespace Kullo;
 
 ApiTest::ApiTest()
-    : taskRunner_(std::make_shared<Util::StlTaskRunner>())
+    : address_(Api::Address::create("exists#example.com"))
+    , masterKey_(
+          Api::MasterKey::createFromDataBlocks(
+              MasterKeyData::VALID_DATA_BLOCKS))
+    , taskRunner_(std::make_shared<Util::StlTaskRunner>())
 {
     Api::Registry::setTaskRunner(taskRunner_);
 }

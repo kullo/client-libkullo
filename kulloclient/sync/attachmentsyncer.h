@@ -38,8 +38,8 @@ public:
      * This doesn't automatically start the syncer. Call start() to start syncing.
      */
     explicit AttachmentSyncer(
-            const Util::UserSettings &settings,
-            Db::SharedSessionPtr session);
+            const Util::Credentials &settings,
+            const Db::SharedSessionPtr &session);
     ~AttachmentSyncer();
 
     /// @brief Start the syncer.

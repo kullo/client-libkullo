@@ -9,6 +9,7 @@ namespace Event {
 class ConversationsEventListener
 {
 public:
+    virtual ~ConversationsEventListener() = default;
     virtual ApiEvents conversationAdded(uint64_t convId) = 0;
     virtual ApiEvents conversationModified(uint64_t convId) = 0;
 };

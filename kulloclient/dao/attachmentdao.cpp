@@ -2,8 +2,6 @@
 #include "kulloclient/dao/attachmentdao.h"
 
 #include <sstream>
-#include <boost/iostreams/stream.hpp>
-#include <boost/iostreams/device/array.hpp>
 
 #include "kulloclient/dao/daoutil.h"
 #include "kulloclient/db/exceptions.h"
@@ -14,8 +12,6 @@
 
 using namespace Kullo::Db;
 using namespace Kullo::Util;
-
-namespace ios = boost::iostreams;
 
 namespace Kullo {
 namespace Dao {
@@ -321,10 +317,7 @@ void AttachmentDao::setContent(const std::vector<unsigned char> &content)
     // content can only be stored to an existing record
     kulloAssert(storedInDb_);
 
-    ios::array_source source(
-                reinterpret_cast<const char*>(content.data()),
-                content.size());
-    ios::stream<ios::array_source> stream(source);
+    std::istringstream stream(Util::to_string(content));
     setContent(stream);
 }
 

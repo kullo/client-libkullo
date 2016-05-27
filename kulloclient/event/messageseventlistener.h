@@ -10,6 +10,8 @@ namespace Event {
 class MessagesEventListener
 {
 public:
+    virtual ~MessagesEventListener() = default;
+
     // "{{}}" forces initializer list constructor
     // http://stackoverflow.com/questions/26947704/implicit-conversion-failure-from-initializer-list
     virtual ApiEvents messageAdded(int64_t convId, int64_t msgId)

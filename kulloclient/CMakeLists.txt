@@ -12,7 +12,6 @@ kullo_add_simple_library(
     api_impl/api_InternalDateTimeUtils.cpp
     api_impl/api_MasterKey.cpp
     api_impl/api_Registry.cpp
-    api_impl/api_UserSettings.cpp
     api_impl/asynctaskimpl.cpp
     api_impl/attachmentscontentworker.cpp
     api_impl/attachmentssavetoworker.cpp
@@ -93,6 +92,7 @@ kullo_add_simple_library(
     dao/symmetrickeydao.cpp
     dao/syncdao.cpp
     dao/unprocessedmessagedao.cpp
+    dao/usersettingsdao.cpp
     db/dbsession.cpp
     protocol/accountclient.cpp
     protocol/accountsclient.cpp
@@ -101,6 +101,7 @@ kullo_add_simple_library(
     protocol/keysclient.cpp
     protocol/httpstructs.cpp
     protocol/messagesclient.cpp
+    protocol/profileclient.cpp
     protocol/publickeysclient.cpp
     protocol/pushclient.cpp
     protocol/requestlistener.cpp
@@ -112,6 +113,7 @@ kullo_add_simple_library(
     sync/messagessender.cpp
     sync/messagessyncer.cpp
     sync/messagesuploader.cpp
+    sync/profilesyncer.cpp
     sync/syncer.cpp
     util/assert.cpp
     util/asynctask.cpp

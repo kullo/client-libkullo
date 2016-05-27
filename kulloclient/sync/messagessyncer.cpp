@@ -33,18 +33,19 @@ namespace {
 const std::chrono::milliseconds SQLITE_MAX_BUSY_INTERVAL(100);
 }
 
-MessagesSyncer::MessagesSyncer(const UserSettings &settings,
-        std::shared_ptr<Codec::PrivateKeyProvider> privKeyProvider,
-        Db::SharedSessionPtr session)
+MessagesSyncer::MessagesSyncer(
+        const Credentials &credentials,
+        const std::shared_ptr<Codec::PrivateKeyProvider> &privKeyProvider,
+        const Db::SharedSessionPtr &session)
     : session_(session),
-      settings_(settings),
+      credentials_(credentials),
       privKeyProvider_(privKeyProvider)
 {
     kulloAssert(session_);
 
     client_.reset(new Protocol::MessagesClient(
-                     *settings_.address,
-                     *settings_.masterKey));
+                     *credentials_.address,
+                     *credentials_.masterKey));
 
     msgAdder_.events.conversationAdded = forwardEvent(events.conversationAdded);
     msgAdder_.events.conversationModified = forwardEvent(events.conversationModified);
@@ -427,7 +428,7 @@ std::unique_ptr<Codec::MessageDecoder> MessagesSyncer::makeDecoder(
 {
     return make_unique<Codec::MessageDecoder>(
                 decryptedMessage,
-                *settings_.address,
+                *credentials_.address,
                 session_);
 }
 

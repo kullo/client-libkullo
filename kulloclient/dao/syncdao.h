@@ -11,7 +11,8 @@ class SyncDao
 {
 public:
     enum DataType {
-        Message
+        Message,
+        Profile,
     };
 
     static lastModified_type timestamp(DataType type, Db::SharedSessionPtr session);

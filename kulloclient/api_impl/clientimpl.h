@@ -13,7 +13,8 @@ public:
     ClientImpl();
 
     std::shared_ptr<Api::AsyncTask> createSessionAsync(
-            const std::shared_ptr<Api::UserSettings> &settings,
+            const std::shared_ptr<Api::Address> &address,
+            const std::shared_ptr<Api::MasterKey> &masterKey,
             const std::string &dbFilePath,
             const std::shared_ptr<Api::SessionListener> &sessionListener,
             const std::shared_ptr<Api::ClientCreateSessionListener> &listener) override;

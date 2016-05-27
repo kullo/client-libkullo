@@ -112,5 +112,12 @@ struct KeyPair
     std::vector<unsigned char> revocation;
 };
 
+struct ProfileInfo
+{
+    std::string key;
+    std::string value;
+    lastModified_type lastModified;
+};
+
 }
 }

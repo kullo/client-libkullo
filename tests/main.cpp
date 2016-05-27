@@ -4,7 +4,7 @@
 #include "tests/commonmain.h"
 #include "tests/testutil.h"
 
-int TestUtil::testCounter_ = 0;
+std::atomic<int> TestUtil::testCounter_(0);
 std::string TestUtil::tempPath_;
 std::string TestUtil::assetPath_;
 

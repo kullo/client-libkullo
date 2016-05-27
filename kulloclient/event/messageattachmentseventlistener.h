@@ -10,6 +10,8 @@ namespace Event {
 class MessageAttachmentsEventListener
 {
 public:
+    virtual ~MessageAttachmentsEventListener() = default;
+
     // "{{}}" forces initializer list constructor
     // http://stackoverflow.com/questions/26947704/implicit-conversion-failure-from-initializer-list
     virtual ApiEvents messageAttachmentsDownloaded(uint64_t msgId)

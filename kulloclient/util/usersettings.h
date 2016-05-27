@@ -5,23 +5,36 @@
 #include <string>
 #include <vector>
 
+#include <boost/optional.hpp>
+
 #include "kulloclient/kulloclient-forwards.h"
 #include "kulloclient/util/datetime.h"
 
 namespace Kullo {
 namespace Util {
 
+struct Credentials
+{
+    Credentials(
+            std::shared_ptr<KulloAddress> &&address,
+            std::shared_ptr<MasterKey> &&masterKey);
+
+    /// Kullo address of the local user (e.g. "john.doe#kullo.net")
+    const std::shared_ptr<KulloAddress> address;
+
+    /// The masterKey
+    const std::shared_ptr<MasterKey> masterKey;
+};
+
 /**
  * @brief Contains the settings of the local user.
- *
- * This class is passed to IClient::create() and is used for sending messages.
- * For details on the fields consult IParticipant.
  */
-class UserSettings
+struct UserSettings
 {
-public:
-    /// Kullo address of the local user (e.g. "john.doe#kullo.net")
-    std::shared_ptr<KulloAddress> address = nullptr;
+    explicit UserSettings(Credentials &&credentials);
+
+    /// Login credentials of the user
+    const Credentials credentials;
 
     /// Real name of the local user (e.g. "John Doe")
     std::string name;
@@ -38,23 +51,13 @@ public:
     /// The footer (e.g. "Firstname Lastname, Mainstreet 123")
     std::string footer;
 
-    /// The masterKey
-    std::shared_ptr<MasterKey> masterKey = nullptr;
-
-    /// masterKeyBackupConfirmed
-    bool masterKeyBackupConfirmed() const;
-    void setMasterKeyBackupConfirmed();
-
-    /// masterKeyBackupDontRemindBefore
-    DateTime masterKeyBackupDontRemindBefore() const;
-    void setMasterKeyBackupDontRemindBefore(const DateTime &dontRemindBefore);
-
-    /// Reset everything to the same state as default constructed
-    void reset();
-
-private:
-    bool masterKeyBackupConfirmed_ = false;
-    DateTime masterKeyBackupDontRemindBefore_ = DateTime::epoch();
+    /**
+     * @brief The next time when the user should be reminded of making a
+     *        MasterKey backup.
+     *
+     * boost::none means that there's no reminder scheduled.
+     */
+    boost::optional<DateTime> nextMasterKeyBackupReminder = DateTime::epoch();
 };
 
 }

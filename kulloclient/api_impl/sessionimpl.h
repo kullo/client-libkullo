@@ -24,7 +24,8 @@ public:
     SessionImpl(
             const std::string &dbPath,
             Db::SharedSessionPtr dbSession,
-            std::shared_ptr<UserSettingsImpl> userSettings,
+            const std::shared_ptr<Api::Address> &address,
+            const std::shared_ptr<Api::MasterKey> &masterKey,
             std::shared_ptr<Api::SessionListener> listener);
 
     // Api::Session impl
@@ -52,6 +53,7 @@ public:
     Event::MessageAttachmentsEventListener &messageAttachmentsEventListener() const override;
     Event::DraftsEventListener &draftsEventListener() const override;
     Event::DraftAttachmentsEventListener &draftAttachmentsEventListener() const override;
+    Event::UserSettingsEventListener &userSettingsEventListener() const override;
     Event::RemovalEventListener &removalEventListener() const override;
 
 private:

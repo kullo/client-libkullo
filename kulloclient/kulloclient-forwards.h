@@ -55,15 +55,18 @@ namespace Kullo {
         class MessagesUploader;
         class MessagesSender;
         class MessagesSyncer;
+        class ProfileSyncer;
 
         enum struct SyncMode;
         struct SyncMessagesProgress;
         struct SyncProgress;
     }
     namespace Util {
+        struct Credentials;
         struct Delivery;
+        struct UserSettings;
+        class DateTime;
         class KulloAddress;
         class MasterKey;
-        class UserSettings;
     }
 }

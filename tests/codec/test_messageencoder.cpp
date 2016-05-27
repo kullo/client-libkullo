@@ -9,9 +9,11 @@
 #include <kulloclient/db/exceptions.h>
 #include <kulloclient/util/binary.h>
 #include <kulloclient/util/checkedconverter.h>
+#include <kulloclient/util/masterkey.h>
 #include <kulloclient/util/misc.h>
 
 #include "tests/dbtest.h"
+#include "tests/testdata.h"
 
 using namespace testing;
 using namespace Kullo;
@@ -30,10 +32,12 @@ class MessageEncoderTest : public DbTest
 {
 protected:
     MessageEncoderTest()
+        : settings(
+              Util::Credentials(
+                  std::make_shared<Util::KulloAddress>("john.doe#kullo.net"),
+                  std::make_shared<Util::MasterKey>(MasterKeyData::VALID_DATA_BLOCKS)))
     {
         settings.name = "John Doe";
-        settings.address.reset(new Util::KulloAddress("john.doe#kullo.net"));
-
         participants.emplace_back("alice#kullo.net");
     }
 
@@ -142,7 +146,8 @@ protected:
     void checkSender(const Json::Value &sender)
     {
         EXPECT_THAT(sender["name"].asString(), Eq(settings.name));
-        EXPECT_THAT(Util::KulloAddress(sender["address"].asString()), Eq(*settings.address));
+        EXPECT_THAT(Util::KulloAddress(sender["address"].asString()),
+                Eq(*settings.credentials.address));
 
         {
             SCOPED_TRACE("sender.organization");
@@ -235,7 +240,7 @@ K_TEST_F(MessageEncoderTest, validMin)
 
     TestData data;
     auto encMsg = MessageEncoder::encodeMessage(
-                settings, *draft, data.dateSent, session_);
+                settings.credentials, *draft, data.dateSent, session_);
     checkResults(encMsg);
 }
 
@@ -247,7 +252,7 @@ K_TEST_F(MessageEncoderTest, validTwoParticipants)
 
     TestData data;
     auto encMsg = MessageEncoder::encodeMessage(
-                settings, *draft, data.dateSent, session_);
+                settings.credentials, *draft, data.dateSent, session_);
     checkResults(encMsg);
 }
 
@@ -258,7 +263,7 @@ K_TEST_F(MessageEncoderTest, validAvatar)
 
     TestData data;
     auto encMsg = MessageEncoder::encodeMessage(
-                settings, *draft, data.dateSent, session_);
+                settings.credentials, *draft, data.dateSent, session_);
     checkResults(encMsg);
 }
 
@@ -270,7 +275,7 @@ K_TEST_F(MessageEncoderTest, validOneAttachment)
     addAttachment("hello.txt", "text/plain", "", data.helloWorldData);
 
     auto encMsg = MessageEncoder::encodeMessage(
-                settings, *draft, data.dateSent, session_);
+                settings.credentials, *draft, data.dateSent, session_);
     checkResults(encMsg);
 }
 
@@ -283,7 +288,7 @@ K_TEST_F(MessageEncoderTest, validTwoAttachments)
     addAttachment("hello.html", "text/html", "This is a note", Util::to_vector("<b>I'm very bold.</b>"));
 
     auto encMsg = MessageEncoder::encodeMessage(
-                settings, *draft, data.dateSent, session_);
+                settings.credentials, *draft, data.dateSent, session_);
     checkResults(encMsg);
 }
 
@@ -302,7 +307,7 @@ K_TEST_F(MessageEncoderTest, validMax)
     addAttachment("hello.html", "text/html", "This is a note", Util::to_vector("<b>I'm very bold.</b>"));
 
     auto encMsg = MessageEncoder::encodeMessage(
-                settings, *draft, data.dateSent, session_);
+                settings.credentials, *draft, data.dateSent, session_);
     checkResults(encMsg);
 }
 
@@ -316,6 +321,7 @@ K_TEST_F(MessageEncoderTest, noConversation)
     draft->save();
 
     ASSERT_THROW(
-                MessageEncoder::encodeMessage(settings, *draft, data.dateSent, session_),
+                MessageEncoder::encodeMessage(
+                    settings.credentials, *draft, data.dateSent, session_),
                 Db::DatabaseIntegrityError);
 }

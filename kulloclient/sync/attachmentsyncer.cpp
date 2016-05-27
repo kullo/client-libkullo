@@ -27,13 +27,13 @@ namespace Kullo {
 namespace Sync {
 
 AttachmentSyncer::AttachmentSyncer(
-        const Util::UserSettings &settings,
-        Db::SharedSessionPtr session)
+        const Util::Credentials &credentials,
+        const Db::SharedSessionPtr &session)
     : session_(session)
 {
     client_.reset(new Protocol::MessagesClient(
-                     *settings.address,
-                     *settings.masterKey));
+                     *credentials.address,
+                     *credentials.masterKey));
 }
 
 AttachmentSyncer::~AttachmentSyncer()

@@ -1,5 +1,10 @@
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+    # Use libc++ on Linux and OS X; use libstdc++ on Android.
+    # Clang on Linux defaults to libstdc++.
+    if(NOT ANDROID)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+    endif()
 
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     set(warn_flags "-Wall -Wextra -Wpedantic -Wcast-qual -Wformat=2 -Wlogical-op -Wmissing-include-dirs -Wswitch-default -Wno-maybe-uninitialized")
@@ -23,10 +28,8 @@ elseif("${CMAKE_CXX_COMPILER_ID} " STREQUAL "MSVC ")
 endif()
 
 if(APPLE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
-
-	if(NOT IOS)
-		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mmacosx-version-min=10.9")
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mmacosx-version-min=10.9")
-	endif()
+    if(NOT IOS)
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mmacosx-version-min=10.9")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mmacosx-version-min=10.9")
+    endif()
 endif()

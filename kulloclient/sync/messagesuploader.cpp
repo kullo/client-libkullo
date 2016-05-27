@@ -32,8 +32,8 @@ namespace Sync {
 
 MessagesUploader::MessagesUploader(
         const UserSettings &settings,
-        std::shared_ptr<Codec::PrivateKeyProvider> privKeyProvider,
-        Db::SharedSessionPtr session)
+        const std::shared_ptr<Codec::PrivateKeyProvider> &privKeyProvider,
+        const Db::SharedSessionPtr &session)
     : session_(session),
       settings_(settings),
       privKeyProvider_(privKeyProvider)
@@ -44,8 +44,8 @@ MessagesUploader::MessagesUploader(
     msgAdder_.events.senderAdded = forwardEvent(events.senderAdded);
 
     messagesClient_.reset(new Protocol::MessagesClient(
-                             *settings_.address,
-                             *settings_.masterKey));
+                             *settings_.credentials.address,
+                             *settings_.credentials.masterKey));
 }
 
 MessagesUploader::~MessagesUploader()
@@ -68,7 +68,7 @@ void MessagesUploader::run(std::shared_ptr<std::atomic<bool>> shouldCancel)
         // encode message
         auto dateSent = DateTime::nowUtc();
         auto encodedMessage = Codec::MessageEncoder::encodeMessage(
-                    settings_,
+                    settings_.credentials,
                     *draft,
                     dateSent,
                     session_);
@@ -226,7 +226,7 @@ MessageDao MessagesUploader::makeMessageDao(
     message.setDateReceived(msgSent.dateReceived.toString());
     // message data from local data
     message.setConversationId(draft.conversationId());
-    message.setSender(settings_.address->toString());
+    message.setSender(settings_.credentials.address->toString());
     message.setDateSent(dateSent.toString());
     message.setText(draft.text());
     message.setFooter(draft.footer());
@@ -239,7 +239,7 @@ ParticipantDao MessagesUploader::makeSender(
         const MessageDao &message,
         const DraftDao &draft)
 {
-    ParticipantDao sender(*settings_.address, session_);
+    ParticipantDao sender(*settings_.credentials.address, session_);
     sender.setMessageId(message.id());
     sender.setName(draft.senderName());
     sender.setOrganization(draft.senderOrganization());

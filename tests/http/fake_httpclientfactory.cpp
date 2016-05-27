@@ -3,6 +3,7 @@
 
 #include <jsoncpp/jsoncpp.h>
 
+#include <boost/regex.hpp>
 #include <kulloclient/http/HttpHeader.h>
 #include <kulloclient/http/Request.h>
 #include <kulloclient/http/RequestListener.h>
@@ -21,6 +22,7 @@ using namespace Kullo;
 namespace {
 const std::string EXISTING_USER = "exists#example.com";
 const std::string BLOCKED_USER = "blocked#example.com";
+const std::string URL_USER_PREFIX = "https://kullo.example.com/v1/exists%23example.com";
 
 int32_t validateAuth(const std::vector<Http::HttpHeader> headers)
 {
@@ -84,8 +86,7 @@ Http::Response FakeHttpClient::sendRequest(const Kullo::Http::Request &request,
 
     // public encryption key for existing address
     if (request.method == Http::HttpMethod::Get && request.url ==
-            "https://kullo.example.com/v1/exists%23example.com"
-            "/keys/public/latest-enc")
+            URL_USER_PREFIX + "/keys/public/latest-enc")
     {
         statusCode = 200;
         responseBody = Util::to_vector(
@@ -105,7 +106,7 @@ Http::Response FakeHttpClient::sendRequest(const Kullo::Http::Request &request,
 
     // private keys for existing logged in user
     else if (request.method == Http::HttpMethod::Get
-             && request.url == "https://kullo.example.com/v1/exists%23example.com/keys/symm")
+             && request.url == URL_USER_PREFIX + "/keys/symm")
     {
         statusCode = 200;
 
@@ -124,7 +125,7 @@ Http::Response FakeHttpClient::sendRequest(const Kullo::Http::Request &request,
 
     // private keys for existing logged in user
     else if (request.method == Http::HttpMethod::Get
-             && request.url == "https://kullo.example.com/v1/exists%23example.com/keys/private")
+             && request.url == URL_USER_PREFIX + "/keys/private")
     {
         statusCode = 200;
         responseBody = Util::to_vector("[]");
@@ -132,9 +133,7 @@ Http::Response FakeHttpClient::sendRequest(const Kullo::Http::Request &request,
 
     // empty inbox for existing address
     else if (request.method == Http::HttpMethod::Get &&
-             request.url.find(
-                 "https://kullo.example.com/v1/exists%23example.com/messages"
-                 ) == 0)
+             request.url.find(URL_USER_PREFIX + "/messages") == 0)
     {
         statusCode = validateAuth(request.headers);
         if (statusCode == 200)
@@ -147,8 +146,7 @@ Http::Response FakeHttpClient::sendRequest(const Kullo::Http::Request &request,
 
     // account info
     else if (request.method == Http::HttpMethod::Get &&
-             request.url ==
-             "https://kullo.example.com/v1/exists%23example.com/account/info")
+             request.url == URL_USER_PREFIX + "/account/info")
     {
         statusCode = validateAuth(request.headers);
         if (statusCode == 200)
@@ -159,10 +157,40 @@ Http::Response FakeHttpClient::sendRequest(const Kullo::Http::Request &request,
         }
     }
 
+    // list user profile info
+    else if (request.method == Http::HttpMethod::Get &&
+             request.url.find(URL_USER_PREFIX + "/profile") == 0)
+    {
+        statusCode = validateAuth(request.headers);
+        if (statusCode == 200)
+        {
+            responseBody = Util::to_vector(R"({"data": []})");
+        }
+    }
+
+    // update user profile info
+    else if (request.method == Http::HttpMethod::Put &&
+             request.url.find(URL_USER_PREFIX + "/profile/") == 0)
+    {
+        statusCode = validateAuth(request.headers);
+        if (statusCode == 200)
+        {
+            static const boost::regex keyRegex(R"(/profile/([a-z_]+)\?)");
+            boost::smatch match;
+            if (!boost::regex_search(request.url, match, keyRegex))
+            {
+                kulloAssert(false);
+            }
+            responseBody = Util::to_vector(
+                        std::string(R"({"key": ")")
+                        + match[1].str()
+                        + R"(", "lastModified": 1337})");
+        }
+    }
+
     // GCM registration token
     else if (request.method == Http::HttpMethod::Post &&
-             request.url ==
-             "https://kullo.example.com/v1/exists%23example.com/push/gcm")
+             request.url == URL_USER_PREFIX + "/push/gcm")
     {
         statusCode = validateAuth(request.headers);
         if (statusCode == 200)
