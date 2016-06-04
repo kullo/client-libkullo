@@ -3,6 +3,8 @@
 
 #include <sstream>
 
+#include <smartsqlite/scopedsavepoint.h>
+
 #include "kulloclient/dao/daoutil.h"
 #include "kulloclient/db/exceptions.h"
 #include "kulloclient/util/binary.h"
@@ -326,75 +328,67 @@ void AttachmentDao::setContent(std::istream &input)
     const std::string savepointName =
             std::string("attachmentdao_") + std::to_string(draft_) +
             "_" + std::to_string(messageId_) + "_" + std::to_string(index_);
-    session_->savepoint(savepointName);
+    SmartSqlite::ScopedSavepoint sp(session_, savepointName);
 
-    try
+    // get rowid
+    std::int64_t rowid;
     {
-        // get rowid
-        std::int64_t rowid;
-        {
-            auto stmt = session_->prepare(
-                        "SELECT rowid FROM attachments_content "
-                        "WHERE draft = :draft "
-                            "AND message_id = :message_id "
-                            "AND idx = :idx");
-            stmt.bind(":draft", draft_);
-            stmt.bind(":message_id", messageId_);
-            stmt.bind(":idx", index_);
-            rowid = stmt.execWithSingleResult().get<std::int64_t>(0);
-        }
+        auto stmt = session_->prepare(
+                    "SELECT rowid FROM attachments_content "
+                    "WHERE draft = :draft "
+                        "AND message_id = :message_id "
+                        "AND idx = :idx");
+        stmt.bind(":draft", draft_);
+        stmt.bind(":message_id", messageId_);
+        stmt.bind(":idx", index_);
+        rowid = stmt.execWithSingleResult().get<std::int64_t>(0);
+    }
 
-        // set size of attachment
-        {
-            auto stmt = session_->prepare(
-                        "UPDATE attachments_content "
-                        "SET content = zeroblob(:size) "
-                        "WHERE rowid = :rowid");
-            stmt.bind(":size", size_);
-            stmt.bind(":rowid", rowid);
-            stmt.execWithoutResult();
-        }
+    // set size of attachment
+    {
+        auto stmt = session_->prepare(
+                    "UPDATE attachments_content "
+                    "SET content = zeroblob(:size) "
+                    "WHERE rowid = :rowid");
+        stmt.bind(":size", size_);
+        stmt.bind(":rowid", rowid);
+        stmt.execWithoutResult();
+    }
 
-        // stream content to blob
-        if (size_)
-        {
-            auto blob = session_->openBlob("main", "attachments_content",
-                                          "content", rowid,
-                                          SmartSqlite::Blob::READWRITE);
+    // stream content to blob
+    if (size_)
+    {
+        auto blob = session_->openBlob("main", "attachments_content",
+                                      "content", rowid,
+                                      SmartSqlite::Blob::READWRITE);
 
-            char buffer[STREAM_BUF_SIZE];
-            size_t bytesWritten = 0;
-            while (input)
-            {
-                input.read(buffer, sizeof(buffer));
-                if (bytesWritten + input.gcount() > size_)
-                {
-                    throw Db::DatabaseIntegrityError(
-                                "AttachmentDao::setContent: The stored size is "
-                                "smaller than the stream size");
-                }
-                blob.write(buffer, input.gcount(), bytesWritten);
-                bytesWritten += input.gcount();
-            }
-            if (input.bad())
-            {
-                throw Util::FilesystemError("Failed to read attachment from stream");
-            }
-            if (bytesWritten < size_)
+        char buffer[STREAM_BUF_SIZE];
+        size_t bytesWritten = 0;
+        while (input)
+        {
+            input.read(buffer, sizeof(buffer));
+            if (bytesWritten + input.gcount() > size_)
             {
                 throw Db::DatabaseIntegrityError(
-                            "AttachmentDao::setContent: The stored size is larger "
-                            "than the stream size");
+                            "AttachmentDao::setContent: The stored size is "
+                            "smaller than the stream size");
             }
+            blob.write(buffer, input.gcount(), bytesWritten);
+            bytesWritten += input.gcount();
         }
+        if (input.bad())
+        {
+            throw Util::FilesystemError("Failed to read attachment from stream");
+        }
+        if (bytesWritten < size_)
+        {
+            throw Db::DatabaseIntegrityError(
+                        "AttachmentDao::setContent: The stored size is larger "
+                        "than the stream size");
+        }
+    }
 
-        session_->releaseSavepoint(savepointName);
-    }
-    catch (...)
-    {
-        session_->rollbackToSavepoint(savepointName);
-        throw;
-    }
+    sp.release();
 }
 
 std::string AttachmentDao::note() const
@@ -471,7 +465,7 @@ std::vector<id_type> AttachmentDao::deleteAttachments(IsDraft draft, id_type mes
             std::string("attachmentdao_delete_all_")
             + std::to_string(draft == IsDraft::Yes)
             + "_" + std::to_string(messageId);
-    session->savepoint(savepointName);
+    SmartSqlite::ScopedSavepoint sp(session, savepointName);
 
     auto stmt = session->prepare(
                 "SELECT idx FROM attachments "
@@ -500,7 +494,7 @@ std::vector<id_type> AttachmentDao::deleteAttachments(IsDraft draft, id_type mes
     stmt.bind(":message_id", messageId);
     stmt.execWithoutResult();
 
-    session->releaseSavepoint(savepointName);
+    sp.release();
     return result;
 }
 

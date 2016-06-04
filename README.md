@@ -70,6 +70,11 @@ Tips and Tricks
 Changelog
 ---------
 
+### v49 (2016-06-04)
+
+ * Windows: Fix bug in handling filenames with special chars when adding files to drafts
+ * Update SmartSqlite v10
+
 ### v48 (2016-05-27)
 
  * Sync user settings

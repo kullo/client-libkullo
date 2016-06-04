@@ -13,6 +13,9 @@ class Filesystem
 {
 public:
     static std::string filename(const std::string &path);
+    static bool exists(const std::string &path);
+    static bool isRegularFile(const std::string &path);
+    static size_t fileSize(const std::string &path);
     static std::vector<unsigned char> getContent(const std::string &path);
     static void putContent(const std::string &path, const std::vector<unsigned char> &content);
     static std::unique_ptr<std::istream> makeIfstream(const std::string &path);

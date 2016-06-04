@@ -1,9 +1,6 @@
 /* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
 #include "kulloclient/api_impl/draftattachmentsaddworker.h"
 
-#include <fstream>
-#include <boost/filesystem/operations.hpp>
-#include <boost/filesystem/path.hpp>
 #include <smartsqlite/scopedtransaction.h>
 
 #include "kulloclient/api_impl/exception_conversion.h"
@@ -14,8 +11,6 @@
 #include "kulloclient/util/filesystem.h"
 #include "kulloclient/util/librarylogger.h"
 #include "kulloclient/util/scopedbenchmark.h"
-
-namespace fs = boost::filesystem;
 
 namespace Kullo {
 namespace ApiImpl {
@@ -41,8 +36,7 @@ void DraftAttachmentsAddWorker::work()
 
     try
     {
-        auto path = fs::path(path_);
-        if (!(fs::exists(path) && fs::is_regular_file(path)))
+        if (!(Util::Filesystem::exists(path_) && Util::Filesystem::isRegularFile(path_)))
         {
             throw Util::FilesystemError(
                         std::string("File doesn't exist: ") + path_);
@@ -55,7 +49,7 @@ void DraftAttachmentsAddWorker::work()
             Util::ScopedBenchmark benchmark("Copy attachment from filesystem to DB");
             K_RAII(benchmark);
 
-            auto istream = Util::Filesystem::makeIfstream(path.string());
+            auto istream = Util::Filesystem::makeIfstream(path_);
             auto hash = Crypto::Hasher::sha512Hex(*istream);
 
             auto session = Db::makeSession(dbPath_);
@@ -70,7 +64,7 @@ void DraftAttachmentsAddWorker::work()
             dao.setIndex(attachmentId);
             dao.setFilename(Util::Filesystem::filename(path_));
             dao.setMimeType(mimeType_);
-            dao.setSize(fs::file_size(path));
+            dao.setSize(Util::Filesystem::fileSize(path_));
             dao.setHash(hash);
             dao.save();
 

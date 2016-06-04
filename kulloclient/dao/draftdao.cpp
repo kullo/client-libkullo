@@ -1,6 +1,8 @@
 /* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
 #include "kulloclient/dao/draftdao.h"
 
+#include <smartsqlite/scopedsavepoint.h>
+
 #include "kulloclient/dao/daoutil.h"
 #include "kulloclient/db/exceptions.h"
 #include "kulloclient/util/checkedconverter.h"
@@ -61,54 +63,46 @@ bool DraftDao::save()
     }
 
     const std::string savepointName = "draftdao_" + std::to_string(conversationId_);
-    session_->savepoint(savepointName);
+    SmartSqlite::ScopedSavepoint sp(session_, savepointName);
 
-    try
+    std::string sql;
+    if (!storedInDb_)
     {
-        std::string sql;
-        if (!storedInDb_)
-        {
-            sql = "INSERT INTO drafts VALUES ("
-                    ":id, :conversation_id, :last_modified, "
-                    ":text, :footer, :sender_name, :sender_organization, "
-                    ":sender_avatar, :sender_avatar_mime_type, "
-                    ":state, :old)";
-        }
-        else
-        {
-            sql = "UPDATE drafts "
-                    "SET id = :id, last_modified = :last_modified, "
-                    "text = :text, footer = :footer, "
-                    "sender_name = :sender_name, sender_organization = :sender_organization, "
-                    "sender_avatar = :sender_avatar, sender_avatar_mime_type = :sender_avatar_mime_type, "
-                    "state = :state "
-                    "WHERE conversation_id = :conversation_id AND old = :old";
-        }
-        auto stmt = session_->prepare(sql);
-        stmt.bind(":id", id_);
-        stmt.bind(":conversation_id", conversationId_);
-        stmt.bind(":last_modified", lastModified_);
-        stmt.bind(":text", text_);
-        stmt.bind(":footer", footer_);
-        stmt.bind(":sender_name", senderName_);
-        stmt.bind(":sender_organization", senderOrganization_);
-        if (senderAvatar_.empty()) stmt.bindNull(":sender_avatar");
-        else stmt.bind(":sender_avatar", senderAvatar_);
-        stmt.bind(":sender_avatar_mime_type", senderAvatarMimeType_);
-        stmt.bind(":state", static_cast<int>(state_));
-        stmt.bind(":old", false);
-        stmt.execWithoutResult();
+        sql = "INSERT INTO drafts VALUES ("
+                ":id, :conversation_id, :last_modified, "
+                ":text, :footer, :sender_name, :sender_organization, "
+                ":sender_avatar, :sender_avatar_mime_type, "
+                ":state, :old)";
+    }
+    else
+    {
+        sql = "UPDATE drafts "
+                "SET id = :id, last_modified = :last_modified, "
+                "text = :text, footer = :footer, "
+                "sender_name = :sender_name, sender_organization = :sender_organization, "
+                "sender_avatar = :sender_avatar, sender_avatar_mime_type = :sender_avatar_mime_type, "
+                "state = :state "
+                "WHERE conversation_id = :conversation_id AND old = :old";
+    }
+    auto stmt = session_->prepare(sql);
+    stmt.bind(":id", id_);
+    stmt.bind(":conversation_id", conversationId_);
+    stmt.bind(":last_modified", lastModified_);
+    stmt.bind(":text", text_);
+    stmt.bind(":footer", footer_);
+    stmt.bind(":sender_name", senderName_);
+    stmt.bind(":sender_organization", senderOrganization_);
+    if (senderAvatar_.empty()) stmt.bindNull(":sender_avatar");
+    else stmt.bind(":sender_avatar", senderAvatar_);
+    stmt.bind(":sender_avatar_mime_type", senderAvatarMimeType_);
+    stmt.bind(":state", static_cast<int>(state_));
+    stmt.bind(":old", false);
+    stmt.execWithoutResult();
 
-        session_->releaseSavepoint(savepointName);
-        storedInDb_ = true;
-        dirty_ = false;
-        return true;
-    }
-    catch (...)
-    {
-        session_->rollbackToSavepoint(savepointName);
-        throw;
-    }
+    sp.release();
+    storedInDb_ = true;
+    dirty_ = false;
+    return true;
 }
 
 void DraftDao::clear()

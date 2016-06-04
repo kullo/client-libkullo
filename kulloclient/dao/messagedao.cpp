@@ -3,6 +3,8 @@
 
 #include <ostream>
 
+#include <smartsqlite/scopedsavepoint.h>
+
 #include "kulloclient/crypto/symmetrickeyloader.h"
 #include "kulloclient/dao/daoutil.h"
 #include "kulloclient/db/exceptions.h"
@@ -148,87 +150,79 @@ bool MessageDao::save(CreateOld createOldIfDoesntExist)
     }
 
     const std::string savepointName = "messagedao_" + std::to_string(id_);
-    session_->savepoint(savepointName);
+    SmartSqlite::ScopedSavepoint sp(session_, savepointName);
 
-    try
+    // if already synced: insert copy of current record (not state of this!) with old = true
+    if (createOldIfDoesntExist == CreateOld::Yes)
     {
-        // if already synced: insert copy of current record (not state of this!) with old = true
-        if (createOldIfDoesntExist == CreateOld::Yes)
+        bool oldExists;
         {
-            bool oldExists;
-            {
-                auto stmt = session_->prepare(
-                            "SELECT id FROM messages WHERE id = :id AND old = 1");
-                stmt.bind(":id", id_);
-                oldExists = stmt.hasResults();
-            }
-
-            if (!oldExists)
-            {
-                auto stmt = session_->prepare(
-                            "INSERT INTO messages "
-                            "SELECT id, conversation_id, sender, "
-                            "last_modified, deleted, meta_version, read, done, "
-                            "sent, received, text, footer, symmetric_key, 1 "
-                            "FROM messages WHERE id = :id");
-                stmt.bind(":id", id_);
-                stmt.execWithoutResult();
-            }
+            auto stmt = session_->prepare(
+                        "SELECT id FROM messages WHERE id = :id AND old = 1");
+            stmt.bind(":id", id_);
+            oldExists = stmt.hasResults();
         }
 
-        std::string sql;
-        if (!storedInDb_)
+        if (!oldExists)
         {
-            sql = "INSERT INTO messages VALUES ("
-                    ":id, :conversation_id, :sender, :last_modified, "
-                    ":deleted, :meta_version, :read, :done, :sent, :received, "
-                    ":text, :footer, :symmetric_key, :old)";
+            auto stmt = session_->prepare(
+                        "INSERT INTO messages "
+                        "SELECT id, conversation_id, sender, "
+                        "last_modified, deleted, meta_version, read, done, "
+                        "sent, received, text, footer, symmetric_key, 1 "
+                        "FROM messages WHERE id = :id");
+            stmt.bind(":id", id_);
+            stmt.execWithoutResult();
         }
-        else
-        {
-            sql = "UPDATE messages SET "
-                    "conversation_id = :conversation_id, "
-                    "sender = :sender, "
-                    "last_modified = :last_modified, "
-                    "deleted = :deleted, "
-                    "meta_version = :meta_version, "
-                    "read = :read, "
-                    "done = :done, "
-                    "sent = :sent, "
-                    "received = :received, "
-                    "text = :text, "
-                    "footer = :footer, "
-                    "symmetric_key = :symmetric_key "
-                    "WHERE id = :id AND old = :old";
-        }
-        auto stmt = session_->prepare(sql);
-        stmt.bind(":id", id_);
-        stmt.bind(":conversation_id", conversationId_);
-        stmt.bind(":sender", sender_);
-        stmt.bind(":last_modified", lastModified_);
-        stmt.bind(":deleted", deleted_);
-        stmt.bind(":meta_version", metaVersion_);
-        stmt.bind(":read", read_);
-        stmt.bind(":done", done_);
-        stmt.bind(":sent", dateSent_);
-        stmt.bind(":received", dateReceived_);
-        stmt.bind(":text", text_);
-        stmt.bind(":footer", footer_);
-        if (symmetricKey_.size()) stmt.bind(":symmetric_key", symmetricKey_);
-        else stmt.bindNull(":symmetric_key");
-        stmt.bind(":old", old_);
-        stmt.execWithoutResult();
-
-        session_->releaseSavepoint(savepointName);
-        storedInDb_ = true;
-        dirty_ = false;
-        return true;
     }
-    catch (...)
+
+    std::string sql;
+    if (!storedInDb_)
     {
-        session_->rollbackToSavepoint(savepointName);
-        throw;
+        sql = "INSERT INTO messages VALUES ("
+                ":id, :conversation_id, :sender, :last_modified, "
+                ":deleted, :meta_version, :read, :done, :sent, :received, "
+                ":text, :footer, :symmetric_key, :old)";
     }
+    else
+    {
+        sql = "UPDATE messages SET "
+                "conversation_id = :conversation_id, "
+                "sender = :sender, "
+                "last_modified = :last_modified, "
+                "deleted = :deleted, "
+                "meta_version = :meta_version, "
+                "read = :read, "
+                "done = :done, "
+                "sent = :sent, "
+                "received = :received, "
+                "text = :text, "
+                "footer = :footer, "
+                "symmetric_key = :symmetric_key "
+                "WHERE id = :id AND old = :old";
+    }
+    auto stmt = session_->prepare(sql);
+    stmt.bind(":id", id_);
+    stmt.bind(":conversation_id", conversationId_);
+    stmt.bind(":sender", sender_);
+    stmt.bind(":last_modified", lastModified_);
+    stmt.bind(":deleted", deleted_);
+    stmt.bind(":meta_version", metaVersion_);
+    stmt.bind(":read", read_);
+    stmt.bind(":done", done_);
+    stmt.bind(":sent", dateSent_);
+    stmt.bind(":received", dateReceived_);
+    stmt.bind(":text", text_);
+    stmt.bind(":footer", footer_);
+    if (symmetricKey_.size()) stmt.bind(":symmetric_key", symmetricKey_);
+    else stmt.bindNull(":symmetric_key");
+    stmt.bind(":old", old_);
+    stmt.execWithoutResult();
+
+    sp.release();
+    storedInDb_ = true;
+    dirty_ = false;
+    return true;
 }
 
 void MessageDao::clearData()

@@ -61,17 +61,6 @@ void ClientCreateSessionWorker::work()
             listener_->finished(session);
         }
     }
-    catch (fs::filesystem_error &ex)
-    {
-        Log.e() << "Couldn't create database directory: "
-                << Util::formatException(ex);
-
-        std::lock_guard<std::mutex> lock(mutex_); K_RAII(lock);
-        if (listener_)
-        {
-            listener_->error(address_, Api::LocalError::Filesystem);
-        }
-    }
     catch (std::exception &ex)
     {
         Log.e() << "ClientCreateSessionWorker failed: " << Util::formatException(ex);

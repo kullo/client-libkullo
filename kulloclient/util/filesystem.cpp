@@ -11,10 +11,32 @@
 namespace Kullo {
 namespace Util {
 
+#ifdef _WIN32 // is also defined on 64 bit...
+    #include <nowide/convert.hpp>
+    #define K_WIDEN_IF_NEEDED(path) nowide::widen(path)
+#else
+    #define K_WIDEN_IF_NEEDED(path) path
+#endif
+
 std::string Filesystem::filename(const std::string &path)
 {
     boost::filesystem::path p(path);
     return p.filename().string();
+}
+
+bool Filesystem::exists(const std::string &path)
+{
+    return boost::filesystem::exists(K_WIDEN_IF_NEEDED(path));
+}
+
+bool Filesystem::isRegularFile(const std::string &path)
+{
+    return boost::filesystem::is_regular_file(K_WIDEN_IF_NEEDED(path));
+}
+
+size_t Filesystem::fileSize(const std::string &path)
+{
+    return boost::filesystem::file_size(K_WIDEN_IF_NEEDED(path));
 }
 
 std::vector<unsigned char> Filesystem::getContent(const std::string &path)

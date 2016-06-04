@@ -3,6 +3,7 @@
 
 #include <smartsqlite/connection.h>
 #include <smartsqlite/exceptions.h>
+#include <smartsqlite/scopedsavepoint.h>
 
 #include "kulloclient/crypto/hasher.h"
 #include "kulloclient/util/assert.h"
@@ -125,8 +126,8 @@ std::vector<Protocol::ProfileInfo> UserSettingsDao::localChanges()
 
 void UserSettingsDao::setRemoteValue(Protocol::ProfileInfo newValue)
 {
-    auto savepoint = "usersettings-setRemoteValue-" + newValue.key;
-    session_->savepoint(savepoint);
+    auto savepointName = "usersettings-setRemoteValue-" + newValue.key;
+    SmartSqlite::ScopedSavepoint sp(session_, savepointName);
 
     auto stmt = session_->prepare(
                 "UPDATE usersettings "
@@ -137,42 +138,30 @@ void UserSettingsDao::setRemoteValue(Protocol::ProfileInfo newValue)
     stmt.bind(":remote_value", newValue.value);
     stmt.bind(":last_modified", newValue.lastModified);
 
-    try
+    stmt.execWithoutResult();
+
+    if (session_->changes() == 0)
     {
+        // Use OR IGNORE because the previous query could have failed not
+        // because there was no row but because last_modified was unchanged,
+        // which is a case where we don't want to change the row.
+        stmt = session_->prepare(
+                        "INSERT OR IGNORE INTO usersettings "
+                        "(key, remote_value, last_modified) "
+                        "VALUES (:key, :remote_value, :last_modified) ");
+        stmt.bind(":key", newValue.key);
+        stmt.bind(":remote_value", newValue.value);
+        stmt.bind(":last_modified", newValue.lastModified);
         stmt.execWithoutResult();
-
-        stmt = session_->prepare("SELECT changes()");
-        auto changes = stmt.execWithSingleResult().get<int>(0);
-
-        if (changes == 0)
-        {
-            // Use OR IGNORE because the previous query could have failed not
-            // because there was no row but because last_modified was unchanged,
-            // which is a case where we don't want to change the row.
-            stmt = session_->prepare(
-                            "INSERT OR IGNORE INTO usersettings "
-                            "(key, remote_value, last_modified) "
-                            "VALUES (:key, :remote_value, :last_modified) ");
-            stmt.bind(":key", newValue.key);
-            stmt.bind(":remote_value", newValue.value);
-            stmt.bind(":last_modified", newValue.lastModified);
-            stmt.execWithoutResult();
-        }
     }
-    catch (...)
-    {
-        session_->rollbackToSavepoint(savepoint);
-        throw;
-    }
-
-    session_->releaseSavepoint(savepoint);
+    sp.release();
 }
 
 void UserSettingsDao::setLocalValue(
         const std::string &key, const std::string &localValue)
 {
-    auto savepoint = "usersettings-setLocalValue-" + key;
-    session_->savepoint(savepoint);
+    auto savepointName = "usersettings-setLocalValue-" + key;
+    SmartSqlite::ScopedSavepoint sp(session_, savepointName);
 
     auto stmt = session_->prepare(
                 "UPDATE usersettings "
@@ -180,31 +169,18 @@ void UserSettingsDao::setLocalValue(
                 "WHERE key = :key ");
     stmt.bind(":key", key);
     stmt.bind(":local_value", localValue);
+    stmt.execWithoutResult();
 
-    try
+    if (session_->changes() == 0)
     {
+        stmt = session_->prepare(
+                        "INSERT INTO usersettings (key, local_value) "
+                        "VALUES (:key, :local_value) ");
+        stmt.bind(":key", key);
+        stmt.bind(":local_value", localValue);
         stmt.execWithoutResult();
-
-        stmt = session_->prepare("SELECT changes()");
-        auto changes = stmt.execWithSingleResult().get<int>(0);
-
-        if (changes == 0)
-        {
-            stmt = session_->prepare(
-                            "INSERT INTO usersettings (key, local_value) "
-                            "VALUES (:key, :local_value) ");
-            stmt.bind(":key", key);
-            stmt.bind(":local_value", localValue);
-            stmt.execWithoutResult();
-        }
     }
-    catch (...)
-    {
-        session_->rollbackToSavepoint(savepoint);
-        throw;
-    }
-
-    session_->releaseSavepoint(savepoint);
+    sp.release();
 }
 
 }

@@ -62,6 +62,58 @@ K_TEST_F(Filesystem, folder)
     EXPECT_EQ(".", Util::Filesystem::filename(path));
 }
 
+K_TEST_F(Filesystem, filesize)
+{
+    const auto inFilepaths = std::vector<std::string>{
+        TestUtil::assetPath() + "/filenames/test-a.txt",
+        TestUtil::assetPath() + "/filenames/test-ä.txt",
+        TestUtil::assetPath() + "/filenames/test-ß.txt",
+        TestUtil::assetPath() + "/filenames/test-'.txt",
+        TestUtil::assetPath() + "/filenames/test-&.txt",
+        TestUtil::assetPath() + "/filenames/test-+.txt",
+    };
+
+    for (const auto &inFilepath : inFilepaths)
+    {
+        auto size = Util::Filesystem::fileSize(inFilepath);
+        EXPECT_THAT(size, Gt(0u));
+    }
+}
+
+K_TEST_F(Filesystem, exists)
+{
+    const auto inFilepaths = std::vector<std::string>{
+        TestUtil::assetPath() + "/filenames/test-a.txt",
+        TestUtil::assetPath() + "/filenames/test-ä.txt",
+        TestUtil::assetPath() + "/filenames/test-ß.txt",
+        TestUtil::assetPath() + "/filenames/test-'.txt",
+        TestUtil::assetPath() + "/filenames/test-&.txt",
+        TestUtil::assetPath() + "/filenames/test-+.txt",
+    };
+
+    for (const auto &inFilepath : inFilepaths)
+    {
+        EXPECT_THAT(Util::Filesystem::exists(inFilepath), Eq(true));
+    }
+}
+
+K_TEST_F(Filesystem, isRegularFile)
+{
+    const auto inFilepaths = std::vector<std::string>{
+        TestUtil::assetPath() + "/filenames/test-a.txt",
+        TestUtil::assetPath() + "/filenames/test-ä.txt",
+        TestUtil::assetPath() + "/filenames/test-ß.txt",
+        TestUtil::assetPath() + "/filenames/test-'.txt",
+        TestUtil::assetPath() + "/filenames/test-&.txt",
+        TestUtil::assetPath() + "/filenames/test-+.txt",
+    };
+
+    for (const auto &inFilepath : inFilepaths)
+    {
+        EXPECT_THAT(Util::Filesystem::isRegularFile(inFilepath), Eq(true));
+    }
+}
+
 K_TEST_F(Filesystem, readUtf8FilenameRelativeWithoutSpecialChar)
 {
     {

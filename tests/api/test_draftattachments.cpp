@@ -211,6 +211,33 @@ K_TEST_F(ApiDraftAttachments, addAsyncWorks)
     }
 }
 
+K_TEST_F(ApiDraftAttachments, filenamesWithSpecialsWork)
+{
+    const auto conversationId = 133; // alternative conversation id to avoid pre-set attachment
+    const auto inFilepaths = std::vector<std::string>{
+        TestUtil::assetPath() + "/filenames/test-a.txt",
+        TestUtil::assetPath() + "/filenames/test-ä.txt",
+        TestUtil::assetPath() + "/filenames/test-ß.txt",
+        TestUtil::assetPath() + "/filenames/test-'.txt",
+        TestUtil::assetPath() + "/filenames/test-&.txt",
+        TestUtil::assetPath() + "/filenames/test-+.txt",
+    };
+    const auto mimeType = "text/plain";
+
+    auto listener = std::make_shared<AddListener>();
+
+    for (const auto &inFilepath : inFilepaths)
+    {
+        auto task = uut->addAsync(conversationId, inFilepath, mimeType, listener);
+
+        ASSERT_THAT(TestUtil::waitAndCheck(task, listener->isFinished_),
+                    Eq(TestUtil::OK));
+        EXPECT_THAT(listener->path_, Eq(inFilepath));
+    }
+
+    EXPECT_THAT(uut->allForDraft(conversationId).size(), Eq(inFilepaths.size()));
+}
+
 K_TEST_F(ApiDraftAttachments, addAsyncWorksOnError)
 {
     suppressErrorLogOutput();
