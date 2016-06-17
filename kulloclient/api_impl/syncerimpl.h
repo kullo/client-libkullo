@@ -21,6 +21,7 @@ public:
     SyncerImpl(
             std::shared_ptr<SessionData> session,
             std::shared_ptr<Api::SessionListener> sessionListener);
+    ~SyncerImpl() override;
 
     void setListener(const std::shared_ptr<Api::SyncerListener> &listener)
         override;
@@ -36,7 +37,8 @@ private:
     class SyncerSyncerListener : public Api::SyncerListener
     {
     public:
-        SyncerSyncerListener(SyncerImpl &parent);
+        SyncerSyncerListener(SyncerImpl *parent);
+        void setParent(SyncerImpl *parent);
 
         // Api::SyncerListener implementation
         void started() override;
@@ -46,7 +48,9 @@ private:
         void error(Api::NetworkError error) override;
 
     private:
-        SyncerImpl &parent_;
+        // must be hold while parent_ is accessed (both r/w)
+        std::mutex parentMutex_;
+        SyncerImpl *parent_;
     };
 
     void runNextJobIfIdle();

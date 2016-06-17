@@ -8,6 +8,7 @@
 
 #include "kulloclient/kulloclient-forwards.h"
 #include "kulloclient/db/dbsession.h"
+#include "kulloclient/http/HttpClient.h"
 #include "kulloclient/protocol/httpstructs.h"
 #include "kulloclient/util/misc.h"
 
@@ -35,11 +36,12 @@ public:
      * @brief Creates a new attachment syncer.
      * @param username Username of the local user (e.g. john.doe#kullo.net)
      *
-     * This doesn't automatically start the syncer. Call start() to start syncing.
+     * This doesn't automatically start the syncer. Call run() to start syncing.
      */
     explicit AttachmentSyncer(
             const Util::Credentials &settings,
-            const Db::SharedSessionPtr &session);
+            const Db::SharedSessionPtr &session,
+            const std::shared_ptr<Http::HttpClient> &httpClient);
     ~AttachmentSyncer();
 
     /// @brief Start the syncer.

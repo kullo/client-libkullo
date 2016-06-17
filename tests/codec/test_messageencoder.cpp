@@ -126,8 +126,7 @@ protected:
         checkSender(content["sender"]);
         checkRecipients(content["recipients"]);
 
-        Util::DateTime dateSentFromJson;
-        EXPECT_NO_THROW(dateSentFromJson = Util::CheckedConverter::toDateTime(content["dateSent"]));
+        auto dateSentFromJson = Util::CheckedConverter::toDateTime(content["dateSent"]);
         EXPECT_THAT(dateSentFromJson, Eq(data.dateSent));
 
         {

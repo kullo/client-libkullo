@@ -1,4 +1,5 @@
 /* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+#include <boost/optional.hpp>
 #include <jsoncpp/jsoncpp.h>
 
 #include <kulloclient/util/binary.h>
@@ -155,40 +156,37 @@ K_TEST_F(CheckedConverter, toDateTimeJson)
     const std::string converted = "2013-12-16T14:39:13+00:00";
     EXPECT_THAT(testData.toString(), StrEq(converted));
 
-    // bad input
-    EXPECT_THROW(Util::CheckedConverter::toDateTime(Json::Value("#abc")), std::exception);
-    EXPECT_THROW(Util::CheckedConverter::toDateTime(Json::Value("2013-12-16")), std::exception);
-    EXPECT_THROW(Util::CheckedConverter::toDateTime(Json::Value("14:39:13")), std::exception);
-    EXPECT_THROW(Util::CheckedConverter::toDateTime(Json::Value("2013-12-16T14:39:13")), std::exception);
+    using UUT = Util::CheckedConverter;
 
-    // good input
-    EXPECT_THAT(Util::CheckedConverter::toDateTime(Json::Value(converted)), Eq(testData));
-    EXPECT_THAT(Util::CheckedConverter::toDateTime(Json::Value("2013-12-17T01:39:13+11:00")), Eq(testData));
-    EXPECT_THAT(Util::CheckedConverter::toDateTime(Json::Value("2013-12-16T13:09:13-01:30")), Eq(testData));
-    EXPECT_THAT(Util::CheckedConverter::toDateTime(Json::Value("2013-12-16T13:09:13Z")), Ne(testData));
+    // various bad time formats
+    EXPECT_THROW(UUT::toDateTime(Json::Value("#abc")), Util::ConversionException);
+    EXPECT_THROW(UUT::toDateTime(Json::Value("2013-12-16")), Util::ConversionException);
+    EXPECT_THROW(UUT::toDateTime(Json::Value("14:39:13")), Util::ConversionException);
+    EXPECT_THROW(UUT::toDateTime(Json::Value("2013-12-16T14:39:13")), Util::ConversionException);
 
-    // Util::AllowEmpty
-    EXPECT_THROW(Util::CheckedConverter::toDateTime(Json::Value("")), std::exception);
-    EXPECT_THAT(Util::CheckedConverter::toDateTime(Json::Value(""), Util::AllowEmpty::True), Eq(Util::DateTime()));
+    // various good time formats
+    EXPECT_THAT(UUT::toDateTime(Json::Value("2013-12-17T01:39:13+11:00")), Eq(testData));
+    EXPECT_THAT(UUT::toDateTime(Json::Value("2013-12-16T13:09:13-01:30")), Eq(testData));
+    EXPECT_THAT(UUT::toDateTime(Json::Value("2013-12-16T13:09:13Z")), Ne(testData));
 
-    // default: input null
-    EXPECT_THAT(Util::CheckedConverter::toDateTime(Json::Value(), Util::DateTime()), Eq(Util::DateTime()));
-    EXPECT_THAT(Util::CheckedConverter::toDateTime(Json::Value(), testData), Eq(testData));
+    // input null
+    EXPECT_THROW(UUT::toDateTime(Json::Value()), Util::ConversionException);
+    EXPECT_THAT(UUT::toDateTime(Json::Value(), testData), Eq(testData));
 
-    // default: input empty
-    EXPECT_THAT(Util::CheckedConverter::toDateTime(Json::Value(""), Util::DateTime()), Eq(Util::DateTime()));
-    EXPECT_THROW(Util::CheckedConverter::toDateTime(Json::Value(""), testData), Util::ConversionException);
+    // input empty
+    EXPECT_THROW(UUT::toDateTime(Json::Value("")), Util::ConversionException);
+    EXPECT_THROW(UUT::toDateTime(Json::Value(""), testData), Util::ConversionException);
 
-    // default: input nonempty
-    EXPECT_THAT(Util::CheckedConverter::toDateTime(Json::Value(converted), Util::DateTime()), Eq(testData));
+    // input valid and nonempty
     const Util::DateTime otherDate("2014-01-01T00:00:00Z");
-    EXPECT_THAT(Util::CheckedConverter::toDateTime(Json::Value(converted), otherDate), Eq(testData));
+    EXPECT_THAT(UUT::toDateTime(Json::Value(converted)), Eq(testData));
+    EXPECT_THAT(UUT::toDateTime(Json::Value(converted), otherDate), Eq(testData));
 }
 
 K_TEST_F(CheckedConverter, toKulloAddressJson)
 {
-    const auto testAddress = Util::KulloAddress("test#kullo.dev");
-    const auto converted = std::string("test#kullo.dev");
+    const auto testAddress = Util::KulloAddress("test#kullo.test");
+    const auto converted = std::string("test#kullo.test");
     ASSERT_THAT(testAddress.toString(), StrEq(converted));
 
     // bad input: not a string
@@ -203,12 +201,12 @@ K_TEST_F(CheckedConverter, toKulloAddressJson)
     EXPECT_THROW(Util::CheckedConverter::toKulloAddress(Json::Value("14:39:13")),      Util::ConversionException);
     EXPECT_THROW(Util::CheckedConverter::toKulloAddress(Json::Value("#abc")),          Util::ConversionException);
     EXPECT_THROW(Util::CheckedConverter::toKulloAddress(Json::Value("user#abc")),      Util::ConversionException);
-    EXPECT_THROW(Util::CheckedConverter::toKulloAddress(Json::Value("___#kullo.dev")), Util::ConversionException);
+    EXPECT_THROW(Util::CheckedConverter::toKulloAddress(Json::Value("___#kullo.test")), Util::ConversionException);
 
     // good input
     EXPECT_THAT(Util::CheckedConverter::toKulloAddress(Json::Value(converted)), Eq(testAddress));
-    EXPECT_THAT(Util::CheckedConverter::toKulloAddress(Json::Value("test#kullo.dev")), Eq(testAddress));
-    EXPECT_THAT(Util::CheckedConverter::toKulloAddress(Json::Value("test2#kullo.dev")), Ne(testAddress));
+    EXPECT_THAT(Util::CheckedConverter::toKulloAddress(Json::Value("test#kullo.test")), Eq(testAddress));
+    EXPECT_THAT(Util::CheckedConverter::toKulloAddress(Json::Value("test2#kullo.test")), Ne(testAddress));
 }
 
 K_TEST_F(CheckedConverter, toVectorJson)

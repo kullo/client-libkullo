@@ -15,10 +15,6 @@ class DateTime : public KulloTest
 K_TEST_F(DateTime, empty)
 {
     EXPECT_THROW(Util::DateTime(""), Util::EmptyDateTime);
-
-    // default constcuctor
-    EXPECT_THAT(Util::DateTime().isNull(), Eq(true));
-    EXPECT_THROW(Util::DateTime().toString(), Kullo::Util::AssertionFailed);
 }
 
 K_TEST_F(DateTime, conversionFromIntegersIsCorrect)
@@ -183,8 +179,4 @@ K_TEST_F(DateTime, operatorMinusDateTime)
     // timezone
     EXPECT_THAT(Util::DateTime("2024-01-01T10:35:36Z") - Util::DateTime("2024-01-01T12:35:36+02:00"),
               Eq(std::chrono::seconds(0)));
-
-    // null
-    EXPECT_THROW(Util::DateTime::epoch() - Util::DateTime(), Kullo::Util::AssertionFailed);
-    EXPECT_THROW(Util::DateTime() - Util::DateTime::epoch(), Kullo::Util::AssertionFailed);
 }

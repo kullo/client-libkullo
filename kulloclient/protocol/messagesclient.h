@@ -1,6 +1,7 @@
 /* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
 #pragma once
 
+#include <boost/optional/optional_fwd.hpp>
 #include <jsoncpp/jsoncpp-forwards.h>
 #include <vector>
 #include <cstdint>
@@ -25,7 +26,8 @@ public:
      */
     MessagesClient(
             const Util::KulloAddress &address,
-            const Util::MasterKey &masterKey);
+            const Util::MasterKey &masterKey,
+            const std::shared_ptr<Http::HttpClient> &httpClient);
 
     /**
      * @brief Sends a message.
@@ -83,7 +85,7 @@ public:
     IdLastModified deleteMessage(const IdLastModified &idlm);
 
 private:
-    MessageSent doSendMessage(
+    boost::optional<MessageSent> doSendMessage(
             const Util::KulloAddress *recipient,
             const SendableMessage &message,
             const std::vector<unsigned char> &meta);

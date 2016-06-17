@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <vector>
+#include <boost/optional/optional_fwd.hpp>
 #include <jsoncpp/jsoncpp-forwards.h>
 
 #include "kulloclient/util/exceptions.h"
@@ -163,7 +164,7 @@ public:
      * @param value string of RFC3339 format
      * @throw ConversionException if conversion fails
      */
-    static DateTime toDateTime(const std::string &value);
+    static boost::optional<DateTime> toDateTime(const std::string &value);
 
     /**
      * @brief Converts the given Json::Value to DateTime.
@@ -174,15 +175,13 @@ public:
      * The conversion will fail if toString() fails when called with the same arguments,
      * or if the resulting string is not a valid ISO date/time string.
      */
-    static DateTime toDateTime(const Json::Value &value, AllowEmpty allowEmpty = AllowEmpty::False);
+    static DateTime toDateTime(const Json::Value &value);
 
     /**
      * @brief Converts the given Json::Value to DateTime.
      * @return defaultVal if value is undefined or null,
      *         otherwise same as the method without a default
      * @throw ConversionException if conversion fails
-     *
-     * If the default value is not empty, the value is not allowed to be empty.
      */
     static DateTime toDateTime(const Json::Value &value, const DateTime &defaultVal);
 

@@ -28,12 +28,14 @@ namespace Sync {
 
 AttachmentSyncer::AttachmentSyncer(
         const Util::Credentials &credentials,
-        const Db::SharedSessionPtr &session)
+        const Db::SharedSessionPtr &session,
+        const std::shared_ptr<Http::HttpClient> &httpClient)
     : session_(session)
 {
     client_.reset(new Protocol::MessagesClient(
                      *credentials.address,
-                     *credentials.masterKey));
+                     *credentials.masterKey,
+                      httpClient));
 }
 
 AttachmentSyncer::~AttachmentSyncer()

@@ -33,7 +33,8 @@ namespace Sync {
 MessagesUploader::MessagesUploader(
         const UserSettings &settings,
         const std::shared_ptr<Codec::PrivateKeyProvider> &privKeyProvider,
-        const Db::SharedSessionPtr &session)
+        const Db::SharedSessionPtr &session,
+        const std::shared_ptr<Http::HttpClient> &httpClient)
     : session_(session),
       settings_(settings),
       privKeyProvider_(privKeyProvider)
@@ -45,7 +46,8 @@ MessagesUploader::MessagesUploader(
 
     messagesClient_.reset(new Protocol::MessagesClient(
                              *settings_.credentials.address,
-                             *settings_.credentials.masterKey));
+                             *settings_.credentials.masterKey,
+                              httpClient));
 }
 
 MessagesUploader::~MessagesUploader()

@@ -10,6 +10,7 @@
 #include "kulloclient/kulloclient-forwards.h"
 #include "kulloclient/codec/codecstructs.h"
 #include "kulloclient/db/dbsession.h"
+#include "kulloclient/http/HttpClient.h"
 #include "kulloclient/protocol/httpstructs.h"
 #include "kulloclient/protocol/publickeysclient.h"
 #include "kulloclient/util/misc.h"
@@ -36,7 +37,8 @@ public:
     explicit MessagesSender(
             const Util::Credentials &settings,
             const std::shared_ptr<Codec::PrivateKeyProvider> &privKeyProvider,
-            const Db::SharedSessionPtr &session);
+            const Db::SharedSessionPtr &session,
+            const std::shared_ptr<Http::HttpClient> &httpClient);
     ~MessagesSender();
 
     /// Start the syncer.

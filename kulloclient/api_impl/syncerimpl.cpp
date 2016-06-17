@@ -17,10 +17,15 @@ SyncerImpl::SyncerImpl(
         std::shared_ptr<Api::SessionListener> sessionListener)
     : sessionData_(session)
     , sessionListener_(sessionListener)
-    , taskSyncerListener_(std::make_shared<SyncerSyncerListener>(*this))
+    , taskSyncerListener_(std::make_shared<SyncerSyncerListener>(this))
     , running_(false)
 {
     kulloAssert(sessionData_);
+}
+
+SyncerImpl::~SyncerImpl()
+{
+    taskSyncerListener_->setParent(nullptr);
 }
 
 void SyncerImpl::setListener(
@@ -192,55 +197,76 @@ std::shared_ptr<Api::AsyncTask> SyncerImpl::downloadAttachmentsForMessageAsync(i
                     sessionData_, msgId, sessionListener_, taskSyncerListener_));
 }
 
-SyncerImpl::SyncerSyncerListener::SyncerSyncerListener(SyncerImpl &parent)
+SyncerImpl::SyncerSyncerListener::SyncerSyncerListener(SyncerImpl *parent)
     : parent_(parent)
 {}
 
+void SyncerImpl::SyncerSyncerListener::setParent(SyncerImpl *parent)
+{
+    std::lock_guard<std::mutex> lock(parentMutex_); K_RAII(lock);
+    parent_ = parent;
+}
+
 void SyncerImpl::SyncerSyncerListener::started()
 {
-    if (auto listener = parent_.listener_) {
+    std::lock_guard<std::mutex> lock(parentMutex_); K_RAII(lock);
+    if (!parent_) return;
+
+    if (auto listener = parent_->listener_) {
         listener->started();
     }
 }
 
 void SyncerImpl::SyncerSyncerListener::draftAttachmentsTooBig(int64_t convId)
 {
-    if (auto listener = parent_.listener_) {
+    std::lock_guard<std::mutex> lock(parentMutex_); K_RAII(lock);
+    if (!parent_) return;
+
+    if (auto listener = parent_->listener_) {
         listener->draftAttachmentsTooBig(convId);
     }
 }
 
 void SyncerImpl::SyncerSyncerListener::progressed(const Api::SyncProgress &progress)
 {
-    if (auto listener = parent_.listener_) {
+    std::lock_guard<std::mutex> lock(parentMutex_); K_RAII(lock);
+    if (!parent_) return;
+
+    if (auto listener = parent_->listener_) {
         listener->progressed(progress);
     }
 }
 
 void SyncerImpl::SyncerSyncerListener::finished()
 {
-    std::lock_guard<std::recursive_mutex> lock(parent_.queueMutex_); K_RAII(lock);
+    std::lock_guard<std::mutex> lock(parentMutex_); K_RAII(lock);
+    if (!parent_) return;
 
-    if (parent_.lastSyncMode_ == Api::SyncMode::WithoutAttachments ||
-            parent_.lastSyncMode_ == Api::SyncMode::Everything)
+    std::lock_guard<std::recursive_mutex> qlock(parent_->queueMutex_); K_RAII(qlock);
+
+    if (parent_->lastSyncMode_ == Api::SyncMode::WithoutAttachments ||
+            parent_->lastSyncMode_ == Api::SyncMode::Everything)
     {
-        parent_.lastFullSync_ = Api::DateTime::nowUtc();
+        parent_->lastFullSync_ = Api::DateTime::nowUtc();
     }
 
-    parent_.running_ = false;
-    parent_.runNextJobIfIdle();
+    parent_->running_ = false;
+    parent_->runNextJobIfIdle();
 }
 
 void SyncerImpl::SyncerSyncerListener::error(Api::NetworkError error)
 {
-    {
-        std::lock_guard<std::recursive_mutex> lock(parent_.queueMutex_); K_RAII(lock);
+    std::lock_guard<std::mutex> lock(parentMutex_); K_RAII(lock);
+    if (!parent_) return;
 
-        parent_.running_ = false;
-        parent_.task_->cancel();
+    {
+        std::lock_guard<std::recursive_mutex> lock(parent_->queueMutex_); K_RAII(lock);
+
+        parent_->running_ = false;
+        parent_->task_->cancel();
     }
 
-    if (auto listener = parent_.listener_) listener->error(error);
+    if (auto listener = parent_->listener_) listener->error(error);
 }
 
 }

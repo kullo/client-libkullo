@@ -2,6 +2,7 @@
 #include "kulloclient/protocol/publickeysclient.h"
 
 #include <limits>
+#include <boost/optional.hpp>
 #include <jsoncpp/jsoncpp.h>
 
 #include "kulloclient/http/HttpMethod.h"
@@ -22,6 +23,11 @@ namespace Protocol {
 
 const id_type PublicKeysClient::LATEST_ENCRYPTION_PUBKEY =
         std::numeric_limits<id_type>::max();
+
+PublicKeysClient::PublicKeysClient(
+        const std::shared_ptr<Http::HttpClient> &httpClient)
+    : BaseClient(httpClient)
+{}
 
 Kullo::Protocol::KeyPair PublicKeysClient::getPublicKey(
         const KulloAddress &username, id_type id)
@@ -60,17 +66,22 @@ Kullo::Protocol::KeyPair PublicKeysClient::getPublicKey(
 KeyPair PublicKeysClient::parseJsonKeyPair(const Json::Value &jsonObject)
 {
     kulloAssert(jsonObject.isObject());
-    KeyPair kp;
+
+    boost::optional<Util::DateTime> validFrom;
+    boost::optional<Util::DateTime> validUntil;
+
+    FWD_NESTED(validFrom = CheckedConverter::toDateTime(jsonObject["validFrom"]),
+            ConversionException, ProtocolError("validFrom invalid"));
+    FWD_NESTED(validUntil = CheckedConverter::toDateTime(jsonObject["validUntil"]),
+            ConversionException, ProtocolError("validUntil invalid"));
+
+    KeyPair kp{validFrom.get(), validUntil.get()};
     FWD_NESTED(kp.id = CheckedConverter::toUint32(jsonObject["id"]),
             ConversionException, ProtocolError("id invalid"));
     FWD_NESTED(kp.type = CheckedConverter::toString(jsonObject["type"]),
             ConversionException, ProtocolError("type invalid"));
     FWD_NESTED(kp.pubkey = CheckedConverter::toVector(jsonObject["pubkey"]),
             ConversionException, ProtocolError("pubkey invalid"));
-    FWD_NESTED(kp.validFrom = CheckedConverter::toDateTime(jsonObject["validFrom"]),
-            ConversionException, ProtocolError("validFrom invalid"));
-    FWD_NESTED(kp.validUntil = CheckedConverter::toDateTime(jsonObject["validUntil"]),
-            ConversionException, ProtocolError("validUntil invalid"));
     FWD_NESTED(kp.revocation = CheckedConverter::toVector(jsonObject["revocation"], AllowEmpty::True),
             ConversionException, ProtocolError("revocation invalid"));
     return kp;

@@ -14,6 +14,7 @@
 #include "kulloclient/util/events.h"
 #include "kulloclient/util/formatstring.h"
 #include "kulloclient/util/librarylogger.h"
+#include "kulloclient/registry.h"
 
 using namespace Kullo::Util;
 
@@ -38,18 +39,20 @@ void Syncer::run(
 {
     auto start = std::chrono::steady_clock::now();
 
-    Db::SharedSessionPtr session = Db::makeSession(dbFile_);
+    auto session = Db::makeSession(dbFile_);
     kulloAssert(Db::hasCurrentSchema(session));
 
+    auto httpClient = Registry::httpClientFactory()->createHttpClient();
+
     // sync keys
-    keysSyncer_.reset(new KeysSyncer(settings_.credentials, session));
+    keysSyncer_.reset(new KeysSyncer(settings_.credentials, session, httpClient));
     keysSyncer_->run(shouldCancel);
 
     // sync outgoing messages
     messagesUploader_ = make_unique<MessagesUploader>(
-                settings_, privKeyProvider_, session);
+                settings_, privKeyProvider_, session, httpClient);
     messagesSender_ = make_unique<MessagesSender>(
-                settings_.credentials, privKeyProvider_, session);
+                settings_.credentials, privKeyProvider_, session, httpClient);
 
     messagesUploader_->events.conversationAdded =
             forwardEvent(events.conversationAdded);
@@ -77,9 +80,9 @@ void Syncer::run(
     if (mode != SyncMode::SendOnly)
     {
         profileSyncer_ = make_unique<ProfileSyncer>(
-                    settings_.credentials, session);
+                    settings_.credentials, session, httpClient);
         messagesSyncer_ = make_unique<MessagesSyncer>(
-                    settings_.credentials, privKeyProvider_, session);
+                    settings_.credentials, privKeyProvider_, session, httpClient);
 
         profileSyncer_->events.profileModified =
             forwardEvent(events.profileModified);
@@ -115,7 +118,7 @@ void Syncer::run(
         if (mode == SyncMode::Everything)
         {
             attachmentSyncer_.reset(
-                        new AttachmentSyncer(settings_.credentials, session));
+                        new AttachmentSyncer(settings_.credentials, session, httpClient));
 
             attachmentSyncer_->events.messageAttachmentsDownloaded =
                 forwardEvent(events.messageAttachmentsDownloaded);
@@ -142,8 +145,10 @@ void Syncer::downloadAttachmentsForMessage(
     Db::SharedSessionPtr session = Db::makeSession(dbFile_);
     kulloAssert(Db::hasCurrentSchema(session));
 
+    auto httpClient = Registry::httpClientFactory()->createHttpClient();
+
     attachmentSyncer_.reset(
-                new AttachmentSyncer(settings_.credentials, session));
+                new AttachmentSyncer(settings_.credentials, session, httpClient));
     attachmentSyncer_->events.messageAttachmentsDownloaded =
         forwardEvent(events.messageAttachmentsDownloaded);
     attachmentSyncer_->downloadForMessage(msgId, shouldCancel);

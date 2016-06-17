@@ -36,16 +36,19 @@ const std::chrono::milliseconds SQLITE_MAX_BUSY_INTERVAL(100);
 MessagesSyncer::MessagesSyncer(
         const Credentials &credentials,
         const std::shared_ptr<Codec::PrivateKeyProvider> &privKeyProvider,
-        const Db::SharedSessionPtr &session)
-    : session_(session),
-      credentials_(credentials),
-      privKeyProvider_(privKeyProvider)
+        const Db::SharedSessionPtr &session,
+        const std::shared_ptr<Http::HttpClient> &httpClient)
+    : pubKeysClient_(httpClient)
+    , session_(session)
+    , credentials_(credentials)
+    , privKeyProvider_(privKeyProvider)
 {
     kulloAssert(session_);
 
     client_.reset(new Protocol::MessagesClient(
                      *credentials_.address,
-                     *credentials_.masterKey));
+                     *credentials_.masterKey,
+                      httpClient));
 
     msgAdder_.events.conversationAdded = forwardEvent(events.conversationAdded);
     msgAdder_.events.conversationModified = forwardEvent(events.conversationModified);

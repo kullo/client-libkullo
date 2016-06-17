@@ -42,10 +42,12 @@ DecryptedMessage MessageDecryptor::decrypt() const
 {
     checkSize();
 
-    DecryptedMessage result;
+    // deleted messages cannot be decrypted
+    kulloAssert(message_.dateReceived.is_initialized());
+
+    DecryptedMessage result{*message_.dateReceived};
     result.id = message_.id;
     result.lastModified = message_.lastModified;
-    result.dateReceived = message_.dateReceived;
 
     try
     {

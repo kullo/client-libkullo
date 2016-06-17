@@ -160,8 +160,6 @@ DateTime DateTime::nowUtc()
 
 std::string DateTime::toString() const
 {
-    kulloAssert(!isNull());
-
     auto date = impl_->dateTime_.date();
     auto time = impl_->dateTime_.time_of_day();
     auto tz = impl_->tzOffset_.total_seconds();
@@ -177,57 +175,38 @@ std::string DateTime::toString() const
     return formatted.str();
 }
 
-bool DateTime::isNull() const
-{
-    return impl_->dateTime_.is_special();
-}
-
 int DateTime::year() const
 {
-    kulloAssert(!isNull());
-
     return impl_->dateTime_.date().year();
 }
 
 int DateTime::month() const
 {
-    kulloAssert(!isNull());
-
     return impl_->dateTime_.date().month();
 }
 
 int DateTime::day() const
 {
-    kulloAssert(!isNull());
-
     return impl_->dateTime_.date().day();
 }
 
 int DateTime::hour() const
 {
-    kulloAssert(!isNull());
-
     return impl_->dateTime_.time_of_day().hours();
 }
 
 int DateTime::minute() const
 {
-    kulloAssert(!isNull());
-
     return impl_->dateTime_.time_of_day().minutes();
 }
 
 int DateTime::second() const
 {
-    kulloAssert(!isNull());
-
     return impl_->dateTime_.time_of_day().seconds();
 }
 
 int DateTime::tzOffset() const
 {
-    kulloAssert(!isNull());
-
     return impl_->tzOffset_.total_seconds();
 }
 
@@ -263,8 +242,6 @@ bool DateTime::operator>=(const DateTime &other) const
 
 DateTime operator+(const DateTime &lhs, std::chrono::seconds rhs)
 {
-    kulloAssert(!lhs.isNull());
-
     DateTime result(
                 make_unique<DateTime::Impl>(
                     lhs.impl_->dateTime_
@@ -296,8 +273,6 @@ DateTime::DateTime(std::unique_ptr<DateTime::Impl> impl)
 
 std::ostream &operator<<(std::ostream &out, const DateTime &dateTime)
 {
-    if (dateTime.isNull()) return out << "(null)";
-
     return out << dateTime.toString();
 }
 

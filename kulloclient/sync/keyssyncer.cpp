@@ -19,13 +19,15 @@ namespace Sync {
 
 KeysSyncer::KeysSyncer(
         const Credentials &credentials,
-        const Db::SharedSessionPtr &session)
+        const Db::SharedSessionPtr &session,
+        const std::shared_ptr<Http::HttpClient> &httpClient)
     : session_(session),
       credentials_(credentials)
 {
     client_.reset(new Protocol::KeysClient(
                      *credentials_.address,
-                     *credentials_.masterKey));
+                     *credentials_.masterKey,
+                      httpClient));
 }
 
 KeysSyncer::~KeysSyncer()

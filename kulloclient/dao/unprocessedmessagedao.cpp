@@ -94,7 +94,7 @@ bool UnprocessedMessageDao::save()
     stmt.bind(":signature_key_id", sigKeyId_);
     stmt.bind(":last_modified", msg_.lastModified);
     stmt.bind(":deleted", msg_.deleted);
-    stmt.bind(":received", msg_.dateReceived.toString());
+    stmt.bind(":received", msg_.dateReceived->toString());
     stmt.bind(":meta", msg_.meta);
     stmt.bind(":key_safe", msg_.keySafe);
     stmt.bind(":content", msg_.content);

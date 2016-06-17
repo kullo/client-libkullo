@@ -6,6 +6,7 @@
 #include "kulloclient/util/kulloaddress.h"
 #include "kulloclient/util/librarylogger.h"
 #include "kulloclient/util/misc.h"
+#include "kulloclient/registry.h"
 
 namespace Kullo {
 namespace ApiImpl {
@@ -13,7 +14,8 @@ namespace ApiImpl {
 ClientAddressExistsWorker::ClientAddressExistsWorker(
         std::shared_ptr<Api::Address> address,
         std::shared_ptr<Api::ClientAddressExistsListener> listener)
-    : address_(address)
+    : keysClient_(Registry::httpClientFactory()->createHttpClient())
+    , address_(address)
     , listener_(listener)
 {}
 

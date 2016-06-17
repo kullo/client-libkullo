@@ -14,6 +14,8 @@ namespace Protocol {
 class AccountsClient : public BaseClient
 {
 public:
+    AccountsClient(const std::shared_ptr<Http::HttpClient> &httpClient);
+
     boost::optional<Challenge> registerAccount(
             const Util::KulloAddress &address,
             const SymmetricKeys &symmKeys,

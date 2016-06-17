@@ -99,8 +99,6 @@ boost::optional<Api::DateTime> UserSettingsImpl::nextMasterKeyBackupReminder()
     if (!userSettings_.nextMasterKeyBackupReminder) return boost::none;
 
     const auto &dt = *userSettings_.nextMasterKeyBackupReminder;
-    if (dt.isNull()) return boost::none;
-
     return Api::DateTime(
                 dt.year(), dt.month(), dt.day(),
                 dt.hour(), dt.minute(), dt.second(),
@@ -117,13 +115,12 @@ void UserSettingsImpl::setNextMasterKeyBackupReminder(
         return;
     }
 
-    Util::DateTime result;
     auto &date = *reminderDate;
-    result = Util::DateTime(
+    Util::DateTime result{
         date.year, date.month, date.day,
         date.hour, date.minute, date.second,
         date.tzOffsetMinutes * 60
-    );
+    };
     userSettings_.nextMasterKeyBackupReminder = result;
     dao_.setNextMasterKeyBackupReminder(result);
 }

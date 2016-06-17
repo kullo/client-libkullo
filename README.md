@@ -70,6 +70,10 @@ Tips and Tricks
 Changelog
 ---------
 
+### v50 (2016-06-17)
+
+ * Improve sync speed by reusing a single HTTP connection for multiple requests
+
 ### v49 (2016-06-04)
 
  * Windows: Fix bug in handling filenames with special chars when adding files to drafts

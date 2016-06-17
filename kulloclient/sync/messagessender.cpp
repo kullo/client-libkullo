@@ -25,13 +25,16 @@ namespace Sync {
 MessagesSender::MessagesSender(
         const Credentials &credentials,
         const std::shared_ptr<Codec::PrivateKeyProvider> &privKeyProvider,
-        const Db::SharedSessionPtr &session)
-    : session_(session),
-      privKeyProvider_(privKeyProvider)
+        const Db::SharedSessionPtr &session,
+        const std::shared_ptr<Http::HttpClient> &httpClient)
+    : session_(session)
+    , keysClient_(httpClient)
+    , privKeyProvider_(privKeyProvider)
 {
     messagesClient_.reset(new Protocol::MessagesClient(
                              *credentials.address,
-                             *credentials.masterKey));
+                             *credentials.masterKey,
+                              httpClient));
 }
 
 MessagesSender::~MessagesSender()
@@ -43,6 +46,8 @@ void MessagesSender::run(std::shared_ptr<std::atomic<bool>> shouldCancel)
     id_type currentConversationId = 0;
     id_type currentMessageId = 0;
     Codec::EncodedMessage encodedMessage;
+    Crypto::AsymmetricKeyLoader loader;
+    Codec::MessageEncryptor encryptor;
 
     auto idsAndRecipients = Dao::DeliveryDao(session_).unsentMessages();
     for (const auto &idAndRecipient : idsAndRecipients)
@@ -71,12 +76,30 @@ void MessagesSender::run(std::shared_ptr<std::atomic<bool>> shouldCancel)
             Codec::MessageCompressor().compress(encodedMessage);
         }
 
-        Protocol::KeyPair encKeyPair;
         try
         {
-            encKeyPair = keysClient_.getPublicKey(
+            auto encKeyPair = keysClient_.getPublicKey(
                         currentRecipient,
                         Protocol::PublicKeysClient::LATEST_ENCRYPTION_PUBKEY);
+
+            auto sigKeyAndId = privKeyProvider_->getLatestKeyAndId(
+                        Crypto::AsymmetricKeyType::Signature);
+
+            auto encKey = loader.loadPublicKey(
+                        Crypto::AsymmetricKeyType::Encryption,
+                        encKeyPair.pubkey);
+
+            auto sendableMsg = encryptor.makeSendableMessage(
+                        encodedMessage,
+                        encKeyPair.id,
+                        encKey,
+                        sigKeyAndId.second,
+                        sigKeyAndId.first);
+
+            sendMessage(currentConversationId,
+                        currentMessageId,
+                        currentRecipient,
+                        sendableMsg);
         }
         catch (Protocol::NotFound)
         {
@@ -86,27 +109,6 @@ void MessagesSender::run(std::shared_ptr<std::atomic<bool>> shouldCancel)
                         currentRecipient);
             continue;
         }
-
-        auto sigKeyAndId = privKeyProvider_->getLatestKeyAndId(
-                    Crypto::AsymmetricKeyType::Signature);
-
-        Crypto::AsymmetricKeyLoader loader;
-        auto encKey = loader.loadPublicKey(
-                    Crypto::AsymmetricKeyType::Encryption,
-                    encKeyPair.pubkey);
-
-        Codec::MessageEncryptor encryptor;
-        auto sendableMsg = encryptor.makeSendableMessage(
-                    encodedMessage,
-                    encKeyPair.id,
-                    encKey,
-                    sigKeyAndId.second,
-                    sigKeyAndId.first);
-
-        sendMessage(currentConversationId,
-                    currentMessageId,
-                    currentRecipient,
-                    sendableMsg);
     }
 }
 

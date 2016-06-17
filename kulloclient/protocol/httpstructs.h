@@ -1,6 +1,7 @@
 /* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
 #pragma once
 
+#include <boost/optional.hpp>
 #include <cstdint>
 #include <vector>
 
@@ -48,7 +49,8 @@ struct Message : IdLastModified
     bool deleted = false;
 
     /// The date and time when the server received the message
-    Util::DateTime dateReceived;
+    /// boost::none if the message was deleted
+    boost::optional<Util::DateTime> dateReceived;
 
     /// The meta data such as read/done that can be modified by the client
     /// (encrypted, binary, not base64-encoded)
@@ -68,6 +70,10 @@ struct MessageSent : IdLastModified
 {
     /// The date and time when the server received the message
     Util::DateTime dateReceived;
+
+    MessageSent(Util::DateTime dateReceived)
+        : dateReceived(std::move(dateReceived))
+    {}
 };
 
 /**
@@ -101,15 +107,20 @@ struct SymmetricKeys
     std::vector<unsigned char> privateDataKey;
 };
 
-struct KeyPair
+struct KeyPair final
 {
-    id_type id;
+    id_type id = 0;
     std::string type;
     std::vector<unsigned char> pubkey;
     std::vector<unsigned char> privkey;
     Util::DateTime validFrom;
     Util::DateTime validUntil;
     std::vector<unsigned char> revocation;
+
+    KeyPair(Util::DateTime validFrom, Util::DateTime validUntil)
+        : validFrom(std::move(validFrom))
+        , validUntil(std::move(validUntil))
+    {}
 };
 
 struct ProfileInfo

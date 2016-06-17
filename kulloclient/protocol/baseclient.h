@@ -16,7 +16,7 @@ namespace Protocol {
 class BaseClient
 {
 public:
-    BaseClient();
+    BaseClient(const std::shared_ptr<Http::HttpClient> &httpClient);
     virtual ~BaseClient();
 
     void setKulloAddress(const Util::KulloAddress &address);

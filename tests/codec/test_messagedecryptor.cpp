@@ -53,6 +53,8 @@ protected:
     {
         asymmCryptor.reset(new MockAsymmetricCryptor());
         symmCryptor.reset(new MockSymmetricCryptor());
+
+        msg.dateReceived = Util::DateTime::nowUtc();
     }
 
     std::shared_ptr<MockPrivateKeyProvider> makePrivKeyProvider()

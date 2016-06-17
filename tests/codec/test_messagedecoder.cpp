@@ -48,9 +48,9 @@ class MessageDecoder : public DbTest
 {
 protected:
     MessageDecoder()
+        : message_(initMessage())
     {
         initContent();
-        initMessage();
     }
 
     void addAllOptionalParts()
@@ -129,13 +129,14 @@ private:
         attachmentsIndex_.append(attIndex1);
     }
 
-    void initMessage()
+    static Codec::DecryptedMessage initMessage()
     {
-        message_.id = 42;
-        message_.lastModified = 1234567890;
-        message_.dateReceived = Util::DateTime::nowUtc();
-        message_.metaVersion = 1;
-        message_.meta = "{\"read\": 0, \"done\": 0}";
+        Codec::DecryptedMessage result{Util::DateTime::nowUtc()};
+        result.id = 42;
+        result.lastModified = 1234567890;
+        result.metaVersion = 1;
+        result.meta = "{\"read\": 0, \"done\": 0}";
+        return result;
     }
 };
 

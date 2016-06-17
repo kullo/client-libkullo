@@ -18,7 +18,8 @@ public:
      */
     KeysClient(
             const Util::KulloAddress &address,
-            const Util::MasterKey &masterKey);
+            const Util::MasterKey &masterKey,
+            const std::shared_ptr<Http::HttpClient> &httpClient);
 
     Kullo::Protocol::SymmetricKeys getSymmKeys();
     void modifySymmKeys(const SymmetricKeys &symmKeys);

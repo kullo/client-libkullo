@@ -28,7 +28,7 @@ struct DecryptedContent
     std::vector<unsigned char> data;
 };
 
-struct DecryptedMessage
+struct DecryptedMessage final
 {
     id_type id = 0;
     lastModified_type lastModified = 0;
@@ -38,6 +38,10 @@ struct DecryptedMessage
     DecryptedContent content;
     metaVersion_type metaVersion = 0;
     std::string meta;
+
+    DecryptedMessage(Util::DateTime dateReceived)
+        : dateReceived(std::move(dateReceived))
+    {}
 };
 
 /// Message struct to hold an encoded but unencrypted message

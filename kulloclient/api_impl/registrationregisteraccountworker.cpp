@@ -15,6 +15,7 @@
 #include "kulloclient/util/kulloaddress.h"
 #include "kulloclient/util/librarylogger.h"
 #include "kulloclient/util/misc.h"
+#include "kulloclient/registry.h"
 
 namespace Kullo {
 namespace ApiImpl {
@@ -35,6 +36,7 @@ RegistrationRegisterAccountWorker::RegistrationRegisterAccountWorker(
     , keypairSignature_(keypairSignature)
     , challenge_(challenge)
     , challengeAnswer_(challengeAnswer)
+    , accountsClient_(Registry::httpClientFactory()->createHttpClient())
     , listener_(listener)
 {}
 
@@ -148,10 +150,8 @@ Protocol::KeyPair RegistrationRegisterAccountWorker::encodeKeyPair(
             Crypto::SymmetricKeyGenerator().makeRandomIV(
                 Crypto::SymmetricCryptor::RANDOM_IV_BYTES);
 
-    Protocol::KeyPair result;
+    Protocol::KeyPair result{validFrom, validUntil};
     result.type = Crypto::toString(privKey.type());
-    result.validFrom = validFrom;
-    result.validUntil = validUntil;
     result.pubkey = Crypto::AsymmetricKeyLoader().toVector(privKey.pubkey());
     result.privkey = Crypto::SymmetricCryptor().encrypt(
                 privKey.toVector(),

@@ -7,6 +7,7 @@
 #include "kulloclient/util/exceptions.h"
 #include "kulloclient/util/librarylogger.h"
 #include "kulloclient/util/misc.h"
+#include "kulloclient/registry.h"
 
 namespace Kullo {
 namespace ApiImpl {
@@ -23,7 +24,10 @@ SessionRegisterPushTokenWorker::SessionRegisterPushTokenWorker(
         Operation operation,
         const Api::PushToken &token)
     : operation_(operation)
-    , pushClient_(address, masterKey)
+    , pushClient_(
+          address,
+          masterKey,
+          Registry::httpClientFactory()->createHttpClient())
     , token_(token)
 {}
 

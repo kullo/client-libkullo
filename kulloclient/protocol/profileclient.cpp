@@ -15,7 +15,10 @@ namespace Kullo {
 namespace Protocol {
 
 ProfileClient::ProfileClient(
-        const KulloAddress &address, const MasterKey &masterKey)
+        const KulloAddress &address,
+        const MasterKey &masterKey,
+        const std::shared_ptr<Http::HttpClient> &httpClient)
+    : BaseClient(httpClient)
 {
     setKulloAddress(address);
     setMasterKey(masterKey);

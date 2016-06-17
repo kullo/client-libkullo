@@ -19,9 +19,7 @@ DateTime::DateTime(
         int16_t tzOffsetMinutes)
     : DateTimeBase(year, month, day, hour, minute, second, tzOffsetMinutes)
     , dateTime_(year, month, day, hour, minute, second, tzOffsetMinutes * 60)
-{
-    if (dateTime_.isNull()) throw std::invalid_argument("DateTime");
-}
+{}
 
 boost::optional<DateTime> DateTime::fromRfc3339(const std::string &timeStr)
 {
@@ -41,9 +39,7 @@ DateTime::DateTime(const Util::DateTime &dateTime)
           dateTime.hour(), dateTime.minute(), dateTime.second(),
           std::round(dateTime.tzOffset() / 60))
     , dateTime_(dateTime)
-{
-    if (dateTime_.isNull()) throw std::invalid_argument("DateTime");
-}
+{}
 
 std::string DateTime::toString() const
 {

@@ -13,7 +13,8 @@ class AccountClient : public BaseClient
 public:
     AccountClient(
             const Util::KulloAddress &address,
-            const Util::MasterKey &masterKey);
+            const Util::MasterKey &masterKey,
+            const std::shared_ptr<Http::HttpClient> &httpClient);
 
     std::string getSettingsLocation();
 };

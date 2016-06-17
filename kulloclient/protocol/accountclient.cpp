@@ -14,7 +14,9 @@ namespace Protocol {
 
 AccountClient::AccountClient(
         const Util::KulloAddress &address,
-        const Util::MasterKey &masterKey)
+        const Util::MasterKey &masterKey,
+        const std::shared_ptr<Http::HttpClient> &httpClient)
+    : BaseClient(httpClient)
 {
     setKulloAddress(address);
     setMasterKey(masterKey);

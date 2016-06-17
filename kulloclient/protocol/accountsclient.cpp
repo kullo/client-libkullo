@@ -15,6 +15,11 @@
 namespace Kullo {
 namespace Protocol {
 
+AccountsClient::AccountsClient(
+        const std::shared_ptr<Http::HttpClient> &httpClient)
+    : BaseClient(httpClient)
+{}
+
 boost::optional<Challenge> AccountsClient::registerAccount(
         const Util::KulloAddress &address,
         const SymmetricKeys &symmKeys,

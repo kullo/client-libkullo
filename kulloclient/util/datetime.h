@@ -17,7 +17,6 @@ namespace Util {
  */
 class DateTime {
 public:
-    DateTime();
     DateTime(const DateTime &other);
     DateTime &operator=(DateTime other);
     explicit DateTime(const std::string &str);
@@ -29,7 +28,6 @@ public:
     /// Returns the date in rfc3339 format with full seconds and numeric timezone,
     /// e.g. 1937-01-01T12:00:27+02:00
     std::string toString() const;
-    bool isNull() const;
 
     int year() const;
     int month() const;
@@ -56,6 +54,7 @@ public:
 private:
     struct Impl;
     DateTime(std::unique_ptr<Impl> impl);
+    DateTime();
 
     std::unique_ptr<Impl> impl_;
 };

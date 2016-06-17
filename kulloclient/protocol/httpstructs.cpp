@@ -18,11 +18,13 @@ bool IdLastModified::operator<(const IdLastModified &rhs) const
 
 std::string Message::toString()
 {
+    auto dateReceivedStr = dateReceived ? dateReceived->toString() : "";
+
     std::string ret;
     ret += "id:\t" + std::to_string(id) + "\n";
     ret += "lastModified:\t" + std::to_string(lastModified) + "\n";
     ret += "deleted:\t" + std::to_string(deleted) + "\n";
-    ret += "received:\t" + dateReceived.toString() + "\n";
+    ret += "received:\t" + dateReceivedStr + "\n";
     ret += "meta:\t" + Util::Base64::encode(meta) + "\n";
     ret += "keySafe:\t" + Util::Base64::encode(keySafe) + "\n";
     ret += "content:\t" + Util::Base64::encode(content) + "\n";

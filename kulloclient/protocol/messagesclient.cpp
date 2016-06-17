@@ -1,6 +1,7 @@
 /* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
 #include "kulloclient/protocol/messagesclient.h"
 
+#include <boost/optional.hpp>
 #include <jsoncpp/jsoncpp.h>
 
 #include "kulloclient/http/HttpMethod.h"
@@ -19,7 +20,9 @@ namespace Protocol {
 
 MessagesClient::MessagesClient(
         const KulloAddress &address,
-        const MasterKey &masterKey)
+        const MasterKey &masterKey,
+        const std::shared_ptr<Http::HttpClient> &httpClient)
+    : BaseClient(httpClient)
 {
     setKulloAddress(address);
     setMasterKey(masterKey);
@@ -36,7 +39,9 @@ MessageSent MessagesClient::sendMessageToSelf(
         const SendableMessage &message,
         const std::vector<unsigned char> &meta)
 {
-    return doSendMessage(nullptr, message, meta);
+    auto result = doSendMessage(nullptr, message, meta);
+    kulloAssert(result);
+    return *result;
 }
 
 MessagesClient::GetMessagesResult MessagesClient::getMessages(
@@ -162,7 +167,7 @@ IdLastModified MessagesClient::deleteMessage(
     }
 }
 
-MessageSent MessagesClient::doSendMessage(
+boost::optional<MessageSent> MessagesClient::doSendMessage(
         const KulloAddress *recipient,
         const SendableMessage &message,
         const std::vector<unsigned char> &meta)
@@ -173,7 +178,6 @@ MessageSent MessagesClient::doSendMessage(
     auto auth = (toSelf) ? Authenticated::True : Authenticated::False;
 
     Util::MimeMultipart multipart;
-    multipart.addPart("keySafe", message.keySafe);
     multipart.addPart("keySafe", message.keySafe);
     multipart.addPart("content", message.content);
     if (!meta.empty()) multipart.addPart("meta", meta);
@@ -188,7 +192,7 @@ MessageSent MessagesClient::doSendMessage(
                     makeHeaders(auth, contentType)),
                 multipart.toString());
 
-    MessageSent msgSent;
+    boost::optional<MessageSent> msgSent;
     if (toSelf)
     {
         auto json = parseJsonBody();
@@ -215,13 +219,7 @@ Message MessagesClient::parseJsonMessage(const Json::Value &json)
     msg.id = CheckedConverter::toUint32(json["id"]);
     msg.lastModified = CheckedConverter::toUint64(json["lastModified"]);
     msg.deleted = CheckedConverter::toBool(json["deleted"]);
-    if (msg.deleted)
-    {
-        msg.dateReceived = Util::DateTime();
-        msg.keySafe      = std::vector<unsigned char>();
-        msg.content      = std::vector<unsigned char>();
-    }
-    else
+    if (!msg.deleted)
     {
         msg.dateReceived = CheckedConverter::toDateTime(json["dateReceived"]);
         msg.keySafe      = CheckedConverter::toVector(json["keySafe"]);
@@ -238,10 +236,10 @@ MessageSent MessagesClient::parseJsonMessageSent(const Json::Value &json)
     {
         throw ProtocolError("Malformed JSON document (object expected)");
     }
-    MessageSent msgSent;
+    auto dateReceived = CheckedConverter::toDateTime(json["dateReceived"]);
+    MessageSent msgSent{dateReceived};
     msgSent.id = CheckedConverter::toUint32(json["id"]);
     msgSent.lastModified = CheckedConverter::toUint64(json["lastModified"]);
-    msgSent.dateReceived = CheckedConverter::toDateTime(json["dateReceived"]);
     return msgSent;
 }
 

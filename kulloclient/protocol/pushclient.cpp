@@ -30,7 +30,11 @@ std::string environmentToJsonValue(Api::PushTokenEnvironment env)
 
 }
 
-PushClient::PushClient(const KulloAddress &address, const MasterKey &masterKey)
+PushClient::PushClient(
+        const KulloAddress &address,
+        const MasterKey &masterKey,
+        const std::shared_ptr<Http::HttpClient> &httpClient)
+    : BaseClient(httpClient)
 {
     setKulloAddress(address);
     setMasterKey(masterKey);

@@ -21,9 +21,11 @@ namespace Kullo {
 namespace Sync {
 
 ProfileSyncer::ProfileSyncer(
-        const Credentials &credentials, const Db::SharedSessionPtr &session)
+        const Credentials &credentials,
+        const Db::SharedSessionPtr &session,
+        const std::shared_ptr<Http::HttpClient> &httpClient)
     : client_(make_unique<Protocol::ProfileClient>(
-                  *credentials.address, *credentials.masterKey))
+                  *credentials.address, *credentials.masterKey, httpClient))
     , session_(session)
     , credentials_(credentials)
 {
@@ -31,8 +33,7 @@ ProfileSyncer::ProfileSyncer(
 }
 
 ProfileSyncer::~ProfileSyncer()
-{
-}
+{}
 
 void ProfileSyncer::run(std::shared_ptr<std::atomic<bool>> shouldCancel)
 {

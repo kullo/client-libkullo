@@ -19,8 +19,11 @@ using namespace Kullo::Util;
 namespace Kullo {
 namespace Protocol {
 
-KeysClient::KeysClient(const KulloAddress &address,
-                       const MasterKey &masterKey)
+KeysClient::KeysClient(
+        const KulloAddress &address,
+        const MasterKey &masterKey,
+        const std::shared_ptr<Http::HttpClient> &httpClient)
+    : BaseClient(httpClient)
 {
     setKulloAddress(address);
     setMasterKey(masterKey);
@@ -105,13 +108,15 @@ SymmetricKeys KeysClient::parseJsonSymmKeys(const Json::Value &jsonObject)
 KeyPair KeysClient::parseJsonKeyPair(const Json::Value &jsonObject)
 {
     kulloAssert(jsonObject.isObject());
-    KeyPair kp;
+
+    auto validFrom  = CheckedConverter::toDateTime(jsonObject["validFrom"]);
+    auto validUntil = CheckedConverter::toDateTime(jsonObject["validUntil"]);
+
+    KeyPair kp{validFrom, validUntil};
     kp.id         = CheckedConverter::toUint32(jsonObject["id"]);
     kp.type       = CheckedConverter::toString(jsonObject["type"]);
     kp.pubkey     = CheckedConverter::toVector(jsonObject["pubkey"]);
     kp.privkey    = CheckedConverter::toVector(jsonObject["privkey"], AllowEmpty::True);
-    kp.validFrom  = CheckedConverter::toDateTime(jsonObject["validFrom"]);
-    kp.validUntil = CheckedConverter::toDateTime(jsonObject["validUntil"]);
     kp.revocation = CheckedConverter::toVector(jsonObject["revocation"], AllowEmpty::True);
     return kp;
 }

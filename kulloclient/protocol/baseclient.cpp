@@ -20,7 +20,7 @@
 #include "kulloclient/util/version.h"
 
 namespace {
-const auto KULLO_DEVELOPMENT_DOMAIN = std::string{"kullo.dev"};
+const auto KULLO_DEVELOPMENT_DOMAIN = std::string{"kullo.test"};
 const auto KULLO_DEVELOPMENT_PORT = 8001;
 
 const std::int32_t DEFAULT_TIMEOUT_MS = 60 * 1000;
@@ -29,16 +29,12 @@ const std::int32_t DEFAULT_TIMEOUT_MS = 60 * 1000;
 namespace Kullo {
 namespace Protocol {
 
-BaseClient::BaseClient()
-{
-    auto httpClientFactory = Registry::httpClientFactory();
-    kulloAssert(httpClientFactory);
-    client_ = httpClientFactory->createHttpClient();
-}
+BaseClient::BaseClient(const std::shared_ptr<Http::HttpClient> &httpClient)
+    : client_(httpClient)
+{}
 
 BaseClient::~BaseClient()
-{
-}
+{}
 
 void BaseClient::setKulloAddress(const Util::KulloAddress &address)
 {

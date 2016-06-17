@@ -2,9 +2,11 @@
 #include "kulloclient/util/checkedconverter.h"
 
 #include <limits>
+#include <boost/optional.hpp>
 #include <boost/regex.hpp>
 #include <jsoncpp/jsoncpp.h>
 
+#include "kulloclient/util/assert.h"
 #include "kulloclient/util/base64.h"
 
 namespace Kullo {
@@ -153,9 +155,9 @@ std::string CheckedConverter::toColorString(const Json::Value &value, const std:
     return toColorString(value, allowEmpty);
 }
 
-DateTime CheckedConverter::toDateTime(const std::string &value)
+boost::optional<DateTime> CheckedConverter::toDateTime(const std::string &value)
 {
-    if (value.empty()) return DateTime();
+    if (value.empty()) return boost::none;
 
     try
     {
@@ -164,22 +166,22 @@ DateTime CheckedConverter::toDateTime(const std::string &value)
     catch (...)
     {
         std::throw_with_nested(ConversionException("couldn't convert value to DateTime (not a valid date/time)"));
-        return DateTime();  // silence "missing return" warning
+        return boost::none;  // silence "missing return" warning
     }
 }
 
-DateTime CheckedConverter::toDateTime(const Json::Value &value, AllowEmpty allowEmpty)
+DateTime CheckedConverter::toDateTime(const Json::Value &value)
 {
-    std::string string = toString(value, allowEmpty);
-    return toDateTime(string);
+    auto result = toDateTime(toString(value, AllowEmpty::False));
+    kulloAssert(result.is_initialized());
+    return *result;
 }
 
 DateTime CheckedConverter::toDateTime(const Json::Value &value, const DateTime &defaultVal)
 {
     if (value.isNull()) return defaultVal;
 
-    AllowEmpty allowEmpty = defaultVal.isNull() ? AllowEmpty::True : AllowEmpty::False;
-    return toDateTime(value, allowEmpty);
+    return toDateTime(value);
 }
 
 KulloAddress CheckedConverter::toKulloAddress(const Json::Value &value)

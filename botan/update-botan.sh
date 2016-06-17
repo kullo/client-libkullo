@@ -7,7 +7,7 @@ which shellcheck > /dev/null && shellcheck "$0"
 MODS_AES="aes"
 MODS_SHA="sha1,sha2_32,sha2_64"
 MODS_COMMON="auto_rng,codec_filt,eme_oaep,emsa_pssr,gcm,hres_timer,rsa,srp6,system_rng"
-MODS_UNIX="${MODS_AES},${MODS_SHA},${MODS_COMMON},dev_random,proc_walk,unix_procs"
+MODS_UNIX="${MODS_AES},${MODS_SHA},${MODS_COMMON},dev_random,proc_walk"
 MODS_IOS="${MODS_AES},${MODS_SHA},${MODS_COMMON},darwin_secrandom"
 MODS_WINDOWS="${MODS_AES},${MODS_SHA},${MODS_COMMON},cryptoapi_rng,win32_stats"
 

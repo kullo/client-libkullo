@@ -5,6 +5,7 @@
 
 #include "kulloclient/kulloclient-forwards.h"
 #include "kulloclient/db/dbsession.h"
+#include "kulloclient/http/HttpClient.h"
 #include "kulloclient/protocol/httpstructs.h"
 #include "kulloclient/util/misc.h"
 #include "kulloclient/util/usersettings.h"
@@ -17,7 +18,8 @@ class KeysSyncer
 public:
     explicit KeysSyncer(
             const Util::Credentials &credentials,
-            const Db::SharedSessionPtr &session);
+            const Db::SharedSessionPtr &session,
+            const std::shared_ptr<Http::HttpClient> &httpClient);
     ~KeysSyncer();
 
     /**

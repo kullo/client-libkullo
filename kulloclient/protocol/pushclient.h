@@ -18,7 +18,8 @@ public:
      */
     PushClient(
             const Util::KulloAddress &address,
-            const Util::MasterKey &masterKey);
+            const Util::MasterKey &masterKey,
+            const std::shared_ptr<Http::HttpClient> &httpClient);
 
     void addGcmRegistrationToken(const Api::PushToken &token);
     void removeGcmRegistrationToken(const Api::PushToken &token);

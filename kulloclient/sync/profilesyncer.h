@@ -44,7 +44,8 @@ public:
      */
     explicit ProfileSyncer(
             const Util::Credentials &credentials,
-            const Db::SharedSessionPtr &session);
+            const Db::SharedSessionPtr &session,
+            const std::shared_ptr<Http::HttpClient> &httpClient);
 
     ~ProfileSyncer();
 

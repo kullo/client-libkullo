@@ -7,6 +7,7 @@
 #include "kulloclient/util/librarylogger.h"
 #include "kulloclient/util/masterkey.h"
 #include "kulloclient/util/misc.h"
+#include "kulloclient/registry.h"
 
 namespace Kullo {
 namespace ApiImpl {
@@ -17,7 +18,8 @@ ClientCheckCredentialsWorker::ClientCheckCredentialsWorker(
         std::shared_ptr<Api::ClientCheckCredentialsListener> listener)
     : messagesClient_(
           Util::KulloAddress(address->toString()),
-          Util::MasterKey(masterKey->dataBlocks()))
+          Util::MasterKey(masterKey->dataBlocks()),
+          Registry::httpClientFactory()->createHttpClient())
     , address_(address)
     , masterKey_(masterKey)
     , listener_(listener)

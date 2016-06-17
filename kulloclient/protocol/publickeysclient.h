@@ -14,6 +14,8 @@ class PublicKeysClient : public BaseClient
 public:
     static const id_type LATEST_ENCRYPTION_PUBKEY;
 
+    PublicKeysClient(const std::shared_ptr<Http::HttpClient> &httpClient);
+
     Kullo::Protocol::KeyPair getPublicKey(
             const Util::KulloAddress &username,
             id_type id);

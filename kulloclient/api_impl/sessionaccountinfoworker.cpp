@@ -6,6 +6,7 @@
 #include "kulloclient/util/exceptions.h"
 #include "kulloclient/util/librarylogger.h"
 #include "kulloclient/util/misc.h"
+#include "kulloclient/registry.h"
 
 namespace Kullo {
 namespace ApiImpl {
@@ -14,7 +15,10 @@ SessionAccountInfoWorker::SessionAccountInfoWorker(
         const Util::KulloAddress &address,
         const Util::MasterKey &masterKey,
         std::shared_ptr<Api::SessionAccountInfoListener> listener)
-    : accountClient_(address, masterKey)
+    : accountClient_(
+          address,
+          masterKey,
+          Registry::httpClientFactory()->createHttpClient())
     , listener_(listener)
 {}
 

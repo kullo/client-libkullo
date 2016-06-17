@@ -92,7 +92,8 @@ public:
     explicit MessagesSyncer(
             const Util::Credentials &settings,
             const std::shared_ptr<Codec::PrivateKeyProvider> &privKeyProvider,
-            const Db::SharedSessionPtr &session);
+            const Db::SharedSessionPtr &session,
+            const std::shared_ptr<Http::HttpClient> &httpClient);
 
     ~MessagesSyncer();
 
