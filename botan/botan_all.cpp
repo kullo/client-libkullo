@@ -1,4 +1,4 @@
-// IMPORTANT: This tree must be kept in sync with botan.h
+// IMPORTANT: This tree must be kept in sync with botan_all.h
 #ifdef _WIN32
     #ifdef _WIN64
         #error "Unsupported platform"

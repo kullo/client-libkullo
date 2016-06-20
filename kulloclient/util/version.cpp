@@ -2,7 +2,7 @@
 #include "kulloclient/util/version.h"
 
 #include <boost/version.hpp>
-#include <botan/botan.h>
+#include <botan/botan_all.h>
 #include <jsoncpp/jsoncpp.h>
 #include <smartsqlite/version.h>
 
@@ -31,7 +31,7 @@ namespace Kullo {
 namespace Util {
 
 namespace {
-const std::string LIBKULLO_VERSION = "v50";
+const std::string LIBKULLO_VERSION = "v51";
 const std::string LIBKULLO_USER_AGENT = "libkulloclient/" + LIBKULLO_VERSION + " (" KULLO_OS ")";
 }
 

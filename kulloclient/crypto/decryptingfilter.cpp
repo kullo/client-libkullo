@@ -5,7 +5,8 @@
 #include <iterator>
 #include <limits>
 
-#include <botan/botan.h>
+#include <botan/botan_all.h>
+#include "kulloclient/crypto/exceptions.h"
 #include "kulloclient/crypto/symmetrickeyimpl.h"
 #include "kulloclient/crypto/symmetriccryptor.h"
 #include "kulloclient/util/assert.h"
@@ -94,7 +95,15 @@ void DecryptingFilter::close(Util::Sink &sink)
     {
         auto &buf = impl_->buffer_;
         Botan::secure_vector<unsigned char> output(buf.begin(), buf.end());
-        impl_->cipher_->finish(output);
+        try
+        {
+            impl_->cipher_->finish(output);
+        }
+        catch (Botan::Integrity_Failure&)
+        {
+            std::throw_with_nested(
+                        IntegrityFailure("DecryptingFilter::doWrite()"));
+        }
         sink.write(output.data(), output.size());
     }
 }
@@ -104,7 +113,15 @@ void DecryptingFilter::doWrite(Util::Sink &sink, const unsigned char *data, std:
     if (length > 0)
     {
         Botan::secure_vector<unsigned char> inout(data, data + length);
-        impl_->cipher_->update(inout);
+        try
+        {
+            impl_->cipher_->update(inout);
+        }
+        catch (Botan::Integrity_Failure&)
+        {
+            std::throw_with_nested(
+                        IntegrityFailure("DecryptingFilter::doWrite()"));
+        }
         sink.write(inout.data(), inout.size());
     }
 }

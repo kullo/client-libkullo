@@ -1,5 +1,5 @@
 /*
-* Botan 1.11.29 Amalgamation
+* Botan 1.11.30 Amalgamation
 * (C) 1999-2013,2014,2015 Jack Lloyd and others
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -42,8 +42,8 @@ BOTAN_REGISTER_BLOCK_CIPHER_MODE_LEN2(CCM_Encryption, CCM_Decryption, 16, 3);
 #endif
 
 #if defined(BOTAN_HAS_AEAD_CHACHA20_POLY1305)
-BOTAN_REGISTER_TRANSFORM_NOARGS(ChaCha20Poly1305_Encryption);
-BOTAN_REGISTER_TRANSFORM_NOARGS(ChaCha20Poly1305_Decryption);
+BOTAN_REGISTER_T_NOARGS(Cipher_Mode, ChaCha20Poly1305_Encryption);
+BOTAN_REGISTER_T_NOARGS(Cipher_Mode, ChaCha20Poly1305_Decryption);
 #endif
 
 #if defined(BOTAN_HAS_AEAD_EAX)
@@ -3327,24 +3327,6 @@ OctetString operator^(const OctetString& k1, const OctetString& k2)
 
 }
 /*
-* (C) 2015 Jack Lloyd
-*
-* Botan is released under the Simplified BSD License (see license.txt)
-*/
-
-
-namespace Botan {
-
-Transform* get_transform(const std::string& specstr,
-                         const std::string& provider,
-                         const std::string& dirstr)
-   {
-   Algo_Registry<Transform>::Spec spec(specstr, dirstr);
-   return Algo_Registry<Transform>::global_registry().make(spec, provider);
-   }
-
-}
-/*
 * Base64 Encoding and Decoding
 * (C) 2010,2015 Jack Lloyd
 *
@@ -5660,9 +5642,7 @@ void Compression_Alloc_Info::do_free(void* ptr)
       }
    }
 
-namespace {
-
-Compressor_Transform* do_make_compressor(const std::string& type, const std::string& suffix)
+Compression_Algorithm* make_compressor(const std::string& type)
    {
    const std::map<std::string, std::string> trans{
       {"zlib", "Zlib"},
@@ -5679,31 +5659,29 @@ Compressor_Transform* do_make_compressor(const std::string& type, const std::str
    if(i == trans.end())
       return nullptr;
 
-   const std::string t_name = i->second + suffix;
+   const SCAN_Name t_name(i->second + "_Compression");
+   return Algo_Registry<Compression_Algorithm>::global_registry().make(t_name);
+   }
 
-   std::unique_ptr<Transform> t(get_transform(t_name));
+Decompression_Algorithm* make_decompressor(const std::string& type)
+   {
+   const std::map<std::string, std::string> trans{
+      {"zlib", "Zlib"},
+      {"deflate", "Deflate"},
+      {"gzip", "Gzip"},
+      {"gz", "Gzip"},
+      {"bzip2", "Bzip2"},
+      {"bz2", "Bzip2"},
+      {"lzma", "LZMA"},
+      {"xz", "LZMA"}};
 
-   if(!t)
+   auto i = trans.find(type);
+
+   if(i == trans.end())
       return nullptr;
 
-   Compressor_Transform* r = dynamic_cast<Compressor_Transform*>(t.get());
-   if(!r)
-      throw Exception("Bad cast of compression object " + t_name);
-
-   t.release();
-   return r;
-   }
-
-}
-
-Compressor_Transform* make_compressor(const std::string& type, size_t level)
-   {
-   return do_make_compressor(type, "_Compression(" + std::to_string(level) + ")");
-   }
-
-Compressor_Transform* make_decompressor(const std::string& type)
-   {
-   return do_make_compressor(type, "_Decompression");
+   const SCAN_Name t_name(i->second + "_Decompression");
+   return Algo_Registry<Decompression_Algorithm>::global_registry().make(t_name);
    }
 
 void Stream_Compression::clear()
@@ -5711,13 +5689,9 @@ void Stream_Compression::clear()
    m_stream.reset();
    }
 
-secure_vector<byte> Stream_Compression::start_raw(const byte[], size_t nonce_len)
+void Stream_Compression::start(size_t level)
    {
-   if(!valid_nonce_length(nonce_len))
-      throw Invalid_IV_Length(name(), nonce_len);
-
-   m_stream.reset(make_stream());
-   return secure_vector<byte>();
+   m_stream.reset(make_stream(level));
    }
 
 void Stream_Compression::process(secure_vector<byte>& buf, size_t offset, u32bit flags)
@@ -5760,16 +5734,10 @@ void Stream_Compression::process(secure_vector<byte>& buf, size_t offset, u32bit
    buf.swap(m_buffer);
    }
 
-void Stream_Compression::update(secure_vector<byte>& buf, size_t offset)
+void Stream_Compression::update(secure_vector<byte>& buf, size_t offset, bool flush)
    {
    BOTAN_ASSERT(m_stream, "Initialized");
-   process(buf, offset, m_stream->run_flag());
-   }
-
-void Stream_Compression::flush(secure_vector<byte>& buf, size_t offset)
-   {
-   BOTAN_ASSERT(m_stream, "Initialized");
-   process(buf, offset, m_stream->flush_flag());
+   process(buf, offset, flush ? m_stream->flush_flag() : m_stream->run_flag());
    }
 
 void Stream_Compression::finish(secure_vector<byte>& buf, size_t offset)
@@ -5784,14 +5752,9 @@ void Stream_Decompression::clear()
    m_stream.reset();
    }
 
-secure_vector<byte> Stream_Decompression::start_raw(const byte[], size_t nonce_len)
+void Stream_Decompression::start()
    {
-   if(!valid_nonce_length(nonce_len))
-      throw Invalid_IV_Length(name(), nonce_len);
-
    m_stream.reset(make_stream());
-
-   return secure_vector<byte>();
    }
 
 void Stream_Decompression::process(secure_vector<byte>& buf, size_t offset, u32bit flags)
@@ -5880,8 +5843,21 @@ CTR_BE::CTR_BE(BlockCipher* ciph) :
    m_cipher(ciph),
    m_counter(m_cipher->parallel_bytes()),
    m_pad(m_counter.size()),
+   m_ctr_size(m_cipher->block_size()),
    m_pad_pos(0)
    {
+   }
+
+CTR_BE::CTR_BE(BlockCipher* cipher, size_t ctr_size) :
+   m_cipher(cipher),
+   m_counter(m_cipher->parallel_bytes()),
+   m_pad(m_counter.size()),
+   m_ctr_size(ctr_size),
+   m_pad_pos(0)
+   {
+   //BOTAN_CHECK_ARG(m_ctr_size > 0 && m_ctr_size <= cipher->block_size(), "Invalid CTR size");
+   if(m_ctr_size == 0 || m_ctr_size > m_cipher->block_size())
+      throw Invalid_Argument("Invalid CTR-BE counter size");
    }
 
 void CTR_BE::clear()
@@ -5936,7 +5912,7 @@ void CTR_BE::set_iv(const byte iv[], size_t iv_len)
       {
       buffer_insert(m_counter, i*bs, &m_counter[(i-1)*bs], bs);
 
-      for(size_t j = 0; j != bs; ++j)
+      for(size_t j = 0; j != m_ctr_size; ++j)
          if(++m_counter[i*bs + (bs - 1 - j)])
             break;
       }
@@ -5955,8 +5931,8 @@ void CTR_BE::increment_counter()
 
    for(size_t i = 0; i != n_wide; ++i)
       {
-      uint16_t carry = n_wide;
-      for(size_t j = 0; carry && j != bs; ++j)
+      uint16_t carry = static_cast<uint16_t>(n_wide);
+      for(size_t j = 0; carry && j != m_ctr_size; ++j)
          {
          const size_t off = i*bs + (bs-1-j);
          const uint16_t cnt = static_cast<uint16_t>(m_counter[off]) + carry;
@@ -5969,6 +5945,10 @@ void CTR_BE::increment_counter()
    m_pad_pos = 0;
    }
 
+void CTR_BE::seek(u64bit)
+   {
+   throw Not_Implemented("CTR_BE::seek");
+   }
 }
 /*
 * Darwin SecRandomCopyBytes EntropySource
@@ -7429,8 +7409,120 @@ void Buffered_Filter::end_msg()
 
 }
 /*
+* Filter interface for Cipher_Modes
+* (C) 2013,2014 Jack Lloyd
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+
+
+namespace Botan {
+
+namespace {
+
+size_t choose_update_size(size_t update_granularity)
+   {
+   const size_t target_size = 1024;
+
+   if(update_granularity >= target_size)
+      return update_granularity;
+
+   return round_up(target_size, update_granularity);
+   }
+
+}
+
+Cipher_Mode_Filter::Cipher_Mode_Filter(Cipher_Mode* mode) :
+   Buffered_Filter(choose_update_size(mode->update_granularity()),
+                   mode->minimum_final_size()),
+   m_nonce(mode->default_nonce_length() == 0),
+   m_mode(mode),
+   m_buffer(m_mode->update_granularity())
+   {
+   }
+
+std::string Cipher_Mode_Filter::name() const
+   {
+   return m_mode->name();
+   }
+
+void Cipher_Mode_Filter::Nonce_State::update(const InitializationVector& iv)
+   {
+   m_nonce = unlock(iv.bits_of());
+   m_fresh_nonce = true;
+   }
+
+std::vector<byte> Cipher_Mode_Filter::Nonce_State::get()
+   {
+   BOTAN_ASSERT(m_fresh_nonce, "The nonce is fresh for this message");
+
+   if(!m_nonce.empty())
+      m_fresh_nonce = false;
+   return m_nonce;
+   }
+
+void Cipher_Mode_Filter::set_iv(const InitializationVector& iv)
+   {
+   m_nonce.update(iv);
+   }
+
+void Cipher_Mode_Filter::set_key(const SymmetricKey& key)
+   {
+   m_mode->set_key(key);
+   }
+
+Key_Length_Specification Cipher_Mode_Filter::key_spec() const
+   {
+   return m_mode->key_spec();
+   }
+
+bool Cipher_Mode_Filter::valid_iv_length(size_t length) const
+   {
+   return m_mode->valid_nonce_length(length);
+   }
+
+void Cipher_Mode_Filter::write(const byte input[], size_t input_length)
+   {
+   Buffered_Filter::write(input, input_length);
+   }
+
+void Cipher_Mode_Filter::end_msg()
+   {
+   Buffered_Filter::end_msg();
+   }
+
+void Cipher_Mode_Filter::start_msg()
+   {
+   send(m_mode->start(m_nonce.get()));
+   }
+
+void Cipher_Mode_Filter::buffered_block(const byte input[], size_t input_length)
+   {
+   while(input_length)
+      {
+      const size_t take = std::min(m_mode->update_granularity(), input_length);
+
+      m_buffer.assign(input, input + take);
+      m_mode->update(m_buffer);
+
+      send(m_buffer);
+
+      input += take;
+      input_length -= take;
+      }
+   }
+
+void Cipher_Mode_Filter::buffered_final(const byte input[], size_t input_length)
+   {
+   secure_vector<byte> buf(input, input + input_length);
+   m_mode->finish(buf);
+   send(buf);
+   }
+
+}
+/*
 * Filter interface for compression
-* (C) 2014,2015 Jack Lloyd
+* (C) 2014,2015,2016 Jack Lloyd
 * (C) 2015 Matej Kenda
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -7440,40 +7532,27 @@ void Buffered_Filter::end_msg()
 namespace Botan {
 
 Compression_Filter::Compression_Filter(const std::string& type, size_t level, size_t bs) :
-   Compression_Decompression_Filter(make_compressor(type, level), bs)
+   m_comp(make_compressor(type)),
+   m_buffersize(std::max<size_t>(bs, 256)),
+   m_level(level)
    {
-   }
-
-Decompression_Filter::Decompression_Filter(const std::string& type, size_t bs) :
-   Compression_Decompression_Filter(make_decompressor(type), bs)
-   {
-   }
-
-Compression_Decompression_Filter::Compression_Decompression_Filter(Transform* transform, size_t bs) :
-   m_buffersize(std::max<size_t>(256, bs)), m_buffer(m_buffersize)
-   {
-   if (!transform)
+   if(!m_comp)
       {
-         throw Invalid_Argument("Transform is null");
-      }
-   m_transform.reset(dynamic_cast<Compressor_Transform*>(transform));
-   if(!m_transform)
-      {
-      throw Invalid_Argument("Transform " + transform->name() + " is not a compressor");
+      throw Invalid_Argument("Compression type '" + type + "' not found");
       }
    }
 
-std::string Compression_Decompression_Filter::name() const
+std::string Compression_Filter::name() const
    {
-   return m_transform->name();
+   return m_comp->name();
    }
 
-void Compression_Decompression_Filter::start_msg()
+void Compression_Filter::start_msg()
    {
-   send(m_transform->start());
+   m_comp->start(m_level);
    }
 
-void Compression_Decompression_Filter::write(const byte input[], size_t input_length)
+void Compression_Filter::write(const byte input[], size_t input_length)
    {
    while(input_length)
       {
@@ -7481,7 +7560,7 @@ void Compression_Decompression_Filter::write(const byte input[], size_t input_le
       BOTAN_ASSERT(take > 0, "Consumed something");
 
       m_buffer.assign(input, input + take);
-      m_transform->update(m_buffer);
+      m_comp->update(m_buffer);
 
       send(m_buffer);
 
@@ -7490,17 +7569,61 @@ void Compression_Decompression_Filter::write(const byte input[], size_t input_le
       }
    }
 
-void Compression_Decompression_Filter::flush()
+void Compression_Filter::flush()
    {
    m_buffer.clear();
-   m_transform->flush(m_buffer);
+   m_comp->update(m_buffer, 0, true);
    send(m_buffer);
    }
 
-void Compression_Decompression_Filter::end_msg()
+void Compression_Filter::end_msg()
    {
    m_buffer.clear();
-   m_transform->finish(m_buffer);
+   m_comp->finish(m_buffer);
+   send(m_buffer);
+   }
+
+Decompression_Filter::Decompression_Filter(const std::string& type, size_t bs) :
+   m_comp(make_decompressor(type)),
+   m_buffersize(std::max<size_t>(bs, 256))
+   {
+   if(!m_comp)
+      {
+      throw Invalid_Argument("Compression type '" + type + "' not found");
+      }
+   }
+
+std::string Decompression_Filter::name() const
+   {
+   return m_comp->name();
+   }
+
+void Decompression_Filter::start_msg()
+   {
+   m_comp->start();
+   }
+
+void Decompression_Filter::write(const byte input[], size_t input_length)
+   {
+   while(input_length)
+      {
+      const size_t take = std::min(m_buffersize, input_length);
+      BOTAN_ASSERT(take > 0, "Consumed something");
+
+      m_buffer.assign(input, input + take);
+      m_comp->update(m_buffer);
+
+      send(m_buffer);
+
+      input += take;
+      input_length -= take;
+      }
+   }
+
+void Decompression_Filter::end_msg()
+   {
+   m_buffer.clear();
+   m_comp->finish(m_buffer);
    send(m_buffer);
    }
 
@@ -7706,7 +7829,7 @@ Keyed_Filter* get_cipher(const std::string& algo_spec,
    {
    std::unique_ptr<Cipher_Mode> c(get_cipher_mode(algo_spec, direction));
    if(c)
-      return new Transform_Filter(c.release());
+      return new Cipher_Mode_Filter(c.release());
    throw Algorithm_Not_Found(algo_spec);
    }
 
@@ -8751,123 +8874,6 @@ void Threaded_Fork::thread_entry(Filter* filter)
 
 }
 /*
-* Filter interface for Transforms
-* (C) 2013,2014 Jack Lloyd
-*
-* Botan is released under the Simplified BSD License (see license.txt)
-*/
-
-
-namespace Botan {
-
-namespace {
-
-size_t choose_update_size(size_t update_granularity)
-   {
-   const size_t target_size = 1024;
-
-   if(update_granularity >= target_size)
-      return update_granularity;
-
-   return round_up(target_size, update_granularity);
-   }
-
-}
-
-Transform_Filter::Transform_Filter(Transform* transform) :
-   Buffered_Filter(choose_update_size(transform->update_granularity()),
-                   transform->minimum_final_size()),
-   m_nonce(transform->default_nonce_length() == 0),
-   m_transform(transform),
-   m_buffer(m_transform->update_granularity())
-   {
-   }
-
-std::string Transform_Filter::name() const
-   {
-   return m_transform->name();
-   }
-
-void Transform_Filter::Nonce_State::update(const InitializationVector& iv)
-   {
-   m_nonce = unlock(iv.bits_of());
-   m_fresh_nonce = true;
-   }
-
-std::vector<byte> Transform_Filter::Nonce_State::get()
-   {
-   BOTAN_ASSERT(m_fresh_nonce, "The nonce is fresh for this message");
-
-   if(!m_nonce.empty())
-      m_fresh_nonce = false;
-   return m_nonce;
-   }
-
-void Transform_Filter::set_iv(const InitializationVector& iv)
-   {
-   m_nonce.update(iv);
-   }
-
-void Transform_Filter::set_key(const SymmetricKey& key)
-   {
-   if(Keyed_Transform* keyed = dynamic_cast<Keyed_Transform*>(m_transform.get()))
-      keyed->set_key(key);
-   else if(key.length() != 0)
-      throw Exception("Transform " + name() + " does not accept keys");
-   }
-
-Key_Length_Specification Transform_Filter::key_spec() const
-   {
-   if(Keyed_Transform* keyed = dynamic_cast<Keyed_Transform*>(m_transform.get()))
-      return keyed->key_spec();
-   return Key_Length_Specification(0);
-   }
-
-bool Transform_Filter::valid_iv_length(size_t length) const
-   {
-   return m_transform->valid_nonce_length(length);
-   }
-
-void Transform_Filter::write(const byte input[], size_t input_length)
-   {
-   Buffered_Filter::write(input, input_length);
-   }
-
-void Transform_Filter::end_msg()
-   {
-   Buffered_Filter::end_msg();
-   }
-
-void Transform_Filter::start_msg()
-   {
-   send(m_transform->start(m_nonce.get()));
-   }
-
-void Transform_Filter::buffered_block(const byte input[], size_t input_length)
-   {
-   while(input_length)
-      {
-      const size_t take = std::min(m_transform->update_granularity(), input_length);
-
-      m_buffer.assign(input, input + take);
-      m_transform->update(m_buffer);
-
-      send(m_buffer);
-
-      input += take;
-      input_length -= take;
-      }
-   }
-
-void Transform_Filter::buffered_final(const byte input[], size_t input_length)
-   {
-   secure_vector<byte> buf(input, input + input_length);
-   m_transform->finish(buf);
-   send(buf);
-   }
-
-}
-/*
 * GCM Mode Encryption
 * (C) 2013,2015 Jack Lloyd
 *
@@ -9031,7 +9037,7 @@ GCM_Mode::GCM_Mode(BlockCipher* cipher, size_t tag_size) :
 
    m_ghash.reset(new GHASH);
 
-   m_ctr.reset(new CTR_BE(cipher)); // CTR_BE takes ownership of cipher
+   m_ctr.reset(new CTR_BE(cipher, 4)); // CTR_BE takes ownership of cipher
 
    if(m_tag_size != 8 && m_tag_size != 16)
       throw Invalid_Argument(name() + ": Bad tag size " + std::to_string(m_tag_size));
@@ -9815,7 +9821,7 @@ size_t HMAC_RNG::reseed_with_sources(Entropy_Sources& srcs,
    m_counter = 0;
 
    m_collected_entropy_estimate =
-      std::min<size_t>(m_collected_entropy_estimate + bits_collected,
+      std::min<size_t>(m_collected_entropy_estimate + static_cast<size_t>(bits_collected),
                        m_extractor->output_length() * 8);
 
    m_output_since_reseed = 0;
@@ -10070,6 +10076,12 @@ bool IF_Scheme_PrivateKey::check_key(RandomNumberGenerator& rng,
 #if defined(BOTAN_HAS_X942_PRF)
 #endif
 
+#if defined(BOTAN_HAS_SP800_108)
+#endif
+
+#if defined(BOTAN_HAS_SP800_56C)
+#endif
+
 #define BOTAN_REGISTER_KDF_NOARGS(type, name)                    \
    BOTAN_REGISTER_NAMED_T(KDF, name, type, (make_new_T<type>))
 #define BOTAN_REGISTER_KDF_1HASH(type, name)                    \
@@ -10130,6 +10142,15 @@ BOTAN_REGISTER_NAMED_T(KDF, "TLS-12-PRF", TLS_12_PRF, TLS_12_PRF::make);
 BOTAN_REGISTER_KDF_NAMED_1STR(X942_PRF, "X9.42-PRF");
 #endif
 
+#if defined(BOTAN_HAS_SP800_108)
+BOTAN_REGISTER_NAMED_T(KDF, "SP800-108-Counter", SP800_108_Counter, SP800_108_Counter::make);
+BOTAN_REGISTER_NAMED_T(KDF, "SP800-108-Feedback", SP800_108_Feedback, SP800_108_Feedback::make);
+BOTAN_REGISTER_NAMED_T(KDF, "SP800-108-Pipeline", SP800_108_Pipeline, SP800_108_Pipeline::make);
+#endif
+
+#if defined(BOTAN_HAS_SP800_56C)
+BOTAN_REGISTER_NAMED_T(KDF, "SP800-56C", SP800_56C, SP800_56C::make);
+#endif
 }
 /*
 * Keypair Checks
@@ -10463,7 +10484,7 @@ void PKCS7_Padding::add_padding(secure_vector<byte>& buffer,
                                 size_t last_byte_pos,
                                 size_t block_size) const
    {
-   const byte pad_value = block_size - last_byte_pos;
+   const byte pad_value = static_cast<byte>(block_size - last_byte_pos);
 
    for(size_t i = 0; i != pad_value; ++i)
       buffer.push_back(pad_value);
@@ -10493,7 +10514,7 @@ void ANSI_X923_Padding::add_padding(secure_vector<byte>& buffer,
                                     size_t last_byte_pos,
                                     size_t block_size) const
    {
-   const byte pad_value = block_size - last_byte_pos;
+   const byte pad_value = static_cast<byte>(block_size - last_byte_pos);
 
    for(size_t i = last_byte_pos; i < block_size; ++i)
       buffer.push_back(0);
@@ -10569,10 +10590,13 @@ size_t OneAndZeros_Padding::unpad(const byte block[], size_t size) const
 
 namespace Botan {
 
+#define BOTAN_REGISTER_CIPHER_MODE(name, maker) BOTAN_REGISTER_T(Cipher_Mode, name, maker)
+#define BOTAN_REGISTER_CIPHER_MODE_NOARGS(name) BOTAN_REGISTER_T_NOARGS(Cipher_Mode, name)
+
 #if defined(BOTAN_HAS_MODE_ECB)
 
 template<typename T>
-Transform* make_ecb_mode(const Transform::Spec& spec)
+Cipher_Mode* make_ecb_mode(const Cipher_Mode::Spec& spec)
    {
    std::unique_ptr<BlockCipher> bc(BlockCipher::create(spec.arg(0)));
    std::unique_ptr<BlockCipherModePaddingMethod> pad(get_bc_pad(spec.arg(1, "NoPadding")));
@@ -10581,14 +10605,14 @@ Transform* make_ecb_mode(const Transform::Spec& spec)
    return nullptr;
    }
 
-BOTAN_REGISTER_TRANSFORM(ECB_Encryption, make_ecb_mode<ECB_Encryption>);
-BOTAN_REGISTER_TRANSFORM(ECB_Decryption, make_ecb_mode<ECB_Decryption>);
+BOTAN_REGISTER_CIPHER_MODE(ECB_Encryption, make_ecb_mode<ECB_Encryption>);
+BOTAN_REGISTER_CIPHER_MODE(ECB_Decryption, make_ecb_mode<ECB_Decryption>);
 #endif
 
 #if defined(BOTAN_HAS_MODE_CBC)
 
 template<typename CBC_T, typename CTS_T>
-Transform* make_cbc_mode(const Transform::Spec& spec)
+Cipher_Mode* make_cbc_mode(const Cipher_Mode::Spec& spec)
    {
    std::unique_ptr<BlockCipher> bc(BlockCipher::create(spec.arg(0)));
 
@@ -10605,8 +10629,8 @@ Transform* make_cbc_mode(const Transform::Spec& spec)
    return nullptr;
    }
 
-BOTAN_REGISTER_TRANSFORM(CBC_Encryption, (make_cbc_mode<CBC_Encryption,CTS_Encryption>));
-BOTAN_REGISTER_TRANSFORM(CBC_Decryption, (make_cbc_mode<CBC_Decryption,CTS_Decryption>));
+BOTAN_REGISTER_CIPHER_MODE(CBC_Encryption, (make_cbc_mode<CBC_Encryption,CTS_Encryption>));
+BOTAN_REGISTER_CIPHER_MODE(CBC_Decryption, (make_cbc_mode<CBC_Decryption,CTS_Decryption>));
 #endif
 
 #if defined(BOTAN_HAS_MODE_CFB)
@@ -10623,14 +10647,17 @@ Cipher_Mode* get_cipher_mode(const std::string& algo_spec, Cipher_Dir direction)
 
    const char* dir_string = (direction == ENCRYPTION) ? "_Encryption" : "_Decryption";
 
-   std::unique_ptr<Transform> t;
+   Cipher_Mode::Spec spec(algo_spec, dir_string);
 
-   t.reset(get_transform(algo_spec, provider, dir_string));
+   std::unique_ptr<Cipher_Mode> cipher_mode(
+      Algo_Registry<Cipher_Mode>::global_registry().make(
+         Cipher_Mode::Spec(algo_spec, dir_string),
+         provider)
+      );
 
-   if(Cipher_Mode* cipher = dynamic_cast<Cipher_Mode*>(t.get()))
+   if(cipher_mode)
       {
-      t.release();
-      return cipher;
+      return cipher_mode.release();
       }
 
    const std::vector<std::string> algo_parts = split_on(algo_spec, '/');
@@ -10655,24 +10682,32 @@ Cipher_Mode* get_cipher_mode(const std::string& algo_spec, Cipher_Dir direction)
    const std::string mode_name = mode_info[0] + alg_args.str();
    const std::string mode_name_directional = mode_info[0] + dir_string + alg_args.str();
 
-   t.reset(get_transform(mode_name_directional, provider));
+   cipher_mode.reset(
+      Algo_Registry<Cipher_Mode>::global_registry().make(
+         Cipher_Mode::Spec(mode_name_directional),
+         provider)
+      );
 
-   if(Cipher_Mode* cipher = dynamic_cast<Cipher_Mode*>(t.get()))
+   if(cipher_mode)
       {
-      t.release();
-      return cipher;
+      return cipher_mode.release();
       }
 
-   t.reset(get_transform(mode_name, provider));
+   cipher_mode.reset(
+      Algo_Registry<Cipher_Mode>::global_registry().make(
+         Cipher_Mode::Spec(mode_name),
+         provider)
+      );
 
-   if(Cipher_Mode* cipher = dynamic_cast<Cipher_Mode*>(t.get()))
+   if(cipher_mode)
       {
-      t.release();
-      return cipher;
+      return cipher_mode.release();
       }
 
    if(auto sc = StreamCipher::create(mode_name, provider))
+      {
       return new Stream_Cipher_Mode(sc.release());
+      }
 
    return nullptr;
    }
@@ -12981,7 +13016,7 @@ BigInt random_prime(RandomNumberGenerator& rng,
       secure_vector<u16bit> sieve(sieve_size);
 
       for(size_t j = 0; j != sieve.size(); ++j)
-         sieve[j] = p % PRIMES[j];
+         sieve[j] = static_cast<u16bit>(p % PRIMES[j]);
 
       size_t counter = 0;
       while(true)
@@ -13107,6 +13142,20 @@ BigInt sub_mul(const BigInt& a, const BigInt& b, const BigInt& c)
    BigInt r = a;
    r -= b;
    r *= c;
+   return r;
+   }
+
+/*
+* Multiply-Subtract Operation
+*/
+BigInt mul_sub(const BigInt& a, const BigInt& b, const BigInt& c)
+   {
+   if(c.is_negative() || c.is_zero())
+      throw Invalid_Argument("mul_sub: Third argument must be > 0");
+
+   BigInt r = a;
+   r *= b;
+   r -= c;
    return r;
    }
 
@@ -13553,7 +13602,7 @@ bool is_prime(const BigInt& n, RandomNumberGenerator& rng,
    // Fast path testing for small numbers (<= 65521)
    if(n <= PRIMES[PRIME_TABLE_SIZE-1])
       {
-      const u16bit num = n.word_at(0);
+      const u16bit num = static_cast<u16bit>(n.word_at(0));
 
       return std::binary_search(PRIMES, PRIMES + PRIME_TABLE_SIZE, num);
       }
@@ -14785,6 +14834,9 @@ const char* default_oid_list()
       "1.2.840.10045.2.1 = ECDSA" "\n"
       "1.3.132.1.12 = ECDH" "\n"
 
+      // ecgPublicKey (see https://www.teletrust.de/projekte/oid/)
+      "1.3.36.3.3.2.5.2.1 = ECGDSA" "\n"
+
       "1.2.643.2.2.19 = GOST-34.10" "\n"
 
       // Block ciphers
@@ -14854,18 +14906,18 @@ const char* default_oid_list()
       "2.16.840.1.101.3.4.3.1 = DSA/EMSA1(SHA-224)" "\n"
       "2.16.840.1.101.3.4.3.2 = DSA/EMSA1(SHA-256)" "\n"
 
-      "0.4.0.127.0.7.1.1.4.1.1 = ECDSA/EMSA1_BSI(SHA-160)" "\n"
-      "0.4.0.127.0.7.1.1.4.1.2 = ECDSA/EMSA1_BSI(SHA-224)" "\n"
-      "0.4.0.127.0.7.1.1.4.1.3 = ECDSA/EMSA1_BSI(SHA-256)" "\n"
-      "0.4.0.127.0.7.1.1.4.1.4 = ECDSA/EMSA1_BSI(SHA-384)" "\n"
-      "0.4.0.127.0.7.1.1.4.1.5 = ECDSA/EMSA1_BSI(SHA-512)" "\n"
-      "0.4.0.127.0.7.1.1.4.1.6 = ECDSA/EMSA1_BSI(RIPEMD-160)" "\n"
-
       "1.2.840.10045.4.1 = ECDSA/EMSA1(SHA-160)" "\n"
       "1.2.840.10045.4.3.1 = ECDSA/EMSA1(SHA-224)" "\n"
       "1.2.840.10045.4.3.2 = ECDSA/EMSA1(SHA-256)" "\n"
       "1.2.840.10045.4.3.3 = ECDSA/EMSA1(SHA-384)" "\n"
       "1.2.840.10045.4.3.4 = ECDSA/EMSA1(SHA-512)" "\n"
+
+      "1.3.36.3.3.2.5.4.1 = ECGDSA/EMSA1(RIPEMD-160)" "\n"
+      "1.3.36.3.3.2.5.4.2 = ECGDSA/EMSA1(SHA-160)" "\n"
+      "1.3.36.3.3.2.5.4.3 = ECGDSA/EMSA1(SHA-224)" "\n"
+      "1.3.36.3.3.2.5.4.4 = ECGDSA/EMSA1(SHA-256)" "\n"
+      "1.3.36.3.3.2.5.4.5 = ECGDSA/EMSA1(SHA-384)" "\n"
+      "1.3.36.3.3.2.5.4.6 = ECGDSA/EMSA1(SHA-512)" "\n"
 
       "1.2.643.2.2.3 = GOST-34.10/EMSA1(GOST-R-34.11-94)" "\n"
 
@@ -15793,9 +15845,6 @@ secure_vector<byte> EME::encode(const secure_vector<byte>& msg,
 #if defined(BOTAN_HAS_EMSA1)
 #endif
 
-#if defined(BOTAN_HAS_EMSA1_BSI)
-#endif
-
 #if defined(BOTAN_HAS_EMSA_X931)
 #endif
 
@@ -15833,10 +15882,6 @@ EMSA* get_emsa(const std::string& algo_spec)
 
 #if defined(BOTAN_HAS_EMSA1)
 BOTAN_REGISTER_EMSA_1HASH(EMSA1, "EMSA1");
-#endif
-
-#if defined(BOTAN_HAS_EMSA1_BSI)
-BOTAN_REGISTER_EMSA_1HASH(EMSA1_BSI, "EMSA1_BSI");
 #endif
 
 #if defined(BOTAN_HAS_EMSA_PKCS1)
@@ -15944,6 +15989,9 @@ BigInt Blinder::unblind(const BigInt& i) const
 #if defined(BOTAN_HAS_ECDSA)
 #endif
 
+#if defined(BOTAN_HAS_ECGDSA)
+#endif
+
 #if defined(BOTAN_HAS_GOST_34_10_2001)
 #endif
 
@@ -16007,6 +16055,11 @@ Public_Key* make_public_key(const AlgorithmIdentifier& alg_id,
 #if defined(BOTAN_HAS_ECDSA)
    if(alg_name == "ECDSA")
       return new ECDSA_PublicKey(alg_id, key_bits);
+#endif
+
+#if defined(BOTAN_HAS_ECGDSA)
+   if(alg_name == "ECGDSA")
+      return new ECGDSA_PublicKey(alg_id, key_bits);
 #endif
 
 #if defined(BOTAN_HAS_GOST_34_10_2001)
@@ -16073,6 +16126,11 @@ Private_Key* make_private_key(const AlgorithmIdentifier& alg_id,
 #if defined(BOTAN_HAS_ECDSA)
    if(alg_name == "ECDSA")
       return new ECDSA_PrivateKey(alg_id, key_bits);
+#endif
+
+#if defined(BOTAN_HAS_ECGDSA)
+   if(alg_name == "ECGDSA")
+      return new ECGDSA_PrivateKey(alg_id, key_bits);
 #endif
 
 #if defined(BOTAN_HAS_GOST_34_10_2001)
@@ -16979,7 +17037,7 @@ size_t dl_exponent_size(size_t bits)
 
    const double strength = 1.92 * std::pow(log_p, 1.0/3.0) * std::pow(std::log(log_p), 2.0/3.0);
 
-   return 2 * std::max<size_t>(MIN_WORKFACTOR, log2_e * strength);
+   return 2 * std::max<size_t>(MIN_WORKFACTOR, static_cast<size_t>(log2_e * strength));
    }
 
 }
@@ -17180,7 +17238,7 @@ bool RSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const
    if((m_e * m_d) % lcm(m_p - 1, m_q - 1) != 1)
       return false;
 
-   return KeyPair::signature_consistency_check(rng, *this, "EMSA4(SHA-1)");
+   return KeyPair::signature_consistency_check(rng, *this, "EMSA4(SHA-256)");
    }
 
 namespace {
@@ -18305,7 +18363,7 @@ void StreamCipher::set_iv(const byte[], size_t iv_len)
    }
 
 #if defined(BOTAN_HAS_CHACHA)
-BOTAN_REGISTER_T_NOARGS(StreamCipher, ChaCha);
+BOTAN_REGISTER_T_1LEN(StreamCipher, ChaCha, 20);
 #endif
 
 #if defined(BOTAN_HAS_SALSA20)
@@ -20298,20 +20356,25 @@ class Zlib_Compression_Stream : public Zlib_Stream
          {
          wbits = compute_window_bits(wbits, wbits_offset);
 
-         int rc = deflateInit2(streamp(), level, Z_DEFLATED, wbits,
-                               8, Z_DEFAULT_STRATEGY);
+         if(level >= 9)
+            level = 9;
+         else if(level == 0)
+            level = 6;
+
+         int rc = ::deflateInit2(streamp(), level, Z_DEFLATED, wbits, 8, Z_DEFAULT_STRATEGY);
+
          if(rc != Z_OK)
             throw Exception("zlib deflate initialization failed");
          }
 
       ~Zlib_Compression_Stream()
          {
-         deflateEnd(streamp());
+         ::deflateEnd(streamp());
          }
 
       bool run(u32bit flags) override
          {
-         int rc = deflate(streamp(), flags);
+         int rc = ::deflate(streamp(), flags);
 
          if(rc == Z_MEM_ERROR)
             throw Exception("zlib memory allocation failure");
@@ -20327,7 +20390,7 @@ class Zlib_Decompression_Stream : public Zlib_Stream
    public:
       Zlib_Decompression_Stream(int wbits, int wbits_offset = 0)
          {
-         int rc = inflateInit2(streamp(), compute_window_bits(wbits, wbits_offset));
+         int rc = ::inflateInit2(streamp(), compute_window_bits(wbits, wbits_offset));
 
          if(rc == Z_MEM_ERROR)
             throw Exception("zlib memory allocation failure");
@@ -20337,12 +20400,12 @@ class Zlib_Decompression_Stream : public Zlib_Stream
 
       ~Zlib_Decompression_Stream()
          {
-         inflateEnd(streamp());
+         ::inflateEnd(streamp());
          }
 
       bool run(u32bit flags) override
          {
-         int rc = inflate(streamp(), flags);
+         int rc = ::inflate(streamp(), flags);
 
          if(rc == Z_MEM_ERROR)
             throw Exception("zlib memory allocation failure");
@@ -20393,9 +20456,9 @@ class Gzip_Decompression_Stream : public Zlib_Decompression_Stream
 
 }
 
-Compression_Stream* Zlib_Compression::make_stream() const
+Compression_Stream* Zlib_Compression::make_stream(size_t level) const
    {
-   return new Zlib_Compression_Stream(m_level, 15);
+   return new Zlib_Compression_Stream(level, 15);
    }
 
 Compression_Stream* Zlib_Decompression::make_stream() const
@@ -20403,9 +20466,9 @@ Compression_Stream* Zlib_Decompression::make_stream() const
    return new Zlib_Decompression_Stream(15);
    }
 
-Compression_Stream* Deflate_Compression::make_stream() const
+Compression_Stream* Deflate_Compression::make_stream(size_t level) const
    {
-   return new Deflate_Compression_Stream(m_level, 15);
+   return new Deflate_Compression_Stream(level, 15);
    }
 
 Compression_Stream* Deflate_Decompression::make_stream() const
@@ -20413,9 +20476,9 @@ Compression_Stream* Deflate_Decompression::make_stream() const
    return new Deflate_Decompression_Stream(15);
    }
 
-Compression_Stream* Gzip_Compression::make_stream() const
+Compression_Stream* Gzip_Compression::make_stream(size_t level) const
    {
-   return new Gzip_Compression_Stream(m_level, 15, m_os_code);
+   return new Gzip_Compression_Stream(level, 15, m_os_code);
    }
 
 Compression_Stream* Gzip_Decompression::make_stream() const

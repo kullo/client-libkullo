@@ -1,7 +1,7 @@
 /* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
 #include "kulloclient/crypto/hashverifyingfilter.h"
 
-#include <botan/botan.h>
+#include <botan/botan_all.h>
 #include "kulloclient/crypto/exceptions.h"
 #include "kulloclient/util/assert.h"
 #include "kulloclient/util/misc.h"

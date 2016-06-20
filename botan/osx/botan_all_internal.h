@@ -290,10 +290,6 @@ make_new_T_1X(const typename Algo_Registry<T>::Spec& spec)
 #define BOTAN_REGISTER_NAMED_T_2LEN(T, type, name, provider, len1, len2) \
    BOTAN_REGISTER_TYPE(T, type, name, (make_new_T_2len<type,len1,len2>), provider, BOTAN_DEFAULT_ALGORITHM_PRIO)
 
-// TODO move elsewhere:
-#define BOTAN_REGISTER_TRANSFORM(name, maker) BOTAN_REGISTER_T(Transform, name, maker)
-#define BOTAN_REGISTER_TRANSFORM_NOARGS(name) BOTAN_REGISTER_T_NOARGS(Transform, name)
-
 }
 
 
@@ -479,8 +475,8 @@ class Zlib_Style_Stream : public Compression_Stream
    };
 
 #define BOTAN_REGISTER_COMPRESSION(C, D) \
-   BOTAN_REGISTER_T_1LEN(Transform, C, 9); \
-   BOTAN_REGISTER_T_NOARGS(Transform, D)
+   BOTAN_REGISTER_T_NOARGS(Compression_Algorithm, C); \
+   BOTAN_REGISTER_T_NOARGS(Decompression_Algorithm, D)
 
 }
 
@@ -594,6 +590,12 @@ inline T is_less(T x, T y)
    but something more complicated may be needed for portable const time.
    */
    return expand_mask<T>(x < y);
+   }
+
+template<typename T>
+inline T is_lte(T x, T y)
+   {
+   return expand_mask<T>(x <= y);
    }
 
 template<typename T>
@@ -933,7 +935,7 @@ inline size_t clamp(size_t n, size_t lower_bound, size_t upper_bound)
 namespace Botan {
 
 template<typename T>
-T* make_block_cipher_mode(const Transform::Spec& spec)
+T* make_block_cipher_mode(const Cipher_Mode::Spec& spec)
    {
    if(std::unique_ptr<BlockCipher> bc = BlockCipher::create(spec.arg(0)))
       return new T(bc.release());
@@ -941,7 +943,7 @@ T* make_block_cipher_mode(const Transform::Spec& spec)
    }
 
 template<typename T, size_t LEN1>
-T* make_block_cipher_mode_len(const Transform::Spec& spec)
+T* make_block_cipher_mode_len(const Cipher_Mode::Spec& spec)
    {
    if(std::unique_ptr<BlockCipher> bc = BlockCipher::create(spec.arg(0)))
       {
@@ -953,7 +955,7 @@ T* make_block_cipher_mode_len(const Transform::Spec& spec)
    }
 
 template<typename T, size_t LEN1, size_t LEN2>
-T* make_block_cipher_mode_len2(const Transform::Spec& spec)
+T* make_block_cipher_mode_len2(const Cipher_Mode::Spec& spec)
    {
    if(std::unique_ptr<BlockCipher> bc = BlockCipher::create(spec.arg(0)))
       {
@@ -966,16 +968,16 @@ T* make_block_cipher_mode_len2(const Transform::Spec& spec)
    }
 
 #define BOTAN_REGISTER_BLOCK_CIPHER_MODE(E, D)                          \
-   BOTAN_REGISTER_NAMED_T(Transform, #E, E, make_block_cipher_mode<E>); \
-   BOTAN_REGISTER_NAMED_T(Transform, #D, D, make_block_cipher_mode<D>)
+   BOTAN_REGISTER_NAMED_T(Cipher_Mode, #E, E, make_block_cipher_mode<E>); \
+   BOTAN_REGISTER_NAMED_T(Cipher_Mode, #D, D, make_block_cipher_mode<D>)
 
 #define BOTAN_REGISTER_BLOCK_CIPHER_MODE_LEN(E, D, LEN)                          \
-   BOTAN_REGISTER_NAMED_T(Transform, #E, E, (make_block_cipher_mode_len<E, LEN>)); \
-   BOTAN_REGISTER_NAMED_T(Transform, #D, D, (make_block_cipher_mode_len<D, LEN>))
+   BOTAN_REGISTER_NAMED_T(Cipher_Mode, #E, E, (make_block_cipher_mode_len<E, LEN>)); \
+   BOTAN_REGISTER_NAMED_T(Cipher_Mode, #D, D, (make_block_cipher_mode_len<D, LEN>))
 
 #define BOTAN_REGISTER_BLOCK_CIPHER_MODE_LEN2(E, D, LEN1, LEN2)                          \
-   BOTAN_REGISTER_NAMED_T(Transform, #E, E, (make_block_cipher_mode_len2<E, LEN1, LEN2>)); \
-   BOTAN_REGISTER_NAMED_T(Transform, #D, D, (make_block_cipher_mode_len2<D, LEN1, LEN2>))
+   BOTAN_REGISTER_NAMED_T(Cipher_Mode, #E, E, (make_block_cipher_mode_len2<E, LEN1, LEN2>)); \
+   BOTAN_REGISTER_NAMED_T(Cipher_Mode, #D, D, (make_block_cipher_mode_len2<D, LEN1, LEN2>))
 
 }
 
@@ -1908,83 +1910,6 @@ void map_remove_if(Pred pred, T& assoc)
          i++;
       }
    }
-
-}
-
-
-namespace Botan {
-
-/**
-* Entropy source for generic Unix. Runs various programs trying to
-* gather data hard for a remote attacker to guess. Probably not too
-* effective against local attackers as they can sample from the same
-* distribution.
-*/
-class Unix_EntropySource final : public Entropy_Source
-   {
-   public:
-      std::string name() const override { return "unix_procs"; }
-
-      void poll(Entropy_Accumulator& accum) override;
-
-      /**
-      * @param trusted_paths is a list of directories that are assumed
-      *        to contain only 'safe' binaries. If an attacker can write
-      *        an executable to one of these directories then we will
-      *        run arbitrary code.
-      */
-      Unix_EntropySource(const std::vector<std::string>& trusted_paths,
-                         size_t concurrent_processes = 0);
-   private:
-      static std::vector<std::vector<std::string>> get_default_sources();
-
-      class Unix_Process
-         {
-         public:
-            int fd() const { return m_fd; }
-
-            void spawn(const std::vector<std::string>& args);
-            void shutdown();
-
-            Unix_Process() {}
-
-            Unix_Process(const std::vector<std::string>& args) { spawn(args); }
-
-            ~Unix_Process() { shutdown(); }
-
-            Unix_Process(Unix_Process&& other)
-               {
-               std::swap(m_fd, other.m_fd);
-               std::swap(m_pid, other.m_pid);
-               }
-
-            Unix_Process(const Unix_Process&) = delete;
-            Unix_Process& operator=(const Unix_Process&) = delete;
-         private:
-            int m_fd = -1;
-            int m_pid = -1;
-         };
-
-      const std::vector<std::string>& next_source();
-
-      std::mutex m_mutex;
-      const std::vector<std::string> m_trusted_paths;
-      const size_t m_concurrent;
-
-      std::vector<std::vector<std::string>> m_sources;
-      size_t m_sources_idx = 0;
-
-      std::vector<Unix_Process> m_procs;
-      secure_vector<byte> m_buf;
-   };
-
-class UnixProcessInfo_EntropySource final : public Entropy_Source
-   {
-   public:
-      std::string name() const override { return "proc_info"; }
-
-      void poll(Entropy_Accumulator& accum) override;
-   };
 
 }
 

@@ -1,7 +1,7 @@
 /* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
 #include "kulloclient/util/gzipdecompressingfilter.h"
 
-#include <botan/botan.h>
+#include <botan/botan_all.h>
 
 #include "kulloclient/util/assert.h"
 #include "kulloclient/util/misc.h"
@@ -19,13 +19,12 @@ struct GZipDecompressingFilter::Impl
 {
     Impl()
         : decompressor_(Botan::make_decompressor(ALGORITHM))
-        , initialOutput_(Botan::unlock(decompressor_->start()))
     {
         kulloAssert(decompressor_);
+        decompressor_->start();
     }
 
-    std::unique_ptr<Botan::Compressor_Transform> decompressor_;
-    std::vector<unsigned char> initialOutput_;
+    std::unique_ptr<Botan::Decompression_Algorithm> decompressor_;
     bool bad_ = false;
     bool hasSeenInput_ = false;
 };
@@ -40,12 +39,6 @@ GZipDecompressingFilter::~GZipDecompressingFilter()
 void GZipDecompressingFilter::write(
         Sink &sink, const unsigned char *buffer, std::size_t size)
 {
-    if (!impl_->initialOutput_.empty())
-    {
-        sink.write(impl_->initialOutput_.data(), impl_->initialOutput_.size());
-        impl_->initialOutput_.clear();
-    }
-
     Botan::secure_vector<unsigned char> inout(buffer, buffer + size);
     if (inout.size() > 0) impl_->hasSeenInput_ = true;
 

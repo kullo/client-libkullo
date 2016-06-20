@@ -6,6 +6,7 @@
 #include <jsoncpp/jsoncpp.h>
 
 #include "kulloclient/codec/exceptions.h"
+#include "kulloclient/crypto/exceptions.h"
 #include "kulloclient/crypto/symmetrickeygenerator.h"
 #include "kulloclient/crypto/symmetrickeyloader.h"
 #include "kulloclient/dao/asymmetrickeypairdao.h"
@@ -59,8 +60,16 @@ DecryptedMessage MessageDecryptor::decrypt() const
                     InvalidContentFormat("MessageDecryptor::decrypt()"));
     }
 
-    result.content = decryptContent(result.keySafe);
-    std::tie(result.metaVersion, result.meta) = decryptMeta();
+    try
+    {
+        result.content = decryptContent(result.keySafe);
+        std::tie(result.metaVersion, result.meta) = decryptMeta();
+    }
+    catch (Crypto::IntegrityFailure&)
+    {
+        std::throw_with_nested(
+                    InvalidContentFormat("MessageDecryptor::decrypt()"));
+    }
 
     return std::move(result);
 }

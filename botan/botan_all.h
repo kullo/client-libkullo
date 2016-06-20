@@ -1,6 +1,6 @@
 #pragma once
 
-// IMPORTANT: This tree must be kept in sync with botan.cpp
+// IMPORTANT: This tree must be kept in sync with botan_all.cpp
 #ifdef _WIN32
     #ifdef _WIN64
         #error "Unsupported platform"

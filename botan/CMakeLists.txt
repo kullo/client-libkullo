@@ -3,10 +3,10 @@
 #     botan/CMakeFiles/botan.dir/depend.make
 #     => *.cpp (bad performance), win32-msvc/*.h (incorrect)
 # vs.
-#     gcc -MM -std=c++11 botan/botan.cpp
-#     => botan.cpp, $OS/* (correct)
+#     gcc -MM -std=c++11 botan/botan_all.cpp
+#     => botan_all.cpp, $OS/* (correct)
 kullo_add_simple_library(
-    botan.cpp
+    botan_all.cpp
 )
 
 kullo_get_target_name(target_name)

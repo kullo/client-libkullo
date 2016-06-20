@@ -69,7 +69,7 @@ if [[ "$DO_UPDATE" -eq 1 ]]; then
 		shift
 
 		(cd "$SRC_DIR" && \
-		"$CONFIGURE" --via-amalgamation --no-autoload --disable-shared --with-boost --with-zlib "$@")
+		"$CONFIGURE" --via-amalgamation --no-autoload --disable-shared --with-zlib "$@")
 		mkdir -p "$DEST_DIR"
 		mv "$SRC_DIR"/botan_all.cpp        "$DEST_DIR/"
 		mv "$SRC_DIR"/botan_all.h          "$DEST_DIR/"

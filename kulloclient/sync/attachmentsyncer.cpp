@@ -7,6 +7,7 @@
 #include "kulloclient/codec/attachmentsplittingsink.h"
 #include "kulloclient/codec/sizelimitingfilter.h"
 #include "kulloclient/crypto/decryptingfilter.h"
+#include "kulloclient/crypto/exceptions.h"
 #include "kulloclient/crypto/hashverifyingfilter.h"
 #include "kulloclient/crypto/symmetrickeyloader.h"
 #include "kulloclient/dao/attachmentdao.h"
@@ -99,16 +100,25 @@ void AttachmentSyncer::downloadForMessage(
     stream.pushFilter(make_unique<Codec::SizeLimitingFilter>(
                        MESSAGE_ATTACHMENTS_MAX_BYTES));
 
-    // only download attachments if they are non-empty
-    if (totalSize > 0)
+    try
     {
-        // download attachments for the given message
-        auto attachments = client_->getMessageAttachments(msgId);
+        // only download attachments if they are non-empty
+        if (totalSize > 0)
+        {
+            // download attachments for the given message
+            auto attachments = client_->getMessageAttachments(msgId);
 
-        // decrypt/decompress and store attachments
-        stream.write(attachments.attachments);
+            // decrypt/decompress and store attachments
+            stream.write(attachments.attachments);
+        }
+        stream.close();
     }
-    stream.close();
+    catch (Crypto::IntegrityFailure&)
+    {
+        Log.e() << "Integrity failure while decrypting attachments for "
+                << "message " << std::to_string(msgId) << ", skipping.";
+        return;
+    }
 
     EMIT(events.messageAttachmentsDownloaded,
          msg->conversationId(),

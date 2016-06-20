@@ -1,7 +1,7 @@
 /* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
 #include "kulloclient/crypto/signer.h"
 
-#include <botan/botan.h>
+#include <botan/botan_all.h>
 
 #include "kulloclient/crypto/asymmetrickeyloader.h"
 #include "kulloclient/crypto/privatekeyimpl.h"

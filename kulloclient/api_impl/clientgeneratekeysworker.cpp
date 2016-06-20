@@ -3,7 +3,7 @@
 
 #include <atomic>
 #include <future>
-#include <botan/botan.h>
+#include <botan/botan_all.h>
 
 #include "kulloclient/api_impl/asynctaskimpl.h"
 #include "kulloclient/api_impl/clientgeneratekeyssigningworker.h"

@@ -290,10 +290,6 @@ make_new_T_1X(const typename Algo_Registry<T>::Spec& spec)
 #define BOTAN_REGISTER_NAMED_T_2LEN(T, type, name, provider, len1, len2) \
    BOTAN_REGISTER_TYPE(T, type, name, (make_new_T_2len<type,len1,len2>), provider, BOTAN_DEFAULT_ALGORITHM_PRIO)
 
-// TODO move elsewhere:
-#define BOTAN_REGISTER_TRANSFORM(name, maker) BOTAN_REGISTER_T(Transform, name, maker)
-#define BOTAN_REGISTER_TRANSFORM_NOARGS(name) BOTAN_REGISTER_T_NOARGS(Transform, name)
-
 }
 
 
@@ -479,8 +475,8 @@ class Zlib_Style_Stream : public Compression_Stream
    };
 
 #define BOTAN_REGISTER_COMPRESSION(C, D) \
-   BOTAN_REGISTER_T_1LEN(Transform, C, 9); \
-   BOTAN_REGISTER_T_NOARGS(Transform, D)
+   BOTAN_REGISTER_T_NOARGS(Compression_Algorithm, C); \
+   BOTAN_REGISTER_T_NOARGS(Decompression_Algorithm, D)
 
 }
 
@@ -594,6 +590,12 @@ inline T is_less(T x, T y)
    but something more complicated may be needed for portable const time.
    */
    return expand_mask<T>(x < y);
+   }
+
+template<typename T>
+inline T is_lte(T x, T y)
+   {
+   return expand_mask<T>(x <= y);
    }
 
 template<typename T>
@@ -950,7 +952,7 @@ inline size_t clamp(size_t n, size_t lower_bound, size_t upper_bound)
 namespace Botan {
 
 template<typename T>
-T* make_block_cipher_mode(const Transform::Spec& spec)
+T* make_block_cipher_mode(const Cipher_Mode::Spec& spec)
    {
    if(std::unique_ptr<BlockCipher> bc = BlockCipher::create(spec.arg(0)))
       return new T(bc.release());
@@ -958,7 +960,7 @@ T* make_block_cipher_mode(const Transform::Spec& spec)
    }
 
 template<typename T, size_t LEN1>
-T* make_block_cipher_mode_len(const Transform::Spec& spec)
+T* make_block_cipher_mode_len(const Cipher_Mode::Spec& spec)
    {
    if(std::unique_ptr<BlockCipher> bc = BlockCipher::create(spec.arg(0)))
       {
@@ -970,7 +972,7 @@ T* make_block_cipher_mode_len(const Transform::Spec& spec)
    }
 
 template<typename T, size_t LEN1, size_t LEN2>
-T* make_block_cipher_mode_len2(const Transform::Spec& spec)
+T* make_block_cipher_mode_len2(const Cipher_Mode::Spec& spec)
    {
    if(std::unique_ptr<BlockCipher> bc = BlockCipher::create(spec.arg(0)))
       {
@@ -983,16 +985,16 @@ T* make_block_cipher_mode_len2(const Transform::Spec& spec)
    }
 
 #define BOTAN_REGISTER_BLOCK_CIPHER_MODE(E, D)                          \
-   BOTAN_REGISTER_NAMED_T(Transform, #E, E, make_block_cipher_mode<E>); \
-   BOTAN_REGISTER_NAMED_T(Transform, #D, D, make_block_cipher_mode<D>)
+   BOTAN_REGISTER_NAMED_T(Cipher_Mode, #E, E, make_block_cipher_mode<E>); \
+   BOTAN_REGISTER_NAMED_T(Cipher_Mode, #D, D, make_block_cipher_mode<D>)
 
 #define BOTAN_REGISTER_BLOCK_CIPHER_MODE_LEN(E, D, LEN)                          \
-   BOTAN_REGISTER_NAMED_T(Transform, #E, E, (make_block_cipher_mode_len<E, LEN>)); \
-   BOTAN_REGISTER_NAMED_T(Transform, #D, D, (make_block_cipher_mode_len<D, LEN>))
+   BOTAN_REGISTER_NAMED_T(Cipher_Mode, #E, E, (make_block_cipher_mode_len<E, LEN>)); \
+   BOTAN_REGISTER_NAMED_T(Cipher_Mode, #D, D, (make_block_cipher_mode_len<D, LEN>))
 
 #define BOTAN_REGISTER_BLOCK_CIPHER_MODE_LEN2(E, D, LEN1, LEN2)                          \
-   BOTAN_REGISTER_NAMED_T(Transform, #E, E, (make_block_cipher_mode_len2<E, LEN1, LEN2>)); \
-   BOTAN_REGISTER_NAMED_T(Transform, #D, D, (make_block_cipher_mode_len2<D, LEN1, LEN2>))
+   BOTAN_REGISTER_NAMED_T(Cipher_Mode, #E, E, (make_block_cipher_mode_len2<E, LEN1, LEN2>)); \
+   BOTAN_REGISTER_NAMED_T(Cipher_Mode, #D, D, (make_block_cipher_mode_len2<D, LEN1, LEN2>))
 
 }
 

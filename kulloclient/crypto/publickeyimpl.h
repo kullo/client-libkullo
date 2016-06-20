@@ -3,7 +3,7 @@
 
 #include <memory>
 
-#include <botan/botan.h>
+#include <botan/botan_all.h>
 
 namespace Kullo {
 namespace Crypto {

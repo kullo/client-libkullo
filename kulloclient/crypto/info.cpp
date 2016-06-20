@@ -4,7 +4,7 @@
 #include <typeinfo>
 
 #include <boost/core/demangle.hpp>
-#include <botan/botan.h>
+#include <botan/botan_all.h>
 
 #include "kulloclient/util/assert.h"
 #include "kulloclient/util/formatstring.h"

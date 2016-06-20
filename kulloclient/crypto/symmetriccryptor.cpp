@@ -2,8 +2,9 @@
 #include "kulloclient/crypto/symmetriccryptor.h"
 
 #include <vector>
-#include <botan/botan.h>
+#include <botan/botan_all.h>
 
+#include "kulloclient/crypto/exceptions.h"
 #include "kulloclient/crypto/symmetrickeyimpl.h"
 #include "kulloclient/util/assert.h"
 
@@ -76,9 +77,18 @@ std::vector<unsigned char> SymmetricCryptor::crypt(
         kulloAssert(false);
     }
 
-    Pipe pipe(get_cipher(CIPHER, key.priv()->key, iv, dir));
-    pipe.process_msg(input);
-    secure_vector<byte> output = pipe.read_all(0);
+    secure_vector<byte> output;
+    try
+    {
+        Pipe pipe(get_cipher(CIPHER, key.priv()->key, iv, dir));
+        pipe.process_msg(input);
+        output = pipe.read_all(0);
+    }
+    catch (Botan::Integrity_Failure&)
+    {
+        std::throw_with_nested(
+                    Crypto::IntegrityFailure("SymmetricCryptor::crypt"));
+    }
     return std::vector<unsigned char>(output.cbegin(), output.cend());
 }
 

@@ -1,7 +1,7 @@
 /* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
 #include "kulloclient/util/hex.h"
 
-#include <botan/botan.h>
+#include <botan/botan_all.h>
 
 namespace Kullo {
 namespace Util {

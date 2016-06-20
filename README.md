@@ -70,6 +70,10 @@ Tips and Tricks
 Changelog
 ---------
 
+### v51 (2016-06-20)
+
+ * Update Botan to 1.11.30, fixing a compatibility issue with GCM
+
 ### v50 (2016-06-17)
 
  * Improve sync speed by reusing a single HTTP connection for multiple requests
@@ -77,18 +81,18 @@ Changelog
 ### v49 (2016-06-04)
 
  * Windows: Fix bug in handling filenames with special chars when adding files to drafts
- * Update SmartSqlite v10
+ * Update SmartSqlite to v10
 
 ### v48 (2016-05-27)
 
  * Sync user settings
- * Update SmartSqlite v10
- * Update Boost 1.61.0
+ * Update SmartSqlite to v10
+ * Update Boost to 1.61.0
 
 ### v47 (2016-04-14)
 
  * Deduplicate avatars to speed up creating a session
- * Update SmartSqlite v9
+ * Update SmartSqlite to v9
 
 ### v46 (2016-04-06)
 
@@ -101,14 +105,14 @@ Changelog
  * Increase attachment size limit for sending to 100 MB
  * Calculate Conversations.lastMessageTime from receiving time on the server
  * Implement http mime multipart for sending messages with attachments
- * Update SmartSqlite v8
- * Update Botan 1.11.29
+ * Update SmartSqlite to v8
+ * Update Botan to 1.11.29
 
 ### v44 (2016-03-03)
 
  * Make downloading attachments more memory-efficient through streaming
  * Increase attachment size limit for receiving to 100 MB
- * Update SmartSqlite v6 (version list shows v5 because of missing version bumb)
+ * Update SmartSqlite to v6 (version list shows v5 because of missing version bump)
 
 ### v43 (2016-02-12)
 
@@ -120,13 +124,13 @@ Changelog
 ### v42 (2016-02-02)
 
  * Retry push token registration on server or network error
- * Update to Botan 1.11.28
+ * Update to Botan to 1.11.28
 
 ### v41 (2016-01-26)
 
  * Implement push notifications
  * Update Djinni
- * Update Botan 1.11.26
+ * Update Botan to 1.11.26
 
 ### v40 (2015-12-22)
 
@@ -139,7 +143,7 @@ Changelog
 
  * New Api: Make sync progress available
  * New Api: Move sync logic from caller to libkullo
- * Update Botan 1.11.25
+ * Update Botan to 1.11.25
 
 ### v38 (2015-11-30)
 
@@ -157,7 +161,7 @@ Changelog
 
 ### v36 (2015-11-25)
 
- * Update SmartSqlite v3
+ * Update SmartSqlite to v3
  * Remove type KulloVersion
 
 ### v35 (2015-11-24)
@@ -168,4 +172,4 @@ Changelog
  * Handle filesystem error in Attachments.saveToAsync
  * Let Senders.getLatest return -1 if not found
  * Create indices to improve database speed
- * Update Botan 1.11.24
+ * Update Botan to 1.11.24

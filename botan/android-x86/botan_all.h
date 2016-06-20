@@ -1,5 +1,5 @@
 /*
-* Botan 1.11.29 Amalgamation
+* Botan 1.11.30 Amalgamation
 * (C) 1999-2013,2014,2015 Jack Lloyd and others
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -28,8 +28,8 @@
 #include <vector>
 
 /*
-* This file was automatically generated Mon Mar 21 06:01:24 2016 UTC by
-* daniel@twentyone running '/tmp/update-botan/1.11.29/Botan-1.11.29/configure.py --via-amalgamation --no-autoload --disable-shared --with-boost --with-zlib --enable-modules=aes,sha1,sha2_32,sha2_64,auto_rng,codec_filt,eme_oaep,emsa_pssr,gcm,hres_timer,rsa,srp6,system_rng,dev_random,proc_walk,unix_procs --os=android --cpu=x86_32 --cc=clang'
+* This file was automatically generated Mon Jun 20 14:53:03 2016 UTC by
+* daniel@twentyone running '/tmp/update-botan/1.11.30/Botan-1.11.30/configure.py --via-amalgamation --no-autoload --disable-shared --with-zlib --enable-modules=aes,sha1,sha2_32,sha2_64,auto_rng,codec_filt,eme_oaep,emsa_pssr,gcm,hres_timer,rsa,srp6,system_rng,dev_random,proc_walk --os=android --cpu=x86_32 --cc=clang'
 *
 * Target
 *  - Compiler: clang++  -pthread -std=c++11 -D_REENTRANT -fstack-protector -O3
@@ -39,19 +39,19 @@
 
 #define BOTAN_VERSION_MAJOR 1
 #define BOTAN_VERSION_MINOR 11
-#define BOTAN_VERSION_PATCH 29
-#define BOTAN_VERSION_DATESTAMP 20160320
+#define BOTAN_VERSION_PATCH 30
+#define BOTAN_VERSION_DATESTAMP 20160619
 
 #define BOTAN_VERSION_RELEASE_TYPE "released"
 
-#define BOTAN_VERSION_VC_REVISION "git:67a756ac2bef809be53ccdce7773682547c857eb"
+#define BOTAN_VERSION_VC_REVISION "git:0b6d2a853638206dfa43420d5419e8b719505cc7"
 
 #define BOTAN_DISTRIBUTION_INFO "unspecified"
 
 #define BOTAN_INSTALL_PREFIX R"(/usr/local)"
 #define BOTAN_INSTALL_HEADER_DIR "include/botan-1.11"
 #define BOTAN_INSTALL_LIB_DIR "lib"
-#define BOTAN_LIB_LINK "-lboost_filesystem -lboost_system -lz"
+#define BOTAN_LIB_LINK "-lz"
 
 #ifndef BOTAN_DLL
   #define BOTAN_DLL 
@@ -273,12 +273,6 @@ Each poll generates 32 bit entropy
 
 #define BOTAN_BUILD_COMPILER_IS_CLANG
 
-#if defined(_MSC_VER)
-  // 4250: inherits via dominance (diamond inheritence issue)
-  // 4251: needs DLL interface (STL DLL exports)
-  #pragma warning(disable: 4250 4251)
-#endif
-
 /*
 * Compile-time deprecatation warnings
 */
@@ -348,9 +342,6 @@ Each poll generates 32 bit entropy
 #define BOTAN_HAS_BIGINT 20131128
 #define BOTAN_HAS_BIGINT_MP 20151225
 #define BOTAN_HAS_BLOCK_CIPHER 20131128
-#define BOTAN_HAS_BOOST_ASIO 20131228
-#define BOTAN_HAS_BOOST_DATETIME 20150720
-#define BOTAN_HAS_BOOST_FILESYSTEM 20131228
 #define BOTAN_HAS_CIPHER_MODE_PADDING 20131128
 #define BOTAN_HAS_CODEC_FILTERS 20131128
 #define BOTAN_HAS_COMPRESSION 20141117
@@ -362,8 +353,7 @@ Each poll generates 32 bit entropy
 #define BOTAN_HAS_ENTROPY_SRC_DEV_RANDOM 20131128
 #define BOTAN_HAS_ENTROPY_SRC_HIGH_RESOLUTION_TIMER 20131128
 #define BOTAN_HAS_ENTROPY_SRC_PROC_WALKER 20131128
-#define BOTAN_HAS_ENTROPY_SRC_UNIX_PROCESS_RUNNER 20131128
-#define BOTAN_HAS_FILTERS 20131128
+#define BOTAN_HAS_FILTERS 20160415
 #define BOTAN_HAS_HEX_CODEC 20131128
 #define BOTAN_HAS_HMAC 20131128
 #define BOTAN_HAS_HMAC_RNG 20131128
@@ -390,9 +380,8 @@ Each poll generates 32 bit entropy
 #define BOTAN_HAS_SRP6 20131128
 #define BOTAN_HAS_STREAM_CIPHER 20131128
 #define BOTAN_HAS_SYSTEM_RNG 20141202
-#define BOTAN_HAS_TRANSFORM 20131209
 #define BOTAN_HAS_UTIL_FUNCTIONS 20150919
-#define BOTAN_HAS_ZLIB_TRANSFORM 20141118
+#define BOTAN_HAS_ZLIB 20160412
 
 /*
 * Local configuration options (if any) follow
@@ -1235,6 +1224,16 @@ struct BOTAN_DLL Self_Test_Failure : public Internal_Error
       {}
    };
 
+/**
+* Not Implemented Exception
+*/
+struct BOTAN_DLL Not_Implemented : public Exception
+   {
+   explicit Not_Implemented(const std::string& err) :
+      Exception("Not implemented", err)
+      {}
+   };
+
 }
 
 
@@ -1478,12 +1477,14 @@ class BOTAN_DLL SCAN_Name
 namespace Botan {
 
 /**
-* Interface for general transformations on data
+* Interface for cipher modes
 */
-class BOTAN_DLL Transform
+class BOTAN_DLL Cipher_Mode
    {
    public:
       typedef SCAN_Name Spec;
+
+      virtual ~Cipher_Mode() {}
 
       /**
       * Begin processing a message.
@@ -1582,12 +1583,17 @@ class BOTAN_DLL Transform
 
       virtual void clear() = 0;
 
-      virtual ~Transform() {}
-   };
+      /**
+      * Returns true iff this mode provides authentication as well as
+      * confidentiality.
+      */
+      virtual bool authenticated() const { return false; }
 
-class BOTAN_DLL Keyed_Transform : public Transform
-   {
-   public:
+      /**
+      * Return the size of the authentication tag used (in bytes)
+      */
+      virtual size_t tag_size() const { return 0; }
+
       /**
       * @return object describing limits on key size
       */
@@ -1630,11 +1636,70 @@ class BOTAN_DLL Keyed_Transform : public Transform
       virtual void key_schedule(const byte key[], size_t length) = 0;
    };
 
-typedef Transform Transformation;
+/**
+* The two possible directions for cipher filters, determining whether they
+* actually perform encryption or decryption.
+*/
+enum Cipher_Dir { ENCRYPTION, DECRYPTION };
 
-BOTAN_DLL Transform* get_transform(const std::string& specstr,
-                                   const std::string& provider = "",
-                                   const std::string& dirstr = "");
+BOTAN_DLL Cipher_Mode* get_cipher_mode(const std::string& algo_spec, Cipher_Dir direction);
+
+}
+
+
+namespace Botan {
+
+/**
+* Interface for AEAD (Authenticated Encryption with Associated Data)
+* modes. These modes provide both encryption and message
+* authentication, and can authenticate additional per-message data
+* which is not included in the ciphertext (for instance a sequence
+* number).
+*/
+class BOTAN_DLL AEAD_Mode : public Cipher_Mode
+   {
+   public:
+      bool authenticated() const override { return true; }
+
+      /**
+      * Set associated data that is not included in the ciphertext but
+      * that should be authenticated. Must be called after set_key and
+      * before start.
+      *
+      * Unless reset by another call, the associated data is kept
+      * between messages. Thus, if the AD does not change, calling
+      * once (after set_key) is the optimum.
+      *
+      * @param ad the associated data
+      * @param ad_len length of add in bytes
+      */
+      virtual void set_associated_data(const byte ad[], size_t ad_len) = 0;
+
+      template<typename Alloc>
+      void set_associated_data_vec(const std::vector<byte, Alloc>& ad)
+         {
+         set_associated_data(ad.data(), ad.size());
+         }
+
+      template<typename Alloc>
+      void set_ad(const std::vector<byte, Alloc>& ad)
+         {
+         set_associated_data(ad.data(), ad.size());
+         }
+
+      /**
+      * Default AEAD nonce size (a commonly supported value among AEAD
+      * modes, and large enough that random collisions are unlikely).
+      */
+      size_t default_nonce_length() const override { return 12; }
+
+      virtual ~AEAD_Mode();
+   };
+
+/**
+* Get an AEAD mode by name (eg "AES-128/GCM" or "Serpent/EAX")
+*/
+BOTAN_DLL AEAD_Mode* get_aead(const std::string& name, Cipher_Dir direction);
 
 }
 
@@ -1719,170 +1784,6 @@ class BOTAN_DLL SymmetricAlgorithm
       */
       virtual void key_schedule(const byte key[], size_t length) = 0;
    };
-
-}
-
-
-namespace Botan {
-
-/**
-* Base class for all stream ciphers
-*/
-class BOTAN_DLL StreamCipher : public SymmetricAlgorithm
-   {
-   public:
-      typedef SCAN_Name Spec;
-
-      /**
-      * Create an instance based on a name
-      * Will return a null pointer if the algo/provider combination cannot
-      * be found. If provider is empty then best available is chosen.
-      */
-      static std::unique_ptr<StreamCipher> create(const std::string& algo_spec,
-                                                  const std::string& provider = "");
-
-      /**
-      * Returns the list of available providers for this algorithm, empty if not available
-      */
-      static std::vector<std::string> providers(const std::string& algo_spec);
-
-      /**
-      * Encrypt or decrypt a message
-      * @param in the plaintext
-      * @param out the byte array to hold the output, i.e. the ciphertext
-      * @param len the length of both in and out in bytes
-      */
-      virtual void cipher(const byte in[], byte out[], size_t len) = 0;
-
-      /**
-      * Encrypt or decrypt a message
-      * @param buf the plaintext / ciphertext
-      * @param len the length of buf in bytes
-      */
-      void cipher1(byte buf[], size_t len)
-         { cipher(buf, buf, len); }
-
-      template<typename Alloc>
-         void encipher(std::vector<byte, Alloc>& inout)
-         { cipher(inout.data(), inout.data(), inout.size()); }
-
-      template<typename Alloc>
-         void encrypt(std::vector<byte, Alloc>& inout)
-         { cipher(inout.data(), inout.data(), inout.size()); }
-
-      template<typename Alloc>
-         void decrypt(std::vector<byte, Alloc>& inout)
-         { cipher(inout.data(), inout.data(), inout.size()); }
-
-      /**
-      * Resync the cipher using the IV
-      * @param iv the initialization vector
-      * @param iv_len the length of the IV in bytes
-      */
-      virtual void set_iv(const byte[], size_t iv_len);
-
-      /**
-      * @param iv_len the length of the IV in bytes
-      * @return if the length is valid for this algorithm
-      */
-      virtual bool valid_iv_length(size_t iv_len) const { return (iv_len == 0); }
-
-      /**
-      * Get a new object representing the same algorithm as *this
-      */
-      virtual StreamCipher* clone() const = 0;
-
-      StreamCipher();
-      virtual ~StreamCipher();
-   };
-
-}
-
-
-namespace Botan {
-
-/**
-* Interface for cipher modes
-*/
-class BOTAN_DLL Cipher_Mode : public Keyed_Transform
-   {
-   public:
-      /**
-      * Returns true iff this mode provides authentication as well as
-      * confidentiality.
-      */
-      virtual bool authenticated() const { return false; }
-
-      /**
-      * Return the size of the authentication tag used (in bytes)
-      */
-      virtual size_t tag_size() const { return 0; }
-   };
-
-/**
-* The two possible directions for cipher filters, determining whether they
-* actually perform encryption or decryption.
-*/
-enum Cipher_Dir { ENCRYPTION, DECRYPTION };
-
-BOTAN_DLL Cipher_Mode* get_cipher_mode(const std::string& algo_spec, Cipher_Dir direction);
-
-}
-
-
-namespace Botan {
-
-/**
-* Interface for AEAD (Authenticated Encryption with Associated Data)
-* modes. These modes provide both encryption and message
-* authentication, and can authenticate additional per-message data
-* which is not included in the ciphertext (for instance a sequence
-* number).
-*/
-class BOTAN_DLL AEAD_Mode : public Cipher_Mode
-   {
-   public:
-      bool authenticated() const override { return true; }
-
-      /**
-      * Set associated data that is not included in the ciphertext but
-      * that should be authenticated. Must be called after set_key and
-      * before start.
-      *
-      * Unless reset by another call, the associated data is kept
-      * between messages. Thus, if the AD does not change, calling
-      * once (after set_key) is the optimum.
-      *
-      * @param ad the associated data
-      * @param ad_len length of add in bytes
-      */
-      virtual void set_associated_data(const byte ad[], size_t ad_len) = 0;
-
-      template<typename Alloc>
-      void set_associated_data_vec(const std::vector<byte, Alloc>& ad)
-         {
-         set_associated_data(ad.data(), ad.size());
-         }
-
-      template<typename Alloc>
-      void set_ad(const std::vector<byte, Alloc>& ad)
-         {
-         set_associated_data(ad.data(), ad.size());
-         }
-
-      /**
-      * Default AEAD nonce size (a commonly supported value among AEAD
-      * modes, and large enough that random collisions are unlikely).
-      */
-      size_t default_nonce_length() const override { return 12; }
-
-      virtual ~AEAD_Mode();
-   };
-
-/**
-* Get an AEAD mode by name (eg "AES-128/GCM" or "Serpent/EAX")
-*/
-BOTAN_DLL AEAD_Mode* get_aead(const std::string& name, Cipher_Dir direction);
 
 }
 
@@ -2697,7 +2598,7 @@ class BOTAN_DLL Serialized_RNG : public RandomNumberGenerator
 
 namespace Botan {
 
-class BOTAN_DLL AutoSeeded_RNG : public RandomNumberGenerator
+class AutoSeeded_RNG : public RandomNumberGenerator
    {
    public:
       void randomize(byte out[], size_t len) override
@@ -3430,7 +3331,7 @@ class BOTAN_DLL BER_Decoder
                                           ASN1_Tag type_tag,
                                           ASN1_Tag class_tag = CONTEXT_SPECIFIC)
          {
-         out = decode_constrained_integer(type_tag, class_tag, sizeof(out));
+         out = static_cast<T>(decode_constrained_integer(type_tag, class_tag, sizeof(out)));
          return (*this);
          }
 
@@ -3815,7 +3716,7 @@ namespace Botan {
 template<typename T> inline byte get_byte(size_t byte_num, T input)
    {
    return static_cast<byte>(
-      input >> ((sizeof(T)-1-(byte_num&(sizeof(T)-1))) << 3)
+      input >> (((~byte_num)&(sizeof(T)-1)) << 3)
       );
    }
 
@@ -5193,6 +5094,17 @@ BigInt BOTAN_DLL sub_mul(const BigInt& a,
                          const BigInt& c);
 
 /**
+* Fused multiply-subtract
+* @param a an integer
+* @param b an integer
+* @param c an integer
+* @return (a*b)-c
+*/
+BigInt BOTAN_DLL mul_sub(const BigInt& a,
+                         const BigInt& b,
+                         const BigInt& c);
+
+/**
 * Return the absolute value
 * @param n an integer
 * @return absolute value of n
@@ -5478,6 +5390,88 @@ class BOTAN_DLL Blinder
 
       mutable BigInt m_e, m_d;
       mutable size_t m_counter = 0;
+   };
+
+}
+
+
+namespace Botan {
+
+/**
+* Base class for all stream ciphers
+*/
+class BOTAN_DLL StreamCipher : public SymmetricAlgorithm
+   {
+   public:
+      typedef SCAN_Name Spec;
+
+      /**
+      * Create an instance based on a name
+      * Will return a null pointer if the algo/provider combination cannot
+      * be found. If provider is empty then best available is chosen.
+      */
+      static std::unique_ptr<StreamCipher> create(const std::string& algo_spec,
+                                                  const std::string& provider = "");
+
+      /**
+      * Returns the list of available providers for this algorithm, empty if not available
+      */
+      static std::vector<std::string> providers(const std::string& algo_spec);
+
+      /**
+      * Encrypt or decrypt a message
+      * @param in the plaintext
+      * @param out the byte array to hold the output, i.e. the ciphertext
+      * @param len the length of both in and out in bytes
+      */
+      virtual void cipher(const byte in[], byte out[], size_t len) = 0;
+
+      /**
+      * Encrypt or decrypt a message
+      * @param buf the plaintext / ciphertext
+      * @param len the length of buf in bytes
+      */
+      void cipher1(byte buf[], size_t len)
+         { cipher(buf, buf, len); }
+
+      template<typename Alloc>
+         void encipher(std::vector<byte, Alloc>& inout)
+         { cipher(inout.data(), inout.data(), inout.size()); }
+
+      template<typename Alloc>
+         void encrypt(std::vector<byte, Alloc>& inout)
+         { cipher(inout.data(), inout.data(), inout.size()); }
+
+      template<typename Alloc>
+         void decrypt(std::vector<byte, Alloc>& inout)
+         { cipher(inout.data(), inout.data(), inout.size()); }
+
+      /**
+      * Resync the cipher using the IV
+      * @param iv the initialization vector
+      * @param iv_len the length of the IV in bytes
+      */
+      virtual void set_iv(const byte[], size_t iv_len);
+
+      /**
+      * @param iv_len the length of the IV in bytes
+      * @return if the length is valid for this algorithm
+      */
+      virtual bool valid_iv_length(size_t iv_len) const { return (iv_len == 0); }
+
+      /**
+      * Get a new object representing the same algorithm as *this
+      */
+      virtual StreamCipher* clone() const = 0;
+
+      /**
+      * Set the offset and the state used later to generate the keystream
+      * @param offset the offset where we begin to generate the keystream
+      */
+      virtual void seek(u64bit offset) = 0;
+
+      StreamCipher();
+      virtual ~StreamCipher();
    };
 
 }
@@ -6361,13 +6355,189 @@ char BOTAN_DLL digit2char(byte b);
 
 namespace Botan {
 
-class Transform;
-class Compressor_Transform;
+/**
+* This class represents keyed filters, i.e. filters that have to be
+* fed with a key in order to function.
+*/
+class BOTAN_DLL Keyed_Filter : public Filter
+   {
+   public:
+      /**
+      * Set the key of this filter
+      * @param key the key to use
+      */
+      virtual void set_key(const SymmetricKey& key) = 0;
+
+      /**
+      * Set the initialization vector of this filter. Note: you should
+      * call set_iv() only after you have called set_key()
+      * @param iv the initialization vector to use
+      */
+      virtual void set_iv(const InitializationVector& iv);
+
+      /**
+      * Check whether a key length is valid for this filter
+      * @param length the key length to be checked for validity
+      * @return true if the key length is valid, false otherwise
+      */
+      bool valid_keylength(size_t length) const
+         {
+         return key_spec().valid_keylength(length);
+         }
+
+      /**
+      * @return object describing limits on key size
+      */
+      virtual Key_Length_Specification key_spec() const = 0;
+
+      /**
+      * Check whether an IV length is valid for this filter
+      * @param length the IV length to be checked for validity
+      * @return true if the IV length is valid, false otherwise
+      */
+      virtual bool valid_iv_length(size_t length) const
+         { return (length == 0); }
+   };
+
+
+
+/*
+* Get a cipher object
+*/
 
 /**
-* Filter interface for compression/decompression
+* Factory method for general symmetric cipher filters.
+* @param algo_spec the name of the desired cipher
+* @param key the key to be used for encryption/decryption performed by
+* the filter
+* @param iv the initialization vector to be used
+* @param direction determines whether the filter will be an encrypting
+* or decrypting filter
+* @return pointer to newly allocated encryption or decryption filter
 */
-class BOTAN_DLL Compression_Decompression_Filter : public Filter
+BOTAN_DLL Keyed_Filter* get_cipher(const std::string& algo_spec,
+                                   const SymmetricKey& key,
+                                   const InitializationVector& iv,
+                                   Cipher_Dir direction);
+
+/**
+* Factory method for general symmetric cipher filters.
+* @param algo_spec the name of the desired cipher
+* @param key the key to be used for encryption/decryption performed by
+* the filter
+* @param direction determines whether the filter will be an encrypting
+* or decrypting filter
+* @return pointer to the encryption or decryption filter
+*/
+BOTAN_DLL Keyed_Filter* get_cipher(const std::string& algo_spec,
+                                   const SymmetricKey& key,
+                                   Cipher_Dir direction);
+
+/**
+* Factory method for general symmetric cipher filters. No key will be
+* set in the filter.
+*
+* @param algo_spec the name of the desired cipher
+* @param direction determines whether the filter will be an encrypting or
+* decrypting filter
+* @return pointer to the encryption or decryption filter
+*/
+BOTAN_DLL Keyed_Filter* get_cipher(const std::string& algo_spec,
+                                   Cipher_Dir direction);
+
+}
+
+
+namespace Botan {
+
+/**
+* Filter interface for cipher modes
+*/
+class BOTAN_DLL Cipher_Mode_Filter : public Keyed_Filter,
+                                     private Buffered_Filter
+   {
+   public:
+      explicit Cipher_Mode_Filter(Cipher_Mode* t);
+
+      void set_iv(const InitializationVector& iv) override;
+
+      void set_key(const SymmetricKey& key) override;
+
+      Key_Length_Specification key_spec() const override;
+
+      bool valid_iv_length(size_t length) const override;
+
+      std::string name() const override;
+
+   protected:
+      const Cipher_Mode& get_mode() const { return *m_mode; }
+
+      Cipher_Mode& get_mode() { return *m_mode; }
+
+   private:
+      void write(const byte input[], size_t input_length) override;
+      void start_msg() override;
+      void end_msg() override;
+
+      void buffered_block(const byte input[], size_t input_length) override;
+      void buffered_final(const byte input[], size_t input_length) override;
+
+      class Nonce_State
+         {
+         public:
+            explicit Nonce_State(bool allow_null_nonce) : m_fresh_nonce(allow_null_nonce) {}
+
+            void update(const InitializationVector& iv);
+            std::vector<byte> get();
+         private:
+            bool m_fresh_nonce;
+            std::vector<byte> m_nonce;
+         };
+
+      Nonce_State m_nonce;
+      std::unique_ptr<Cipher_Mode> m_mode;
+      secure_vector<byte> m_buffer;
+   };
+
+// deprecated aliases, will be removed before 2.0
+typedef Cipher_Mode_Filter Transform_Filter;
+typedef Transform_Filter Transformation_Filter;
+
+}
+
+
+namespace Botan {
+
+class Compression_Algorithm;
+class Decompression_Algorithm;
+
+/**
+* Filter interface for compression
+*/
+class BOTAN_DLL Compression_Filter : public Filter
+   {
+   public:
+      void start_msg() override;
+      void write(const byte input[], size_t input_length) override;
+      void end_msg() override;
+
+      void flush();
+
+      std::string name() const override;
+
+      Compression_Filter(const std::string& type,
+                         size_t compression_level,
+                         size_t buffer_size = 4096);
+   private:
+      std::unique_ptr<Compression_Algorithm> m_comp;
+      size_t m_buffersize, m_level;
+      secure_vector<byte> m_buffer;
+   };
+
+/**
+* Filter interface for decompression
+*/
+class BOTAN_DLL Decompression_Filter : public Filter
    {
    public:
       void start_msg() override;
@@ -6376,31 +6546,12 @@ class BOTAN_DLL Compression_Decompression_Filter : public Filter
 
       std::string name() const override;
 
-   protected:
-      Compression_Decompression_Filter(Transform* t, size_t bs);
-
-      void flush();
-   private:
-      std::unique_ptr<Compressor_Transform> m_transform;
-      std::size_t m_buffersize;
-      secure_vector<byte> m_buffer;
-   };
-
-class BOTAN_DLL Compression_Filter : public Compression_Decompression_Filter
-   {
-   public:
-      Compression_Filter(const std::string& type,
-                         size_t compression_level,
-                         size_t buffer_size = 4096);
-
-      using Compression_Decompression_Filter::flush;
-   };
-
-class BOTAN_DLL Decompression_Filter : public Compression_Decompression_Filter
-   {
-   public:
       Decompression_Filter(const std::string& type,
                            size_t buffer_size = 4096);
+   private:
+      std::unique_ptr<Decompression_Algorithm> m_comp;
+      std::size_t m_buffersize;
+      secure_vector<byte> m_buffer;
    };
 
 }
@@ -6408,28 +6559,71 @@ class BOTAN_DLL Decompression_Filter : public Compression_Decompression_Filter
 
 namespace Botan {
 
-class BOTAN_DLL Compressor_Transform : public Transform
+class BOTAN_DLL Compression_Algorithm
    {
    public:
-      size_t update_granularity() const override final { return 1; }
+      typedef SCAN_Name Spec;
 
-      size_t minimum_final_size() const override final { return 0; }
+      /**
+      * Begin compressing. Most compression algorithms offer a tunable
+      * time/compression tradeoff parameter generally represented by
+      * an integer in the range of 1 to 9.
+      *
+      * If 0 or a value out of range is provided, a compression algorithm
+      * specific default is used.
+      */
+      virtual void start(size_t comp_level = 0) = 0;
 
-      size_t default_nonce_length() const override final { return 0; }
+      /**
+      * Process some data. Input must be in size update_granularity() byte blocks.
+      * @param blocks in/out parameter which will possibly be resized or swapped
+      * @param offset an offset into blocks to begin processing
+      * @param flush if true the compressor will be told to flush state
+      */
+      virtual void update(secure_vector<byte>& buf, size_t offset = 0, bool flush = false) = 0;
 
-      bool valid_nonce_length(size_t nonce_len) const override final
-         { return nonce_len == 0; }
+      /**
+      * Finish compressing
+      *
+      * @param final_block in/out parameter
+      * @param offset an offset into final_block to begin processing
+      */
+      virtual void finish(secure_vector<byte>& final_block, size_t offset = 0) = 0;
 
-      virtual void flush(secure_vector<byte>& buf, size_t offset = 0) { update(buf, offset); }
+      virtual std::string name() const = 0;
 
-      size_t output_length(size_t) const override final
-         {
-         throw Exception(name() + " output length indeterminate");
-         }
+      /**
+      * Reset the state and abort the current message; start can be
+      * called again to process a new message.
+      */
+      virtual void clear() = 0;
+
+      virtual ~Compression_Algorithm() {}
    };
 
-BOTAN_DLL Compressor_Transform* make_compressor(const std::string& type, size_t level);
-BOTAN_DLL Compressor_Transform* make_decompressor(const std::string& type);
+class BOTAN_DLL Decompression_Algorithm
+   {
+   public:
+      typedef SCAN_Name Spec;
+
+      /**
+      * Decompression does not support levels
+      */
+      virtual void start() = 0;
+
+      virtual void update(secure_vector<byte>& buf, size_t offset = 0) = 0;
+
+      virtual void finish(secure_vector<byte>& final_block, size_t offset = 0) = 0;
+
+      virtual std::string name() const = 0;
+
+      virtual void clear() = 0;
+
+      virtual ~Decompression_Algorithm() {}
+   };
+
+BOTAN_DLL Compression_Algorithm* make_compressor(const std::string& type);
+BOTAN_DLL Decompression_Algorithm* make_decompressor(const std::string& type);
 
 class Compression_Stream
    {
@@ -6451,39 +6645,37 @@ class Compression_Stream
       virtual bool run(u32bit flags) = 0;
    };
 
-class BOTAN_DLL Stream_Compression : public Compressor_Transform
+class Stream_Compression : public Compression_Algorithm
    {
    public:
-      void update(secure_vector<byte>& buf, size_t offset = 0) final override;
+      void update(secure_vector<byte>& buf, size_t offset, bool flush) final override;
 
-      void flush(secure_vector<byte>& buf, size_t offset = 0) final override;
-
-      void finish(secure_vector<byte>& buf, size_t offset = 0) final override;
+      void finish(secure_vector<byte>& buf, size_t offset) final override;
 
       void clear() final override;
 
    private:
-      secure_vector<byte> start_raw(const byte[], size_t) final override;
+      void start(size_t level) final override;
 
       void process(secure_vector<byte>& buf, size_t offset, u32bit flags);
 
-      virtual Compression_Stream* make_stream() const = 0;
+      virtual Compression_Stream* make_stream(size_t level) const = 0;
 
       secure_vector<byte> m_buffer;
       std::unique_ptr<Compression_Stream> m_stream;
    };
 
-class BOTAN_DLL Stream_Decompression : public Compressor_Transform
+class Stream_Decompression : public Decompression_Algorithm
    {
    public:
-      void update(secure_vector<byte>& buf, size_t offset = 0) final override;
+      void update(secure_vector<byte>& buf, size_t offset) final override;
 
-      void finish(secure_vector<byte>& buf, size_t offset = 0) final override;
+      void finish(secure_vector<byte>& buf, size_t offset) final override;
 
       void clear() final override;
 
    private:
-      secure_vector<byte> start_raw(const byte[], size_t) final override;
+      void start() final override;
 
       void process(secure_vector<byte>& buf, size_t offset, u32bit flags);
 
@@ -6689,12 +6881,17 @@ class BOTAN_DLL CTR_BE final : public StreamCipher
       * @param cipher the underlying block cipher to use
       */
       explicit CTR_BE(BlockCipher* cipher);
+
+      CTR_BE(BlockCipher* cipher, size_t ctr_size);
+
+      void seek(u64bit offset) override;
    private:
       void key_schedule(const byte key[], size_t key_len) override;
       void increment_counter();
 
       std::unique_ptr<BlockCipher> m_cipher;
       secure_vector<byte> m_counter, m_pad;
+      size_t m_ctr_size;
       size_t m_pad_pos;
    };
 
@@ -7682,101 +7879,6 @@ BOTAN_DLL std::istream& operator>>(std::istream& in, Pipe& pipe);
 #endif
 
 
-namespace Botan {
-
-/**
-* This class represents keyed filters, i.e. filters that have to be
-* fed with a key in order to function.
-*/
-class BOTAN_DLL Keyed_Filter : public Filter
-   {
-   public:
-      /**
-      * Set the key of this filter
-      * @param key the key to use
-      */
-      virtual void set_key(const SymmetricKey& key) = 0;
-
-      /**
-      * Set the initialization vector of this filter. Note: you should
-      * call set_iv() only after you have called set_key()
-      * @param iv the initialization vector to use
-      */
-      virtual void set_iv(const InitializationVector& iv);
-
-      /**
-      * Check whether a key length is valid for this filter
-      * @param length the key length to be checked for validity
-      * @return true if the key length is valid, false otherwise
-      */
-      bool valid_keylength(size_t length) const
-         {
-         return key_spec().valid_keylength(length);
-         }
-
-      /**
-      * @return object describing limits on key size
-      */
-      virtual Key_Length_Specification key_spec() const = 0;
-
-      /**
-      * Check whether an IV length is valid for this filter
-      * @param length the IV length to be checked for validity
-      * @return true if the IV length is valid, false otherwise
-      */
-      virtual bool valid_iv_length(size_t length) const
-         { return (length == 0); }
-   };
-
-
-
-/*
-* Get a cipher object
-*/
-
-/**
-* Factory method for general symmetric cipher filters.
-* @param algo_spec the name of the desired cipher
-* @param key the key to be used for encryption/decryption performed by
-* the filter
-* @param iv the initialization vector to be used
-* @param direction determines whether the filter will be an encrypting
-* or decrypting filter
-* @return pointer to newly allocated encryption or decryption filter
-*/
-BOTAN_DLL Keyed_Filter* get_cipher(const std::string& algo_spec,
-                                   const SymmetricKey& key,
-                                   const InitializationVector& iv,
-                                   Cipher_Dir direction);
-
-/**
-* Factory method for general symmetric cipher filters.
-* @param algo_spec the name of the desired cipher
-* @param key the key to be used for encryption/decryption performed by
-* the filter
-* @param direction determines whether the filter will be an encrypting
-* or decrypting filter
-* @return pointer to the encryption or decryption filter
-*/
-BOTAN_DLL Keyed_Filter* get_cipher(const std::string& algo_spec,
-                                   const SymmetricKey& key,
-                                   Cipher_Dir direction);
-
-/**
-* Factory method for general symmetric cipher filters. No key will be
-* set in the filter.
-*
-* @param algo_spec the name of the desired cipher
-* @param direction determines whether the filter will be an encrypting or
-* decrypting filter
-* @return pointer to the encryption or decryption filter
-*/
-BOTAN_DLL Keyed_Filter* get_cipher(const std::string& algo_spec,
-                                   Cipher_Dir direction);
-
-}
-
-
 
 #if defined(BOTAN_HAS_CODEC_FILTERS)
 
@@ -8737,7 +8839,8 @@ class BOTAN_DLL KDF
 
       virtual size_t kdf(byte key[], size_t key_len,
                          const byte secret[], size_t secret_len,
-                         const byte salt[], size_t salt_len) const = 0;
+                         const byte salt[], size_t salt_len,
+                         const byte label[], size_t label_len) const = 0;
 
 
       /**
@@ -8747,15 +8850,19 @@ class BOTAN_DLL KDF
       * @param secret_len size of secret in bytes
       * @param salt a diversifier
       * @param salt_len size of salt in bytes
+      * @param label purpose for the derived keying material
+      * @param label_len size of label in bytes
       */
       secure_vector<byte> derive_key(size_t key_len,
                                     const byte secret[],
                                     size_t secret_len,
                                     const byte salt[],
-                                    size_t salt_len) const
+                                    size_t salt_len,
+                                    const byte label[] = nullptr,
+                                    size_t label_len = 0) const
          {
          secure_vector<byte> key(key_len);
-         key.resize(kdf(key.data(), key.size(), secret, secret_len, salt, salt_len));
+         key.resize(kdf(key.data(), key.size(), secret, secret_len, salt, salt_len, label, label_len));
          return key;
          }
 
@@ -8764,14 +8871,19 @@ class BOTAN_DLL KDF
       * @param key_len the desired output length in bytes
       * @param secret the secret input
       * @param salt a diversifier
+      * @param label purpose for the derived keying material
       */
       secure_vector<byte> derive_key(size_t key_len,
                                     const secure_vector<byte>& secret,
-                                    const std::string& salt = "") const
+                                    const std::string& salt = "",
+                                    const std::string& label = "") const
          {
          return derive_key(key_len, secret.data(), secret.size(),
                            reinterpret_cast<const byte*>(salt.data()),
-                           salt.length());
+                           salt.length(),
+                           reinterpret_cast<const byte*>(label.data()),
+                           label.length());
+
          }
 
       /**
@@ -8779,15 +8891,18 @@ class BOTAN_DLL KDF
       * @param key_len the desired output length in bytes
       * @param secret the secret input
       * @param salt a diversifier
+      * @param label purpose for the derived keying material
       */
-      template<typename Alloc, typename Alloc2>
+      template<typename Alloc, typename Alloc2, typename Alloc3>
       secure_vector<byte> derive_key(size_t key_len,
                                      const std::vector<byte, Alloc>& secret,
-                                     const std::vector<byte, Alloc2>& salt) const
+                                     const std::vector<byte, Alloc2>& salt,
+                                     const std::vector<byte, Alloc3>& label) const
          {
          return derive_key(key_len,
                            secret.data(), secret.size(),
-                           salt.data(), salt.size());
+                           salt.data(), salt.size(),
+                           label.data(), label.size());
          }
 
       /**
@@ -8796,15 +8911,19 @@ class BOTAN_DLL KDF
       * @param secret the secret input
       * @param salt a diversifier
       * @param salt_len size of salt in bytes
+      * @param label purpose for the derived keying material
       */
       secure_vector<byte> derive_key(size_t key_len,
                                     const secure_vector<byte>& secret,
                                     const byte salt[],
-                                    size_t salt_len) const
+                                    size_t salt_len,
+                                    const std::string& label = "") const
          {
          return derive_key(key_len,
                            secret.data(), secret.size(),
-                           salt, salt_len);
+                           salt, salt_len,
+                           reinterpret_cast<const byte*>(label.data()),
+                           label.size());
          }
 
       /**
@@ -8813,15 +8932,19 @@ class BOTAN_DLL KDF
       * @param secret the secret input
       * @param secret_len size of secret in bytes
       * @param salt a diversifier
+      * @param label purpose for the derived keying material
       */
       secure_vector<byte> derive_key(size_t key_len,
                                     const byte secret[],
                                     size_t secret_len,
-                                    const std::string& salt = "") const
+                                    const std::string& salt = "",
+                                    const std::string& label = "") const
          {
          return derive_key(key_len, secret, secret_len,
                            reinterpret_cast<const byte*>(salt.data()),
-                           salt.length());
+                           salt.length(),
+                           reinterpret_cast<const byte*>(label.data()),
+                           label.length());
          }
 
       virtual KDF* clone() const = 0;
@@ -10892,62 +11015,6 @@ class BOTAN_DLL System_RNG : public RandomNumberGenerator
 namespace Botan {
 
 /**
-* Filter interface for Transforms
-*/
-class BOTAN_DLL Transform_Filter : public Keyed_Filter,
-                                   private Buffered_Filter
-   {
-   public:
-      explicit Transform_Filter(Transform* t);
-
-      void set_iv(const InitializationVector& iv) override;
-
-      void set_key(const SymmetricKey& key) override;
-
-      Key_Length_Specification key_spec() const override;
-
-      bool valid_iv_length(size_t length) const override;
-
-      std::string name() const override;
-
-   protected:
-      const Transform& get_transform() const { return *m_transform; }
-
-      Transform& get_transform() { return *m_transform; }
-
-   private:
-      void write(const byte input[], size_t input_length) override;
-      void start_msg() override;
-      void end_msg() override;
-
-      void buffered_block(const byte input[], size_t input_length) override;
-      void buffered_final(const byte input[], size_t input_length) override;
-
-      class Nonce_State
-         {
-         public:
-            explicit Nonce_State(bool allow_null_nonce) : m_fresh_nonce(allow_null_nonce) {}
-
-            void update(const InitializationVector& iv);
-            std::vector<byte> get();
-         private:
-            bool m_fresh_nonce;
-            std::vector<byte> m_nonce;
-         };
-
-      Nonce_State m_nonce;
-      std::unique_ptr<Transform> m_transform;
-      secure_vector<byte> m_buffer;
-   };
-
-typedef Transform_Filter Transformation_Filter;
-
-}
-
-
-namespace Botan {
-
-/**
 * Estimate work factor for discrete logarithm
 * @param prime_group_size size of the group in bits
 * @return estimated security level for this group
@@ -11032,20 +11099,9 @@ namespace Botan {
 class BOTAN_DLL Zlib_Compression final : public Stream_Compression
    {
    public:
-      /**
-      * @param level how much effort to use on compressing (0 to 9);
-      *        higher levels are slower but tend to give better
-      *        compression
-      */
-
-      Zlib_Compression(size_t level = 6) : m_level(level) {}
-
       std::string name() const override { return "Zlib_Compression"; }
-
    private:
-      Compression_Stream* make_stream() const override;
-
-      const size_t m_level;
+      Compression_Stream* make_stream(size_t level) const override;
    };
 
 /**
@@ -11055,7 +11111,6 @@ class BOTAN_DLL Zlib_Decompression final : public Stream_Decompression
    {
    public:
       std::string name() const override { return "Zlib_Decompression"; }
-
    private:
       Compression_Stream* make_stream() const override;
    };
@@ -11066,19 +11121,9 @@ class BOTAN_DLL Zlib_Decompression final : public Stream_Decompression
 class BOTAN_DLL Deflate_Compression final : public Stream_Compression
    {
    public:
-      /**
-      * @param level how much effort to use on compressing (0 to 9);
-      *        higher levels are slower but tend to give better
-      *        compression
-      */
-      Deflate_Compression(size_t level = 6) : m_level(level) {}
-
       std::string name() const override { return "Deflate_Compression"; }
-
    private:
-      Compression_Stream* make_stream() const override;
-
-      const size_t m_level;
+      Compression_Stream* make_stream(size_t level) const override;
    };
 
 /**
@@ -11088,7 +11133,6 @@ class BOTAN_DLL Deflate_Decompression final : public Stream_Decompression
    {
    public:
       std::string name() const override { return "Deflate_Decompression"; }
-
    private:
       Compression_Stream* make_stream() const override;
    };
@@ -11099,20 +11143,11 @@ class BOTAN_DLL Deflate_Decompression final : public Stream_Decompression
 class BOTAN_DLL Gzip_Compression final : public Stream_Compression
    {
    public:
-      /**
-      * @param level how much effort to use on compressing (0 to 9);
-      *        higher levels are slower but tend to give better
-      *        compression
-      */
-      Gzip_Compression(size_t level = 6, byte os_code = 255) :
-         m_level(level), m_os_code(os_code) {}
+      Gzip_Compression(byte os_code = 255) : m_os_code(os_code) {}
 
       std::string name() const override { return "Gzip_Compression"; }
-
    private:
-      Compression_Stream* make_stream() const override;
-
-      const size_t m_level;
+      Compression_Stream* make_stream(size_t level) const override;
       const byte m_os_code;
    };
 
@@ -11123,7 +11158,6 @@ class BOTAN_DLL Gzip_Decompression final : public Stream_Decompression
    {
    public:
       std::string name() const override { return "Gzip_Decompression"; }
-
    private:
       Compression_Stream* make_stream() const override;
    };
