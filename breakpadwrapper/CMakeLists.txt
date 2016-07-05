@@ -1,7 +1,7 @@
-include_directories("../../google-breakpad/breakpad-code/src")
+include_directories("../../build-google-breakpad/src")
 
 if("${CMAKE_SYSTEM_NAME}" STREQUAL Linux)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11 -Wno-pedantic")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wno-pedantic")
     set(platform_sources breakpad_linux.cpp)
 
 elseif("${CMAKE_SYSTEM_NAME}" STREQUAL Windows)

@@ -8,8 +8,6 @@
 #include "kulloclient/crypto/publickeyimpl.h"
 #include "kulloclient/util/assert.h"
 
-using namespace Botan;
-
 namespace Kullo {
 namespace Crypto {
 
@@ -24,8 +22,8 @@ std::vector<unsigned char> Signer::sign(
 {
     kulloAssert(key.type() == AsymmetricKeyType::Signature);
 
-    AutoSeeded_RNG rng;
-    PK_Signer sig(*key.p->privkey, EMSA);
+    Botan::AutoSeeded_RNG rng;
+    Botan::PK_Signer sig(*key.p->privkey, EMSA);
     return sig.sign_message(data, rng);
 }
 
@@ -36,7 +34,7 @@ bool Signer::verify(
 {
     kulloAssert(key.type() == AsymmetricKeyType::Signature);
 
-    PK_Verifier ver(*key.p->pubkey, EMSA);
+    Botan::PK_Verifier ver(*key.p->pubkey, EMSA);
     return ver.verify_message(data, signature);
 }
 

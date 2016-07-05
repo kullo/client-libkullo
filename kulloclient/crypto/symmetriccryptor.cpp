@@ -8,8 +8,6 @@
 #include "kulloclient/crypto/symmetrickeyimpl.h"
 #include "kulloclient/util/assert.h"
 
-using namespace Botan;
-
 namespace Kullo {
 namespace Crypto {
 
@@ -64,23 +62,24 @@ std::vector<unsigned char> SymmetricCryptor::crypt(
 {
     if (!input.size()) return std::vector<unsigned char>();
 
-    Cipher_Dir dir = ENCRYPTION;  // initialization to make the compiler happy
+    // initialization to make the compiler happy
+    Botan::Cipher_Dir dir = Botan::ENCRYPTION;
     switch (direction)
     {
     case ENCRYPT:
-        dir = ENCRYPTION;
+        dir = Botan::ENCRYPTION;
         break;
     case DECRYPT:
-        dir = DECRYPTION;
+        dir = Botan::DECRYPTION;
         break;
     default:
         kulloAssert(false);
     }
 
-    secure_vector<byte> output;
+    Botan::secure_vector<Botan::byte> output;
     try
     {
-        Pipe pipe(get_cipher(CIPHER, key.priv()->key, iv, dir));
+        Botan::Pipe pipe(get_cipher(CIPHER, key.priv()->key, iv, dir));
         pipe.process_msg(input);
         output = pipe.read_all(0);
     }

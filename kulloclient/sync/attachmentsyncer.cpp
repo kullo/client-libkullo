@@ -119,6 +119,13 @@ void AttachmentSyncer::downloadForMessage(
                 << "message " << std::to_string(msgId) << ", skipping.";
         return;
     }
+    catch (Util::GZipStreamError &ex)
+    {
+        Log.e() << "Error while decompressing attachments for "
+                << "message " << std::to_string(msgId) << ", skipping.\n"
+                << "Exception: " << formatException(ex);
+        return;
+    }
 
     EMIT(events.messageAttachmentsDownloaded,
          msg->conversationId(),

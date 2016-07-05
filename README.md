@@ -70,6 +70,12 @@ Tips and Tricks
 Changelog
 ---------
 
+### v52 (2016-07-05)
+
+ * Fix crash that occured when an unknown NetworkError was written to log
+ * Use zlib directly
+ * Move Botan to separate repository
+
 ### v51 (2016-06-20)
 
  * Update Botan to 1.11.30, fixing a compatibility issue with GCM

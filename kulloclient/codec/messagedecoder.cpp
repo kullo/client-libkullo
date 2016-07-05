@@ -153,12 +153,15 @@ id_type MessageDecoder::signatureKeyId() const
 
 void MessageDecoder::parseContent(const DecryptedContent &content)
 {
-    auto data = compressor_->decompress(content.data);
+    std::vector<unsigned char> data;
+    FWD_NESTED(data = compressor_->decompress(content.data),
+               Util::GZipStreamError,
+               InvalidContentFormat());
     auto dataString = Util::to_string(data);
     Json::Value messageJson;
     FWD_NESTED(messageJson = Util::JsonHelper::readObject(dataString),
                Util::JsonException,
-               InvalidContentFormat("content invalid"));
+               InvalidContentFormat());
 
     // sender
     if (!messageJson["sender"].isObject())

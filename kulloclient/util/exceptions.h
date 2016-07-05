@@ -47,6 +47,15 @@ public:
     virtual ~FilesystemError() = default;
 };
 
+/// An exception for errors while decompressing Gzip data.
+class GZipStreamError : public Util::BaseException
+{
+public:
+    /// @copydoc BaseException::BaseException(const std::string&)
+    GZipStreamError(const std::string &message = "") throw() : BaseException(message) {}
+    virtual ~GZipStreamError() = default;
+};
+
 /// An exception for invalud agument values.
 class InvalidArgument : public Util::BaseException
 {

@@ -5,21 +5,20 @@
 
 #include "kulloclient/util/exceptions.h"
 
-using namespace Botan;
-
 namespace Kullo {
 namespace Crypto {
 
 std::vector<unsigned char> Hasher::sha256(const std::vector<unsigned char> &data)
 {
-    Pipe pipe(new Hash_Filter("SHA-256"));
+    Botan::Pipe pipe(new Botan::Hash_Filter("SHA-256"));
     pipe.process_msg(data);
     return unlock(pipe.read_all(0));
 }
 
 std::string Hasher::sha256Hex(const std::vector<unsigned char> &data)
 {
-    Pipe pipe(new Hash_Filter("SHA-256"), new Hex_Encoder(Hex_Encoder::Lowercase));
+    Botan::Pipe pipe(new Botan::Hash_Filter("SHA-256"),
+                     new Botan::Hex_Encoder(Botan::Hex_Encoder::Lowercase));
     pipe.process_msg(data);
     auto result = pipe.read_all(0);
     return std::string(result.cbegin(), result.cend());
@@ -27,14 +26,15 @@ std::string Hasher::sha256Hex(const std::vector<unsigned char> &data)
 
 std::vector<unsigned char> Hasher::sha512(const std::vector<unsigned char> &data)
 {
-    Pipe pipe(new Hash_Filter("SHA-512"));
+    Botan::Pipe pipe(new Botan::Hash_Filter("SHA-512"));
     pipe.process_msg(data);
     return unlock(pipe.read_all(0));
 }
 
 std::string Hasher::sha512Hex(const std::vector<unsigned char> &data)
 {
-    Pipe pipe(new Hash_Filter("SHA-512"), new Hex_Encoder(Hex_Encoder::Lowercase));
+    Botan::Pipe pipe(new Botan::Hash_Filter("SHA-512"),
+                     new Botan::Hex_Encoder(Botan::Hex_Encoder::Lowercase));
     pipe.process_msg(data);
     auto result = pipe.read_all(0);
     return std::string(result.cbegin(), result.cend());
@@ -44,8 +44,9 @@ std::string Hasher::sha512Hex(std::istream &input)
 {
     try
     {
-        Pipe pipe(new Hash_Filter("SHA-512"), new Hex_Encoder(Hex_Encoder::Lowercase));
-        DataSource_Stream source(input);
+        Botan::Pipe pipe(new Botan::Hash_Filter("SHA-512"),
+                         new Botan::Hex_Encoder(Botan::Hex_Encoder::Lowercase));
+        Botan::DataSource_Stream source(input);
         pipe.process_msg(source);
         auto result = pipe.read_all(0);
         return std::string(result.cbegin(), result.cend());

@@ -8,8 +8,6 @@
 #include "kulloclient/crypto/publickeyimpl.h"
 #include "kulloclient/util/assert.h"
 
-using namespace Botan;
-
 namespace Kullo {
 namespace Crypto {
 
@@ -24,8 +22,8 @@ std::vector<unsigned char> AsymmetricCryptor::encrypt(
 {
     kulloAssert(key.type() == AsymmetricKeyType::Encryption);
 
-    AutoSeeded_RNG rng;
-    PK_Encryptor_EME enc(*key.p->pubkey, EME);
+    Botan::AutoSeeded_RNG rng;
+    Botan::PK_Encryptor_EME enc(*key.p->pubkey, EME);
     return enc.encrypt(plaintext, rng);
 }
 
@@ -35,7 +33,7 @@ std::vector<unsigned char> AsymmetricCryptor::decrypt(
 {
     kulloAssert(key.type() == AsymmetricKeyType::Encryption);
 
-    PK_Decryptor_EME dec(*key.p->privkey, EME);
+    Botan::PK_Decryptor_EME dec(*key.p->privkey, EME);
     auto plaintext = dec.decrypt(ciphertext);
     return std::vector<unsigned char>(plaintext.cbegin(), plaintext.cend());
 }

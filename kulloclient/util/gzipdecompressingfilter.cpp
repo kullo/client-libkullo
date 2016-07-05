@@ -2,8 +2,11 @@
 #include "kulloclient/util/gzipdecompressingfilter.h"
 
 #include <botan/botan_all.h>
+#include <zlib.h>
 
 #include "kulloclient/util/assert.h"
+#include "kulloclient/util/exceptions.h"
+#include "kulloclient/util/librarylogger.h"
 #include "kulloclient/util/misc.h"
 
 namespace Kullo {
@@ -12,21 +15,34 @@ namespace Util {
 namespace {
 
 const std::string ALGORITHM = "gzip";
+const int WINDOW_SIZE = 15; // maximum
+const int WINSIZE_OFFSET_GZIP = 16;
 
 }
 
 struct GZipDecompressingFilter::Impl
 {
     Impl()
-        : decompressor_(Botan::make_decompressor(ALGORITHM))
+        : outputBuffer_(1 * 1024 * 1024, '\0')
     {
-        kulloAssert(decompressor_);
-        decompressor_->start();
+        std::memset(&zstream_, 0, sizeof(zstream_));
+        auto rc = ::inflateInit2(&zstream_, WINDOW_SIZE + WINSIZE_OFFSET_GZIP);
+        kulloAssert(rc == Z_OK);
     }
 
-    std::unique_ptr<Botan::Decompression_Algorithm> decompressor_;
-    bool bad_ = false;
+    ~Impl()
+    {
+        if (::inflateEnd(&zstream_) != Z_OK)
+        {
+            // don't throw from dtor
+            Log.e() << "Error during inflateEnd: " << zstream_.msg;
+        }
+    }
+
+    ::z_stream zstream_;
     bool hasSeenInput_ = false;
+    bool finished_ = false;
+    std::vector<unsigned char> outputBuffer_;
 };
 
 GZipDecompressingFilter::GZipDecompressingFilter()
@@ -39,26 +55,64 @@ GZipDecompressingFilter::~GZipDecompressingFilter()
 void GZipDecompressingFilter::write(
         Sink &sink, const unsigned char *buffer, std::size_t size)
 {
-    Botan::secure_vector<unsigned char> inout(buffer, buffer + size);
-    if (inout.size() > 0) impl_->hasSeenInput_ = true;
+    if (!size) return;
+    impl_->hasSeenInput_ = true;
 
-    // set bad_ flag so that an exception is not thrown both on write and close
-    try {
-        if (!inout.empty()) impl_->decompressor_->update(inout);
-    } catch (...) {
-        impl_->bad_ = true;
-        throw;
+    if(impl_->finished_)
+    {
+        throw GZipStreamError("Tried to write to a finished stream");
     }
-    if (!inout.empty()) sink.write(inout.data(), inout.size());
+
+    impl_->zstream_.next_in = const_cast<unsigned char *>(buffer);
+    impl_->zstream_.avail_in = size;
+
+    while (!impl_->finished_)
+    {
+        impl_->zstream_.next_out = impl_->outputBuffer_.data();
+        impl_->zstream_.avail_out = impl_->outputBuffer_.size();
+
+        auto rc = ::inflate(&impl_->zstream_, Z_NO_FLUSH);
+        switch (rc)
+        {
+        case Z_OK:
+            break;
+
+        case Z_STREAM_END:
+            impl_->finished_ = true;
+            break;
+
+        default:
+            impl_->finished_ = true;
+
+            throw GZipStreamError(
+                        std::string("inflate error ") + std::to_string(rc)
+                        + ": " + impl_->zstream_.msg);
+        }
+
+        auto bytesProduced = impl_->outputBuffer_.size() - impl_->zstream_.avail_out;
+        if (bytesProduced)
+        {
+            sink.write(impl_->outputBuffer_.data(), bytesProduced);
+        }
+
+        // stream is finished, but there's some input left
+        if (impl_->finished_ && (impl_->zstream_.avail_in > 0))
+        {
+            throw GZipStreamError("Encountered extra input after stream end");
+        }
+
+        // we're done if the whole input buffer has been processed
+        if (!impl_->zstream_.avail_in) break;
+    }
 }
 
 void GZipDecompressingFilter::close(Sink &sink)
 {
-    if (!impl_->bad_ && impl_->hasSeenInput_)
+    K_UNUSED(sink);
+
+    if (impl_->hasSeenInput_ && !impl_->finished_)
     {
-        Botan::secure_vector<unsigned char> output;
-        impl_->decompressor_->finish(output);
-        if (!output.empty()) sink.write(output.data(), output.size());
+        throw GZipStreamError("Tried to close non-empty but unfinished stream");
     }
 }
 

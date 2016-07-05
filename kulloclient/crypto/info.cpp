@@ -9,8 +9,6 @@
 #include "kulloclient/util/assert.h"
 #include "kulloclient/util/formatstring.h"
 
-using namespace Botan;
-
 namespace Kullo {
 namespace Crypto {
 
@@ -51,11 +49,26 @@ std::string getImpls(
 std::map<std::string, std::string> Info::getImplementationInfos()
 {
     std::map<std::string, std::string> out;
-    out["AES-256"] = getImpls(BlockCipher::providers, BlockCipher::create, "AES-256");
-    out["HMAC(SHA-1)"] = getImpls(MessageAuthenticationCode::providers, MessageAuthenticationCode::create, "HMAC(SHA-1)");
-    out["HMAC(SHA-512)"] = getImpls(MessageAuthenticationCode::providers, MessageAuthenticationCode::create, "HMAC(SHA-512)");
-    out["SHA-1"] = getImpls(HashFunction::providers, HashFunction::create, "SHA-1");
-    out["SHA-512"] = getImpls(HashFunction::providers, HashFunction::create, "SHA-512");
+    out["AES-256"] = getImpls(
+                Botan::BlockCipher::providers,
+                Botan::BlockCipher::create,
+                "AES-256");
+    out["HMAC(SHA-1)"] = getImpls(
+                Botan::MessageAuthenticationCode::providers,
+                Botan::MessageAuthenticationCode::create,
+                "HMAC(SHA-1)");
+    out["HMAC(SHA-512)"] = getImpls(
+                Botan::MessageAuthenticationCode::providers,
+                Botan::MessageAuthenticationCode::create,
+                "HMAC(SHA-512)");
+    out["SHA-1"] = getImpls(
+                Botan::HashFunction::providers,
+                Botan::HashFunction::create,
+                "SHA-1");
+    out["SHA-512"] = getImpls(
+                Botan::HashFunction::providers,
+                Botan::HashFunction::create,
+                "SHA-512");
     return out;
 }
 

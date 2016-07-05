@@ -27,10 +27,16 @@ endif()
 
 project(libkullo)
 
-set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+set(_bin_botan "${CMAKE_CURRENT_BINARY_DIR}/../bin-botan${install_prefix_suffix}")
+set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${_bin_botan}/cmake")
 include(CompilerSettings)
 include(KulloCommon)
 
+find_package(botan REQUIRED
+    NO_MODULE
+    PATHS "${_bin_botan}"
+    NO_DEFAULT_PATH
+)
 
 ### BEGIN feature checks
 
@@ -61,7 +67,6 @@ add_subdirectory("../smartsqlite/src" "external/smartsqlite/src")
 
 include_directories(.)
 
-add_subdirectory("botan")
 if(HAS_BREAKPADWRAPPER)
     add_subdirectory("breakpadwrapper")
 endif()

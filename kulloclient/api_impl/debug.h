@@ -96,6 +96,9 @@ inline std::ostream &operator<<(std::ostream &os, Api::NetworkError value)
     case Api::NetworkError::Unauthorized:
         os << "Unauthorized";
         break;
+    case Api::NetworkError::Unknown:
+        os << "Unknown";
+        break;
     default:
         kulloAssert(false);
     }

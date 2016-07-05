@@ -155,4 +155,5 @@ target_link_libraries(${target_name}
 		boost_filesystem
 		boost_regex
 		smartsqlite
+                z
 )
