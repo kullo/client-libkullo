@@ -23,7 +23,10 @@ namespace {
 const auto KULLO_DEVELOPMENT_DOMAIN = std::string{"kullo.test"};
 const auto KULLO_DEVELOPMENT_PORT = 8001;
 
-const std::int32_t DEFAULT_TIMEOUT_MS = 60 * 1000;
+// This timeout limits the entire download or send process. When sending 100 MiB via
+// 1 MBit/s this takes 14 Minutes. Since a timeout this high is still to fragile,
+// this does not help at all. Thus we set the timeout to 0 = inifinite.
+const std::int32_t DEFAULT_TIMEOUT_MS = 0;
 }
 
 namespace Kullo {
@@ -131,10 +134,9 @@ void BaseClient::throwOnError(const Http::Response &response)
     {
         switch (*response.error)
         {
-        case Http::ResponseError::Canceled:     throw Canceled();     break;
-        case Http::ResponseError::NetworkError: throw NetworkError(); break;
-        case Http::ResponseError::Timeout:      throw Timeout();      break;
-        default: kulloAssert(false);
+        case Http::ResponseError::Canceled:     throw Canceled();
+        case Http::ResponseError::NetworkError: throw NetworkError();
+        case Http::ResponseError::Timeout:      throw Timeout();
         }
     }
 

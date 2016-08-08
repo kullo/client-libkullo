@@ -50,8 +50,8 @@ K_TEST_F(Events, onlyExecuteIfTheyAreDefined)
     std::function<void()> event;
 
     EXPECT_THROW(event(), std::bad_function_call);
-    EXPECT_NO_THROW(EMIT(event));
+    EXPECT_NO_THROW(EMIT0(event));
 
     auto forwardedEvent = forwardEvent(event);
-    EXPECT_NO_THROW(EMIT(forwardedEvent));
+    EXPECT_NO_THROW(EMIT0(forwardedEvent));
 }

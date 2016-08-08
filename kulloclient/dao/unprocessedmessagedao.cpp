@@ -173,7 +173,6 @@ std::unique_ptr<UnprocessedMessageDao> UnprocessedMessageDao::loadFromDb(const S
     catch (...)
     {
         std::throw_with_nested(Db::DatabaseIntegrityError("Failed to load UnprocessedMessageDao"));
-        return nullptr;  // silence "missing return" warning
     }
 }
 

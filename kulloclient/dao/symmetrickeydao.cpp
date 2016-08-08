@@ -104,8 +104,7 @@ std::string SymmetricKeyDao::keyTypeToString(SymmetricKeyDao::SymmetricKeyType t
         return PRIVATE_DATA_KEY_STRING;
 
     default:
-        kulloAssert(false);
-        return "";
+        kulloAssertionFailed("Key type is invalid.");
     }
 }
 
@@ -113,8 +112,7 @@ SymmetricKeyDao::SymmetricKeyType SymmetricKeyDao::stringToKeyType(const std::st
 {
     if (type == MASTER_KEY_STRING) return MASTER_KEY;
     if (type == PRIVATE_DATA_KEY_STRING) return PRIVATE_DATA_KEY;
-    kulloAssert(false);
-    return INVALID;
+    kulloAssertionFailed("Key type is invalid.");
 }
 
 std::unique_ptr<SymmetricKeyDao> SymmetricKeyDao::loadFromDb(const SmartSqlite::Row &row, SharedSessionPtr session)

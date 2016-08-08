@@ -21,11 +21,8 @@ std::string environmentToJsonValue(Api::PushTokenEnvironment env)
     {
     case Api::PushTokenEnvironment::Android: return "android";
     case Api::PushTokenEnvironment::IOS: return "ios";
-    default: kulloAssert(false);
+    default: kulloAssertionFailed("APNS is not supported at the moment.");
     }
-
-    // never reached
-    return "";
 }
 
 }

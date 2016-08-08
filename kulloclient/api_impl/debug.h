@@ -36,8 +36,6 @@ inline std::ostream &operator<<(std::ostream &os, Api::DeliveryReason value)
     case Api::DeliveryReason::Canceled:
         os << "Canceled";
         break;
-    default:
-        kulloAssert(false);
     }
     return os;
 }
@@ -55,8 +53,6 @@ inline std::ostream &operator<<(std::ostream &os, Api::DeliveryState value)
     case Api::DeliveryState::Failed:
         os << "Failed";
         break;
-    default:
-        kulloAssert(false);
     }
     return os;
 }
@@ -71,8 +67,6 @@ inline std::ostream &operator<<(std::ostream &os, Api::LocalError value)
     case Api::LocalError::Unknown:
         os << "Unknown";
         break;
-    default:
-        kulloAssert(false);
     }
     return os;
 }
@@ -99,8 +93,6 @@ inline std::ostream &operator<<(std::ostream &os, Api::NetworkError value)
     case Api::NetworkError::Unknown:
         os << "Unknown";
         break;
-    default:
-        kulloAssert(false);
     }
     return os;
 }

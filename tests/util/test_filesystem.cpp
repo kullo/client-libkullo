@@ -220,7 +220,7 @@ K_TEST_F(Filesystem, writeReadLatin1Filenames)
 
     const auto data = Util::to_vector("foo2");
 
-    for (const auto c : latin1_chars)
+    for (const auto &c : latin1_chars)
     {
         auto path = TestUtil::tempPath() + "/filesystem-" + c + ".txt";
         Util::Filesystem::putContent(path, data);

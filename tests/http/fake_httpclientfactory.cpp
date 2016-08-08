@@ -179,7 +179,7 @@ Http::Response FakeHttpClient::sendRequest(const Kullo::Http::Request &request,
             boost::smatch match;
             if (!boost::regex_search(request.url, match, keyRegex))
             {
-                kulloAssert(false);
+                kulloAssertionFailed("Regex didn't match.");
             }
             responseBody = Util::to_vector(
                         std::string(R"({"key": ")")
@@ -307,14 +307,14 @@ Http::Response FakeHttpClient::sendRequest(const Kullo::Http::Request &request,
 
         else
         {
-            kulloAssert(false);
+            kulloAssertionFailed("Unknown address");
         }
     }
 
     else
     {
         // If we get here, we received a request that isn't handled (yet)
-        kulloAssert(false);
+        kulloAssertionFailed("Request type not implemented");
     }
 
     if (responseListener) responseListener->dataReceived(responseBody);

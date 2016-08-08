@@ -143,8 +143,8 @@ K_TEST_F(MessageDecryptor, decryptKeySafeDecryptsCorrectly)
 
     // test initialization
     EXPECT_THAT(ciphertext.size(), Eq(size_t{2}));
-    EXPECT_THAT(ciphertext.at(0), 190);
-    EXPECT_THAT(ciphertext.at(1), 239);
+    EXPECT_THAT(ciphertext.at(0), std::uint8_t{190});
+    EXPECT_THAT(ciphertext.at(1), std::uint8_t{239});
 
     Crypto::PrivateKey nullPrivKey(Crypto::AsymmetricKeyType::Encryption, nullptr);
     auto privKeyProvider = makePrivKeyProvider();

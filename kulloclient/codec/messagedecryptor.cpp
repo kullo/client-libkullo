@@ -71,7 +71,7 @@ DecryptedMessage MessageDecryptor::decrypt() const
                     InvalidContentFormat("MessageDecryptor::decrypt()"));
     }
 
-    return std::move(result);
+    return result;
 }
 
 namespace {
@@ -120,7 +120,6 @@ std::string MessageDecryptor::decryptKeySafe() const
     catch (Db::DatabaseIntegrityError)
     {
         std::throw_with_nested(DecryptionKeyMissing());
-        return "";  // silence "missing return" warning
     }
 }
 

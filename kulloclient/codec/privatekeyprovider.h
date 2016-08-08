@@ -23,6 +23,7 @@ class PrivateKeyProvider
 {
 public:
     PrivateKeyProvider(const std::string &dbPath);
+    virtual ~PrivateKeyProvider() = default;
 
     /// Get key with the given type and ID from cache or DB. Thread-safe.
     virtual Crypto::PrivateKey getKey(

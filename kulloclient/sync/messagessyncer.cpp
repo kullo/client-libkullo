@@ -129,7 +129,7 @@ void MessagesSyncer::downloadAndProcessMessages()
             else if (!local && !httpMsg.deleted) handleNewMessage(httpMsg);              // 2. Download message
             else if ( local &&  httpMsg.deleted) handleDeletedMessage(httpMsg, *local);  // 3. Clear local message
             else if ( local && !httpMsg.deleted) handleModifiedMessage(httpMsg, *local); // 4. Merge
-            else kulloAssert(false);
+            else kulloAssertionFailed("Logic error");
 
             ++progress_.countProcessed;
             EMIT(events.progressed, progress_);
@@ -442,7 +442,7 @@ boost::optional<Codec::DecryptedMessage> MessagesSyncer::tryDecrypt(
     {
         Codec::MessageDecryptor decryptor(
                     httpMsg, privKeyProvider_, getPrivateDataKey());
-        return std::move(decryptor.decrypt());
+        return decryptor.decrypt();
     }
     catch (Codec::DecryptionKeyMissing)
     {

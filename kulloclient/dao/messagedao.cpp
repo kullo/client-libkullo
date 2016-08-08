@@ -372,9 +372,6 @@ bool MessageDao::state(MessageState state) const
         return !done_;
     case MessageState::Any:
         return true;
-    default:
-        kulloAssert(false); // unknown state
-        return false;
     }
 }
 
@@ -388,8 +385,7 @@ bool MessageDao::setState(MessageState state, bool value)
         return assignAndUpdateDirty(done_, value, dirty_);
 
     default:
-        kulloAssert(false); // unknown state
-        return false;
+        kulloAssertionFailed("Only Read and Done are allowed here.");
     }
 }
 

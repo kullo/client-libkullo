@@ -6,20 +6,22 @@
 namespace Kullo {
 namespace Util {
 
-void assertionFailed(const std::string &file,
-                          int line,
-                          const std::string &func,
-                          const std::string &expr)
+K_NORETURN void assertionFailed(
+        const std::string &file,
+        int line,
+        const std::string &func,
+        const std::string &expr)
 {
     auto stacktrace = Stacktrace::toString(1);
     throw AssertionFailed(file, line, func, expr, stacktrace);
 }
 
-AssertionFailed::AssertionFailed(const std::string &file,
-                                 int line,
-                                 const std::string &func,
-                                 const std::string &expr,
-                                 const std::string &stacktrace) throw()
+AssertionFailed::AssertionFailed(
+        const std::string &file,
+        int line,
+        const std::string &func,
+        const std::string &expr,
+        const std::string &stacktrace) noexcept
     : file_(file),
       line_(line),
       function_(func),
@@ -32,7 +34,7 @@ AssertionFailed::AssertionFailed(const std::string &file,
             + "\n" + stacktrace_;
 }
 
-const char *AssertionFailed::what() const throw()
+const char *AssertionFailed::what() const noexcept
 {
     return message_.c_str();
 }

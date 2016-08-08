@@ -23,9 +23,6 @@ std::string to_string(const Http::HttpMethod &method)
         return "PATCH";
     case Http::HttpMethod::Delete:
         return "DELETE";
-    default:
-        kulloAssert(false);
-        return "";
     }}
 
 std::ostream &operator<<(std::ostream &os, const Http::HttpMethod &method)
@@ -53,9 +50,6 @@ std::ostream &operator<<(std::ostream &os, Http::ResponseError err)
         break;
     case Http::ResponseError::Timeout:
         os << "Timeout";
-        break;
-    default:
-        os << "<unknown>";
         break;
     }
     return os;

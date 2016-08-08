@@ -327,7 +327,7 @@ bool MasterKey::checkRange(const std::string &block)
         std::istringstream(value) >> valueInt;
     }
     catch (...) {
-        kulloAssert(false);
+        kulloAssertionFailed("Couldn't parse block.");
     }
 
     return valueInt <= MAX_BLOCK_VALUE;

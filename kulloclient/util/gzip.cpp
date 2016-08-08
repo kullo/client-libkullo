@@ -102,7 +102,6 @@ std::vector<unsigned char> GZip::decompress(
             throw GZipStreamError(
                         std::string("inflate error ") + std::to_string(rc)
                         + ": " + zstream.msg);
-            break;
         }
     }
 

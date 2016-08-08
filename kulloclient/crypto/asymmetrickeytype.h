@@ -18,8 +18,7 @@ inline std::string toString(AsymmetricKeyType type)
     if (type == AsymmetricKeyType::Encryption) return "enc";
     if (type == AsymmetricKeyType::Signature) return "sig";
 
-    kulloAssert(false);
-    return ""; // silence warnings
+    kulloAssertionFailed("AsymmetricKeyType must be valid");
 }
 
 inline AsymmetricKeyType keyTypeFromString(const std::string &type)

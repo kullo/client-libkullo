@@ -70,6 +70,10 @@ Tips and Tricks
 Changelog
 ---------
 
+### v53 (2016-07-13)
+
+ * Remove 60 seconds network timeout, which was hit when sending large files
+
 ### v52 (2016-07-05)
 
  * Fix crash that occured when an unknown NetworkError was written to log

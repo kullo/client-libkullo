@@ -4,6 +4,12 @@
 #define K_UNUSED(x) (void)x
 #define K_RAII(x) (void)x
 
+#ifdef _MSC_VER
+    #define K_NORETURN __declspec(noreturn)
+#else
+    #define K_NORETURN __attribute__((noreturn))
+#endif
+
 #define K_DISABLE_COPY(ClassName) \
     ClassName(const ClassName &) = delete; \
     ClassName &operator=(const ClassName &) = delete

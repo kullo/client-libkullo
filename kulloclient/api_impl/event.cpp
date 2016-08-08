@@ -27,7 +27,6 @@ std::ostream & operator<<(std::ostream &os, const Kullo::Api::EventType& t)
     case EventType::MessageAttachmentsDownloadedChanged: out = K_AS_STRING(EventType::MessageAttachmentsDownloadedChanged); break;
     case EventType::MessageRemoved:                      out = K_AS_STRING(EventType::MessageRemoved);                      break;
     case EventType::LatestSenderChanged:                 out = K_AS_STRING(EventType::LatestSenderChanged);                 break;
-    default: kulloAssert(false);
     }
 
     return os << out;

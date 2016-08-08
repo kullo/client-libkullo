@@ -4,6 +4,8 @@
 #include "kulloclient/api/Task.h"
 #include "kulloclient/util/assert.h"
 #include "kulloclient/util/librarylogger.h"
+#include "kulloclient/util/misc.h"
+#include "kulloclient/util/scopedbenchmark.h"
 
 #include <chrono>
 
@@ -17,12 +19,13 @@ const auto MAX_TASKS_COUNT = 25;
 StlTaskRunner::~StlTaskRunner()
 {
     kulloAssert(waitCalled_ == true);
-
-    wait();
+    kulloAssert(futures_.empty());
 }
 
 void StlTaskRunner::runTaskAsync(const std::shared_ptr<Api::Task> &task)
 {
+    if (waitCalled_) return;
+
     auto future = std::async(
                 std::launch::async,
                 // Bind shared_ptr to task by value so that the task is not
@@ -56,7 +59,10 @@ void StlTaskRunner::runTaskAsync(const std::shared_ptr<Api::Task> &task)
 
 void StlTaskRunner::wait()
 {
+    kulloAssert(waitCalled_ == false);
     waitCalled_ = true;
+
+    ScopedBenchmark benchmark("Waiting for tasks to complete"); K_RAII(benchmark);
 
     for (auto &future : futures_)
     {

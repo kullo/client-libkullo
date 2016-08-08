@@ -124,8 +124,7 @@ std::string PublicKeyDao::keyTypeToString(PublicKeyDao::PublicKeyType type)
         return SIGNATURE_STRING;
 
     default:
-        kulloAssert(false);
-        return "";
+        kulloAssertionFailed("Key type is invalid.");
     }
 }
 
@@ -133,8 +132,7 @@ PublicKeyDao::PublicKeyType PublicKeyDao::stringToKeyType(const std::string &typ
 {
     if (type == ENCRYPTION_STRING) return ENCRYPTION;
     if (type == SIGNATURE_STRING) return SIGNATURE;
-    kulloAssert(false);
-    return INVALID;
+    kulloAssertionFailed("Key type is invalid.");
 }
 
 std::unique_ptr<PublicKeyDao> PublicKeyDao::loadFromDb(const SmartSqlite::Row &row, Db::SharedSessionPtr session)

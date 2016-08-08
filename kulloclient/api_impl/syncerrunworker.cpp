@@ -27,9 +27,6 @@ Sync::SyncMode toSyncSyncMode(Api::SyncMode mode)
         return Sync::SyncMode::WithoutAttachments;
     case Api::SyncMode::Everything:
         return Sync::SyncMode::Everything;
-    default:
-        kulloAssert(false);
-        return Sync::SyncMode::Everything;
     }
 }
 

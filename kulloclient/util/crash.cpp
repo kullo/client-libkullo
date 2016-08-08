@@ -13,7 +13,8 @@ void Crash::nullptrDereference()
     std::cout << *null;
 }
 
-void Crash::throwException()
+
+K_NORETURN void Crash::throwException()
 {
     throw std::runtime_error("error to test breakpad");
 }

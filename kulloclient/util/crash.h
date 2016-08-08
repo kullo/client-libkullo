@@ -1,6 +1,8 @@
 /* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
 #pragma once
 
+#include "kulloclient/util/misc.h"
+
 namespace Kullo {
 namespace Util {
 
@@ -10,7 +12,7 @@ public:
     // -> SIGSEGV
     static void nullptrDereference();
     // -> std::terminate()
-    static void throwException();
+    K_NORETURN static void throwException();
 };
 
 }

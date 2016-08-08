@@ -70,9 +70,6 @@ void SyncerImpl::requestSync(Api::SyncMode mode)
         enqueuedSync_ = mode;
         messageAttachmentDownloadQueue_.clear();
         break;
-
-    default:
-        kulloAssert(false);
     }
 
     runNextJobIfIdle();

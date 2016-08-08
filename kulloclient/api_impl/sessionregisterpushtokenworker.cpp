@@ -47,8 +47,6 @@ void SessionRegisterPushTokenWorker::work()
             case Remove:
                 pushClient_.removeGcmRegistrationToken(token_);
                 break;
-            default:
-                kulloAssert(false);
             }
             break;
         }

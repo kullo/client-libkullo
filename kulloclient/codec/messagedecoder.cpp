@@ -444,9 +444,6 @@ void MessageDecoder::parseDelivery(const Json::Value &delivery)
                     del.lockExpires = CheckedConverter::toDateTime(lockRecord["expires"]);
                 }
                 break;
-            default:
-                // if we reach this branch, Delivery::toState() handles states that we don't know of
-                kulloAssert(false);
             }
             parsed.emplace_back(del);
         }

@@ -79,9 +79,6 @@ Api::DraftState DraftsImpl::state(int64_t convId)
     {
     case Dao::DraftState::Editing: return Api::DraftState::Editing;
     case Dao::DraftState::Sending: return Api::DraftState::Sending;
-    default:
-        kulloAssert(false);
-        return Api::DraftState::Editing;
     }
 }
 

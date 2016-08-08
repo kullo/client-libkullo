@@ -44,9 +44,6 @@ std::string Delivery::toString(Delivery::State state)
     case unsent: return "unsent";
     case delivered: return "delivered";
     case failed: return "failed";
-    default:
-        kulloAssert(false);
-        return ""; // make compiler happy
     }
 }
 
@@ -68,9 +65,6 @@ std::string Delivery::toString(Delivery::Reason reason)
     case doesnt_exist: return "doesnt_exist";
     case too_large: return "too_large";
     case canceled: return "canceled";
-    default:
-        kulloAssert(false);
-        return ""; // make compiler happy
     }
 }
 

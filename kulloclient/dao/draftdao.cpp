@@ -229,8 +229,6 @@ DraftState DraftDao::intToDraftState(int stateInt)
         return DraftState::Editing;
     case DraftState::Sending:
         return DraftState::Sending;
-    default:
-        throw DatabaseIntegrityError("DraftDao: bad state");
     }
 }
 

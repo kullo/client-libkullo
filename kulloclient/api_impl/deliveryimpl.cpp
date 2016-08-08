@@ -29,9 +29,6 @@ Api::DeliveryState DeliveryImpl::state()
         return Api::DeliveryState::Delivered;
     case Util::Delivery::failed:
         return Api::DeliveryState::Failed;
-    default:
-        kulloAssert(false);
-        return Api::DeliveryState::Failed;
     }
 }
 
@@ -49,9 +46,6 @@ boost::optional<Api::DeliveryReason> DeliveryImpl::reason()
         return Api::DeliveryReason::TooLarge;
     case Util::Delivery::canceled:
         return Api::DeliveryReason::Canceled;
-    default:
-        kulloAssert(false);
-        return {Api::DeliveryReason::Unknown};
     }
 }
 

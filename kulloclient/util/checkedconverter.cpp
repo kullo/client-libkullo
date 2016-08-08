@@ -49,7 +49,6 @@ std::uint32_t CheckedConverter::toUint32(const Json::Value &value)
     catch (...)
     {
         std::throw_with_nested(ConversionException("couldn't convert value to uint32"));
-        return 0;  // make compiler happy
     }
 }
 
@@ -76,7 +75,6 @@ std::uint64_t CheckedConverter::toUint64(const Json::Value &value)
     catch (...)
     {
         std::throw_with_nested(ConversionException("couldn't convert value to uint64"));
-        return 0;  // make compiler happy
     }
 }
 
@@ -166,7 +164,6 @@ boost::optional<DateTime> CheckedConverter::toDateTime(const std::string &value)
     catch (...)
     {
         std::throw_with_nested(ConversionException("couldn't convert value to DateTime (not a valid date/time)"));
-        return boost::none;  // silence "missing return" warning
     }
 }
 

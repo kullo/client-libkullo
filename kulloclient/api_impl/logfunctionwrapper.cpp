@@ -42,9 +42,6 @@ void LogFunctionWrapper::logFunction(
     case LibraryLogger::LogType::Warning: llType = Api::LogType::Warning; break;
     case LibraryLogger::LogType::Error:   llType = Api::LogType::Error;   break;
     case LibraryLogger::LogType::Fatal:   llType = Api::LogType::Fatal;   break;
-    default:
-        kulloAssert(false);
-        llType = Api::LogType::None;
     }
 
     listener_->writeLogMessage(

@@ -72,8 +72,6 @@ std::vector<unsigned char> SymmetricCryptor::crypt(
     case DECRYPT:
         dir = Botan::DECRYPTION;
         break;
-    default:
-        kulloAssert(false);
     }
 
     Botan::secure_vector<Botan::byte> output;

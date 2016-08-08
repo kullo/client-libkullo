@@ -400,7 +400,7 @@ void migrate(SharedSessionPtr session)
 
         default:
             session->rollbackTransaction();
-            kulloAssert(false); // found no migration for given version
+            kulloAssertionFailed("Found no migration for given version.");
         }
 
         ++version;

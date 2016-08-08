@@ -1,7 +1,6 @@
 /* Copyright 2013–2015 Kullo GmbH. All rights reserved. */
 #include "kulloclient/api/DateTime.h"
 
-#include <cmath>
 #include <iostream>
 #include <stdexcept>
 #include <boost/optional.hpp>
@@ -18,7 +17,7 @@ DateTime::DateTime(
         int8_t hour, int8_t minute, int8_t second,
         int16_t tzOffsetMinutes)
     : DateTimeBase(year, month, day, hour, minute, second, tzOffsetMinutes)
-    , dateTime_(year, month, day, hour, minute, second, tzOffsetMinutes * 60)
+    , dateTime_(year, month, day, hour, minute, second, tzOffsetMinutes)
 {}
 
 boost::optional<DateTime> DateTime::fromRfc3339(const std::string &timeStr)
@@ -37,7 +36,7 @@ DateTime::DateTime(const Util::DateTime &dateTime)
     : DateTimeBase(
           dateTime.year(), dateTime.month(), dateTime.day(),
           dateTime.hour(), dateTime.minute(), dateTime.second(),
-          std::round(dateTime.tzOffset() / 60))
+          dateTime.tzOffsetMinutes())
     , dateTime_(dateTime)
 {}
 

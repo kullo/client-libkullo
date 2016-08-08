@@ -1,8 +1,6 @@
 /* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
 #include "kulloclient/api_impl/usersettingsimpl.h"
 
-#include <cmath>
-
 #include "kulloclient/api/Address.h"
 #include "kulloclient/api/DateTime.h"
 #include "kulloclient/api/MasterKey.h"
@@ -102,7 +100,7 @@ boost::optional<Api::DateTime> UserSettingsImpl::nextMasterKeyBackupReminder()
     return Api::DateTime(
                 dt.year(), dt.month(), dt.day(),
                 dt.hour(), dt.minute(), dt.second(),
-                std::round(dt.tzOffset() / 60.0));
+                dt.tzOffsetMinutes());
 }
 
 void UserSettingsImpl::setNextMasterKeyBackupReminder(
@@ -119,7 +117,7 @@ void UserSettingsImpl::setNextMasterKeyBackupReminder(
     Util::DateTime result{
         date.year, date.month, date.day,
         date.hour, date.minute, date.second,
-        date.tzOffsetMinutes * 60
+        date.tzOffsetMinutes
     };
     userSettings_.nextMasterKeyBackupReminder = result;
     dao_.setNextMasterKeyBackupReminder(result);

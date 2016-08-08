@@ -79,8 +79,6 @@ std::size_t ConversationDao::loadMessageCount(MessageState type)
     case MessageState::Undone:
         sqlWherePart = "AND done = 0";
         break;
-    default:
-        kulloAssert(false);
     }
 
     const std::string sql = "SELECT count(id) AS count "

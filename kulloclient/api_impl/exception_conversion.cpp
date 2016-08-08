@@ -23,10 +23,6 @@ Api::NetworkError toNetworkError(std::exception_ptr exptr)
     catch (Protocol::NetworkError)        {return Api::NetworkError::Connection;}
     catch (Protocol::Timeout)             {return Api::NetworkError::Connection;}
     catch (...)                           {return Api::NetworkError::Unknown;}
-
-    // cannot happen, but make compiler happy
-    kulloAssert(false);
-    return Api::NetworkError::Unknown;
 }
 
 Api::LocalError toLocalError(std::exception_ptr exptr)
@@ -37,10 +33,6 @@ Api::LocalError toLocalError(std::exception_ptr exptr)
     catch (fs::filesystem_error)  {return Api::LocalError::Filesystem;}
     catch (std::ios_base::failure){return Api::LocalError::Filesystem;}
     catch (...)                   {return Api::LocalError::Unknown;}
-
-    // cannot happen, but make compiler happy
-    kulloAssert(false);
-    return Api::LocalError::Unknown;
 }
 
 }

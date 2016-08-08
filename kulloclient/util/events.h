@@ -3,6 +3,7 @@
 
 #include <functional>
 
+#define EMIT0(event) if (event) event()
 #define EMIT(event, ...) if (event) event(__VA_ARGS__)
 
 namespace Kullo {

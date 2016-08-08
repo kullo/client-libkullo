@@ -110,8 +110,6 @@ void DeliveryDao::insertDelivery(id_type msgId, const std::vector<Util::Delivery
                 stmt.bindNull(":lockExpires");
             }
             break;
-        default:
-            kulloAssert(false);
         }
 
         stmt.execWithoutResult();

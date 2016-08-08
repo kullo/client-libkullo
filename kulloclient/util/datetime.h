@@ -20,7 +20,10 @@ public:
     DateTime(const DateTime &other);
     DateTime &operator=(DateTime other);
     explicit DateTime(const std::string &str);
-    DateTime(int year, int month, int day, int hour, int minute, int second, int tzOffset = 0);
+    DateTime(
+            std::int16_t year, std::int8_t month, std::int8_t day,
+            std::int8_t hour, std::int8_t minute, std::int8_t second,
+            std::int16_t tzOffsetMinutes = 0);
     virtual ~DateTime();
     static DateTime epoch();
     static DateTime nowUtc();
@@ -29,13 +32,13 @@ public:
     /// e.g. 1937-01-01T12:00:27+02:00
     std::string toString() const;
 
-    int year() const;
-    int month() const;
-    int day() const;
-    int hour() const;
-    int minute() const;
-    int second() const;
-    int tzOffset() const;
+    std::int16_t year() const;
+    std::int8_t month() const;
+    std::int8_t day() const;
+    std::int8_t hour() const;
+    std::int8_t minute() const;
+    std::int8_t second() const;
+    std::int16_t tzOffsetMinutes() const;
 
     bool operator==(const DateTime &other) const;
     bool operator!=(const DateTime &other) const;

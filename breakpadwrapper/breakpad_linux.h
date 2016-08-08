@@ -2,7 +2,11 @@
 #pragma once
 
 #include <memory>
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpedantic"
 #include <client/linux/handler/exception_handler.h>
+#pragma clang diagnostic pop
 
 #include "breakpad_all.h"
 
