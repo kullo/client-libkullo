@@ -13,7 +13,8 @@ namespace Kullo {
 namespace Util {
 
 namespace {
-const auto MAX_TASKS_COUNT = 25;
+// number of tasks that will trigger pruning
+const auto PRUNING_THRESHOLD = 25;
 }
 
 StlTaskRunner::~StlTaskRunner()
@@ -34,9 +35,9 @@ void StlTaskRunner::runTaskAsync(const std::shared_ptr<Api::Task> &task)
             );
     futures_.emplace_back(std::move(future));
 
-    // Task is running, now check if we can delete something
+    // Task is running, now check if we should prune futures
     auto taskCountBefore = futures_.size();
-    if (taskCountBefore > MAX_TASKS_COUNT)
+    if (taskCountBefore > PRUNING_THRESHOLD)
     {
         Log.d() << "Pruning tasks ...";
         auto start = std::chrono::high_resolution_clock::now();
@@ -44,15 +45,15 @@ void StlTaskRunner::runTaskAsync(const std::shared_ptr<Api::Task> &task)
         auto end = std::chrono::high_resolution_clock::now();
         auto taskCountAfter = futures_.size();
 
-        Log.d() << "Deleted " << taskCountBefore - taskCountAfter << " taks in "
+        Log.d() << "Pruned " << taskCountBefore - taskCountAfter << " tasks in "
                 << std::chrono::duration<double, std::milli>(end - start).count()
                 << " ms";
 
-        if (taskCountAfter > MAX_TASKS_COUNT)
+        if (taskCountAfter > PRUNING_THRESHOLD)
         {
-            Log.w() << "Task count still exceeds maximum after pruning "
+            Log.w() << "Task count still exceeds threshold after pruning "
                     << "(count: " << taskCountAfter
-                    << ", max: " << MAX_TASKS_COUNT << ")";
+                    << ", threshold: " << PRUNING_THRESHOLD << ")";
         }
     }
 }

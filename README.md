@@ -8,13 +8,6 @@ libkullo
 
 A platform-independent C++ client library for the Kullo protocol.
 
-Requirements
-------------
-
-* OpenGL runtime and headers (Ubuntu: `libgl1-mesa-dev`)
-* google-breakpad, checked out to and built in the same workspace as this project
-* boost and smartsqlite, checked out in the same workspace
-
 Configuring Qt Creator for development
 --------------------------------------
 
@@ -69,6 +62,11 @@ Tips and Tricks
 
 Changelog
 ---------
+
+### v54 (2016-08-08)
+
+ * Fix HTTP 400 issue when sending message to multiple recipients caused by large keySafe
+ * Reduce gzip compression level to improve performance
 
 ### v53 (2016-07-13)
 

@@ -7,7 +7,7 @@ endif()
 
 # These must come before the project directive, won't work otherwise
 
-if((NOT CMAKE_BUILD_TYPE) OR (CMAKE_BUILD_TYPE STREQUAL "Debug"))
+if(((NOT CMAKE_BUILD_TYPE) OR (CMAKE_BUILD_TYPE STREQUAL "Debug")) AND (NOT CMAKE_GENERATOR STREQUAL "Xcode"))
     set(install_prefix_suffix "-debug")
 else()
     set(install_prefix_suffix "")

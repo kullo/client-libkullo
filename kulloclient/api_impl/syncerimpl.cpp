@@ -260,7 +260,10 @@ void SyncerImpl::SyncerSyncerListener::error(Api::NetworkError error)
         std::lock_guard<std::recursive_mutex> lock(parent_->queueMutex_); K_RAII(lock);
 
         parent_->running_ = false;
-        parent_->task_->cancel();
+        if (auto task = parent_->task_)
+        {
+            task->cancel();
+        }
     }
 
     if (auto listener = parent_->listener_) listener->error(error);

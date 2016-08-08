@@ -22,10 +22,11 @@ Protocol::SendableMessage MessageEncryptor::makeSendableMessage(
         id_type sigKeyId,
         const Crypto::PrivateKey &sigKeyPair)
 {
-    makeKeySafe(encKeyId, encKey);
-    encryptContent(encodedMsg.content, sigKeyId, sigKeyPair);
-    encryptAttachments(encodedMsg);
-    return sendableMessage_;
+    State state;
+    makeKeySafe(state, encKeyId, encKey);
+    encryptContent(state, encodedMsg.content, sigKeyId, sigKeyPair);
+    encryptAttachments(state, encodedMsg);
+    return std::move(state.sendableMessage_);
 }
 
 std::vector<unsigned char> MessageEncryptor::encryptMeta(
@@ -42,25 +43,26 @@ std::vector<unsigned char> MessageEncryptor::encryptMeta(
 }
 
 void MessageEncryptor::makeKeySafe(
+        State &state,
         id_type encKeyId,
         const Crypto::PublicKey &encKey)
 {
     Crypto::SymmetricKeyGenerator keyGen;
-    symmKey_ = keyGen.makeMessageSymmKey();
+    state.symmKey_ = keyGen.makeMessageSymmKey();
 
     Json::Value keySafeJson(Json::objectValue);
     keySafeJson["msgFormat"]  = 1;
     keySafeJson["symmCipher"] = "AES-256/GCM";
-    keySafeJson["symmKey"]    = symmKey_.toBase64();
+    keySafeJson["symmKey"]    = state.symmKey_.toBase64();
     keySafeJson["hashAlgo"]   = "SHA-512";
 
     Crypto::AsymmetricCryptor asymmCryptor;
 
     // encKeyId
-    sendableMessage_.keySafe.push_back((encKeyId >> 24) & 0xff);
-    sendableMessage_.keySafe.push_back((encKeyId >> 16) & 0xff);
-    sendableMessage_.keySafe.push_back((encKeyId >> 8) & 0xff);
-    sendableMessage_.keySafe.push_back(encKeyId & 0xff);
+    state.sendableMessage_.keySafe.push_back((encKeyId >> 24) & 0xff);
+    state.sendableMessage_.keySafe.push_back((encKeyId >> 16) & 0xff);
+    state.sendableMessage_.keySafe.push_back((encKeyId >> 8) & 0xff);
+    state.sendableMessage_.keySafe.push_back(encKeyId & 0xff);
 
     auto encryptedKeySafe = asymmCryptor.encrypt(
                 Util::to_vector(Json::FastWriter().write(keySafeJson)),
@@ -68,10 +70,11 @@ void MessageEncryptor::makeKeySafe(
     );
 
     std::copy(encryptedKeySafe.cbegin(), encryptedKeySafe.cend(),
-              std::back_inserter(sendableMessage_.keySafe));
+              std::back_inserter(state.sendableMessage_.keySafe));
 }
 
 void MessageEncryptor::encryptContent(
+        State &state,
         const std::vector<unsigned char> &content,
         id_type sigKeyId,
         const Crypto::PrivateKey &sigKeyPair)
@@ -98,21 +101,21 @@ void MessageEncryptor::encryptContent(
     // content
     std::copy(content.cbegin(), content.cend(), std::back_inserter(unencryptedContent));
 
-    sendableMessage_.content = Crypto::SymmetricCryptor().encrypt(
+    state.sendableMessage_.content = Crypto::SymmetricCryptor().encrypt(
                 unencryptedContent,
-                symmKey_,
+                state.symmKey_,
                 Util::to_vector(Crypto::SymmetricCryptor::CONTENT_IV),
                 Crypto::PrependIV::False
                 );
 }
 
-void MessageEncryptor::encryptAttachments(const EncodedMessage &encodedMsg)
+void MessageEncryptor::encryptAttachments(State &state, const EncodedMessage &encodedMsg)
 {
     if (!encodedMsg.attachments.empty())
     {
-        sendableMessage_.attachments = Crypto::SymmetricCryptor().encrypt(
+        state.sendableMessage_.attachments = Crypto::SymmetricCryptor().encrypt(
                     encodedMsg.attachments,
-                    symmKey_,
+                    state.symmKey_,
                     Util::to_vector(Crypto::SymmetricCryptor::ATTACHMENTS_IV),
                     Crypto::PrependIV::False
                     );

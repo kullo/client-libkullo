@@ -29,20 +29,27 @@ public:
             const Crypto::SymmetricKey &key);
 
 protected:
+    struct State
+    {
+        Crypto::SymmetricKey symmKey_;
+        std::vector<unsigned char> keySafe_;
+        Protocol::SendableMessage sendableMessage_;
+    };
+
     virtual void makeKeySafe(
+            State &state,
             id_type encKeyId,
             const Crypto::PublicKey &encKey);
 
     virtual void encryptContent(
+            State &state,
             const std::vector<unsigned char> &content,
             id_type sigKeyId,
             const Crypto::PrivateKey &sigKeyPair);
 
-    virtual void encryptAttachments(const EncodedMessage &encodedMsg);
-
-    Crypto::SymmetricKey symmKey_;
-    std::vector<unsigned char> keySafe_;
-    Protocol::SendableMessage sendableMessage_;
+    virtual void encryptAttachments(
+            State &state,
+            const EncodedMessage &encodedMsg);
 };
 
 }

@@ -13,7 +13,7 @@ namespace Util {
 
 namespace {
 
-const int LEVEL = 9; // maximum
+const int LEVEL = 6; // default, much faster than 9 and almost as good results
 const int WINDOW_SIZE = 15; // maximum
 const int WINSIZE_OFFSET_GZIP = 16;
 const int MEM_LEVEL = 8; // default

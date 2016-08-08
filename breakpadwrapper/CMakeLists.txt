@@ -1,4 +1,4 @@
-include_directories("../../build-google-breakpad/src")
+include_directories("../../build-breakpad/src")
 
 if("${CMAKE_SYSTEM_NAME}" STREQUAL Linux)
     set(platform_sources breakpad_linux.cpp)
