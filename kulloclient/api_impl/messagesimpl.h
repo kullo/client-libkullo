@@ -61,7 +61,7 @@ public:
 
     // Event::RemovalEventListener
 
-    Event::ApiEvents conversationRemoved(int64_t convId) override;
+    Event::ApiEvents conversationWillBeRemoved(int64_t convId) override;
     Event::ApiEvents messageRemoved(int64_t convId, int64_t msgId) override;
 
 private:
@@ -77,6 +77,7 @@ private:
      * @return The removed DAO, if one has been found
      */
     boost::optional<Dao::MessageDao> removeFromCache(int64_t msgId);
+    Event::ApiEvents removeFromDb(Dao::MessageDao &dao);
 
     std::shared_ptr<SessionData> sessionData_;
     std::shared_ptr<Api::SessionListener> sessionListener_;

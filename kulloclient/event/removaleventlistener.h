@@ -14,7 +14,7 @@ public:
 
     // "{{}}" forces initializer list constructor
     // http://stackoverflow.com/questions/26947704/implicit-conversion-failure-from-initializer-list
-    virtual ApiEvents conversationRemoved(int64_t convId)
+    virtual ApiEvents conversationWillBeRemoved(int64_t convId)
     {
         K_UNUSED(convId);
         return {{}};

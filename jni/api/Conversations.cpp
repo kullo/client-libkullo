@@ -51,12 +51,12 @@ CJNIEXPORT jlong JNICALL Java_net_kullo_libkullo_api_Conversations_00024CppProxy
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, 0 /* value doesn't matter */)
 }
 
-CJNIEXPORT void JNICALL Java_net_kullo_libkullo_api_Conversations_00024CppProxy_native_1remove(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef, jlong j_convId)
+CJNIEXPORT void JNICALL Java_net_kullo_libkullo_api_Conversations_00024CppProxy_native_1triggerRemoval(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef, jlong j_convId)
 {
     try {
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
         const auto& ref = ::djinni::objectFromHandleAddress<::Kullo::Api::Conversations>(nativeRef);
-        ref->remove(::djinni::I64::toCpp(jniEnv, j_convId));
+        ref->triggerRemoval(::djinni::I64::toCpp(jniEnv, j_convId));
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, )
 }
 

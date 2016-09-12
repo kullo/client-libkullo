@@ -10,15 +10,18 @@ RemovalEventDispatcher::RemovalEventDispatcher(SessionImpl &session)
     : session_(session)
 {}
 
-Event::ApiEvents RemovalEventDispatcher::conversationRemoved(int64_t convId)
+Event::ApiEvents RemovalEventDispatcher::conversationWillBeRemoved(int64_t convId)
 {
     Event::ApiEvents result;
-    auto messagesResult = session_.messages_->conversationRemoved(convId);
-    auto conversationsResult = session_.conversations_->conversationRemoved(convId);
-    auto draftsResult = session_.drafts_->conversationRemoved(convId);
+    auto messagesResult = session_.messages_->conversationWillBeRemoved(convId);
+    auto draftsResult = session_.drafts_->conversationWillBeRemoved(convId);
+
+    // the last call of conversationWillBeRemoved() must go to Conversations
+    auto conversationsResult = session_.conversations_->conversationWillBeRemoved(convId);
+
     result.insert(messagesResult.begin(), messagesResult.end());
-    result.insert(conversationsResult.begin(), conversationsResult.end());
     result.insert(draftsResult.begin(), draftsResult.end());
+    result.insert(conversationsResult.begin(), conversationsResult.end());
     return result;
 }
 

@@ -7,7 +7,7 @@
 #include <kulloclient/api_impl/conversationsimpl.h>
 #include <kulloclient/dao/conversationdao.h>
 #include <kulloclient/event/conversationaddedevent.h>
-#include <kulloclient/event/conversationremovedevent.h>
+#include <kulloclient/event/conversationwillberemovedevent.h>
 
 using namespace testing;
 using namespace Kullo;
@@ -215,7 +215,7 @@ K_TEST_F(ApiConversations, addDoesntAcceptCurrentUser)
     EXPECT_THROW(uut_->add(participants3), Util::AssertionFailed);
 }
 
-K_TEST_F(ApiConversations, removeWorks)
+K_TEST_F(ApiConversations, triggerRemovalWorks)
 {
     // Existing in memory
     ASSERT_THAT(uut_->participants(data_.id).size(), Gt(0u));
@@ -224,7 +224,7 @@ K_TEST_F(ApiConversations, removeWorks)
     auto dao1 = Dao::ConversationDao::load(data_.id, dbSession_);
     EXPECT_THAT(dao1, Not(IsNull()));
 
-    uut_->remove(data_.id);
+    uut_->triggerRemoval(data_.id);
 
     // Deleted in memory
     EXPECT_THAT(uut_->participants(data_.id).size(), Eq(0u));
@@ -234,19 +234,20 @@ K_TEST_F(ApiConversations, removeWorks)
     EXPECT_THAT(dao2, IsNull());
 }
 
-K_TEST_F(ApiConversations, removeEmitsEvents)
+K_TEST_F(ApiConversations, triggerRemovalEmitsEvents)
 {
-    uut_->remove(data_.id);
-
-    // no worker event running
-    auto type = std::type_index(typeid(Event::ConversationRemovedEvent));
+    auto type = std::type_index(typeid(Event::ConversationWillBeRemovedEvent));
     EXPECT_THAT(sessionListener_->internalEventCount(type), Eq(0));
 
-    // we'd like to get a notification that the conversation has been removed
+    uut_->triggerRemoval(data_.id);
+
+    // a ConversationRemoved API event must be emitted
     auto events = sessionListener_->externalEvents();
     EXPECT_THAT(events, Contains(
                     Api::Event(Api::EventType::ConversationRemoved, data_.id, -1, -1))
                 );
+
+    EXPECT_THAT(sessionListener_->internalEventCount(type), Eq(1));
 }
 
 K_TEST_F(ApiConversations, participantsWorks)
@@ -310,7 +311,7 @@ K_TEST_F(ApiConversations, idRangeWorks)
         EXPECT_NO_THROW(uut_->unreadMessages(convId));
         EXPECT_NO_THROW(uut_->undoneMessages(convId));
         EXPECT_NO_THROW(uut_->latestMessageTimestamp(convId));
-        EXPECT_NO_THROW(uut_->remove(convId));
+        EXPECT_NO_THROW(uut_->triggerRemoval(convId));
     }
 
     for (auto convId : TEST_IDS_INVALID)
@@ -320,6 +321,6 @@ K_TEST_F(ApiConversations, idRangeWorks)
         EXPECT_ANY_THROW(uut_->unreadMessages(convId));
         EXPECT_ANY_THROW(uut_->undoneMessages(convId));
         EXPECT_ANY_THROW(uut_->latestMessageTimestamp(convId));
-        EXPECT_ANY_THROW(uut_->remove(convId));
+        EXPECT_ANY_THROW(uut_->triggerRemoval(convId));
     }
 }

@@ -6,17 +6,17 @@
 namespace Kullo {
 namespace Event {
 
-class ConversationRemovedEvent : public RemovalEvent
+class ConversationWillBeRemovedEvent : public RemovalEvent
 {
 public:
-    ConversationRemovedEvent(int64_t convId)
+    ConversationWillBeRemovedEvent(int64_t convId)
         : convId_(convId)
     {}
 
 protected:
     ApiEvents notifyConcrete(RemovalEventListener &listener) override
     {
-        return listener.conversationRemoved(convId_);
+        return listener.conversationWillBeRemoved(convId_);
     }
 
 private:

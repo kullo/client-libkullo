@@ -9,10 +9,20 @@
 namespace Kullo {
 namespace Util {
 
+enum class StlTaskRunnerSate {
+    Active,
+    Inactive
+};
+
 class StlTaskRunner: public Api::TaskRunner
 {
 public:
-    /// Calls wait()
+    /**
+     * @brief Expects that wait() was called before destruction
+     *
+     * The task runner must be in inactive state on destruction, i.e. wait()
+     * must be called.
+     */
     ~StlTaskRunner() override;
 
     void runTaskAsync(const std::shared_ptr<Api::Task> &task) override;
@@ -26,6 +36,15 @@ public:
      */
     void wait();
 
+    /**
+      * @brief Resets the taskrunner tio active mode
+      *
+      * When wait() was called, the task runner went into inactive state. In this
+      * state no further tasks must be added. This method sets the state back to
+      * active allowing the reuse of the same task runner.
+      */
+    void reset();
+
 private:
     /**
      * @brief Delete all finished tasks.
@@ -35,7 +54,7 @@ private:
     void pruneFinishedTasks();
 
     std::list<std::future<void>> futures_;
-    bool waitCalled_ = false;
+    StlTaskRunnerSate state_ = StlTaskRunnerSate::Active;
 };
 
 }

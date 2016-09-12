@@ -9,7 +9,7 @@
 #include "kulloclient/api_impl/debug.h"
 #include "kulloclient/db/exceptions.h"
 #include "kulloclient/event/conversationaddedevent.h"
-#include "kulloclient/event/conversationremovedevent.h"
+#include "kulloclient/event/conversationwillberemovedevent.h"
 #include "kulloclient/event/sendapieventsevent.h"
 #include "kulloclient/util/assert.h"
 #include "kulloclient/util/formatstring.h"
@@ -27,7 +27,7 @@ ConversationsImpl::ConversationsImpl(
     auto daos = Dao::ConversationDao::all(sessionData_->dbSession_);
     while (const auto &dao = daos->next())
     {
-        convForParticipants_[dao->participants()] = dao->id();
+        participantsToConversationId_[dao->participants()] = dao->id();
         conversations_.emplace_hint(conversations_.end(), dao->id(), *dao);
     }
 }
@@ -78,28 +78,14 @@ int64_t ConversationsImpl::add(
     return convId;
 }
 
-void ConversationsImpl::remove(int64_t convId)
+void ConversationsImpl::triggerRemoval(int64_t convId)
 {
     kulloAssert(convId >= Kullo::ID_MIN && convId <= Kullo::ID_MAX);
-
     auto daoIter = conversations_.find(convId);
     if (daoIter != conversations_.end())
     {
-        auto &dao = daoIter->second;
-
-        const auto participants = dao.participants();
-        auto countErased = convForParticipants_.erase(participants);
-        kulloAssert(countErased > 0);
-
-        dao.deletePermanently();
-        conversations_.erase(daoIter);
-
         sessionListener_->internalEvent(
-                    std::make_shared<Event::SendApiEventsEvent>(
-                        Event::ApiEvents{
-                            Api::Event(Api::EventType::ConversationRemoved,
-                            convId, -1, -1)
-                        }));
+                    std::make_shared<Event::ConversationWillBeRemovedEvent>(convId));
     }
 }
 
@@ -200,7 +186,7 @@ Event::ApiEvents ConversationsImpl::conversationAdded(uint64_t convId)
     if (!dao) throw Db::DatabaseIntegrityError(
                 "ConversationsImpl::conversationAdded");
 
-    convForParticipants_[dao->participants()] = convId;
+    participantsToConversationId_[dao->participants()] = convId;
     conversations_.emplace(convId, *dao);
 
     return {Api::Event(Api::EventType::ConversationAdded, convId, -1, -1)};
@@ -255,7 +241,7 @@ Event::ApiEvents ConversationsImpl::messageRemoved(int64_t convId, int64_t msgId
     return {{}};
 }
 
-Event::ApiEvents ConversationsImpl::conversationRemoved(int64_t convId)
+Event::ApiEvents ConversationsImpl::conversationWillBeRemoved(int64_t convId)
 {
     Event::ApiEvents result;
 
@@ -265,16 +251,13 @@ Event::ApiEvents ConversationsImpl::conversationRemoved(int64_t convId)
         auto &dao = daoIter->second;
         const auto participants = dao.participants();
 
-        {
-            auto countErased = convForParticipants_.erase(participants);
-            kulloAssert(countErased > 0);
-        }
+        auto countErased = participantsToConversationId_.erase(participants);
+        kulloAssert(countErased > 0);
 
-        {
-            // Those keys do not necessarily exist
-            latestMessageTimestampsCache_.erase(convId);
-        }
+        // does not necessarily exist
+        latestMessageTimestampsCache_.erase(convId);
 
+        dao.deletePermanently();
         conversations_.erase(daoIter);
 
         result.emplace(Api::EventType::ConversationRemoved,
@@ -300,8 +283,8 @@ std::string ConversationsImpl::participantsToString(
 
 int64_t ConversationsImpl::get(const std::string &participants)
 {
-    auto iter = convForParticipants_.find(participants);
-    return iter != convForParticipants_.end() ? iter->second : -1;
+    auto iter = participantsToConversationId_.find(participants);
+    return iter != participantsToConversationId_.end() ? iter->second : -1;
 }
 
 }

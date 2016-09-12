@@ -164,7 +164,7 @@ Event::ApiEvents DraftsImpl::draftModified(uint64_t convId)
     return result;
 }
 
-Event::ApiEvents DraftsImpl::conversationRemoved(int64_t convId)
+Event::ApiEvents DraftsImpl::conversationWillBeRemoved(int64_t convId)
 {
     Event::ApiEvents result;
 

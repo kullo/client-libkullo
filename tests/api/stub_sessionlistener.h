@@ -17,7 +17,7 @@ public:
     inline void internalEvent(
             const std::shared_ptr<Kullo::Api::InternalEvent> &event) override
     {
-        std::lock_guard<std::mutex> lock(mutex_); K_RAII(lock);
+        std::lock_guard<std::recursive_mutex> lock(mutex_); K_RAII(lock);
 
         auto &eventRef = *event;
         internalEventCounts_[std::type_index(typeid(eventRef))]++;
@@ -30,23 +30,23 @@ public:
     }
 
     void setSession(std::shared_ptr<Kullo::Api::Session> session) {
-        std::lock_guard<std::mutex> lock(mutex_); K_RAII(lock);
+        std::lock_guard<std::recursive_mutex> lock(mutex_); K_RAII(lock);
         session_ = session;
     }
 
     int internalEventCount(std::type_index type) {
-        std::lock_guard<std::mutex> lock(mutex_); K_RAII(lock);
+        std::lock_guard<std::recursive_mutex> lock(mutex_); K_RAII(lock);
         return internalEventCounts_[type];
     }
 
     Kullo::Event::ApiEvents externalEvents() {
-        std::lock_guard<std::mutex> lock(mutex_); K_RAII(lock);
+        std::lock_guard<std::recursive_mutex> lock(mutex_); K_RAII(lock);
         return externalEvents_;
     }
 
 private:
     // Those members are accessed from different threads via internalEvent()
-    std::mutex mutex_;
+    std::recursive_mutex mutex_;
     std::unordered_map<std::type_index, int> internalEventCounts_;
     std::weak_ptr<Kullo::Api::Session> session_;
     Kullo::Event::ApiEvents externalEvents_;

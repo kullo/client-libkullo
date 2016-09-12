@@ -36,7 +36,7 @@ public:
             const std::unordered_set<std::shared_ptr<Api::Address>> &participants
             ) override;
 
-    void remove(int64_t convId) override;
+    void triggerRemoval(int64_t convId) override;
 
     std::unordered_set<std::shared_ptr<Api::Address>> participants(
             int64_t convId) override;
@@ -61,7 +61,7 @@ public:
     // Event::RemovalEventListener
 
     Event::ApiEvents messageRemoved(int64_t convId, int64_t msgId) override;
-    Event::ApiEvents conversationRemoved(int64_t convId) override;
+    Event::ApiEvents conversationWillBeRemoved(int64_t convId) override;
 
 private:
     std::string participantsToString(
@@ -70,7 +70,7 @@ private:
 
     std::shared_ptr<SessionData> sessionData_;
     std::shared_ptr<Api::SessionListener> sessionListener_;
-    std::map<std::string, int64_t> convForParticipants_;
+    std::map<std::string, int64_t> participantsToConversationId_;
     std::map<int64_t, Dao::ConversationDao> conversations_;
     std::map<int64_t, Api::DateTime> latestMessageTimestampsCache_;
 };

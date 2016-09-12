@@ -91,6 +91,21 @@ boost::optional<Dao::MessageDao> MessagesImpl::removeFromCache(int64_t msgId)
     return result;
 }
 
+Event::ApiEvents MessagesImpl::removeFromDb(Dao::MessageDao &dao)
+{
+    auto conversationId = dao.conversationId();
+    auto messageId = dao.id();
+
+    dao.clearData();
+    dao.setDeleted(true);
+    dao.save(Dao::CreateOld::Yes);
+
+    return {
+        Api::Event(Api::EventType::MessageRemoved,
+                   conversationId, messageId, -1)
+    };
+}
+
 void MessagesImpl::remove(int64_t msgId)
 {
     kulloAssert(msgId >= Kullo::ID_MIN && msgId <= Kullo::ID_MAX);
@@ -98,20 +113,17 @@ void MessagesImpl::remove(int64_t msgId)
     auto removedDao = removeFromCache(msgId);
     if (removedDao)
     {
-        id_type conversationId = removedDao->conversationId();
-        removedDao->clearData();
-        removedDao->setDeleted(true);
-        removedDao->save(Dao::CreateOld::Yes);
-
+        auto conversationId = removedDao->conversationId();
+        auto events = removeFromDb(*removedDao);
+        sessionListener_->internalEvent(
+                    std::make_shared<Event::SendApiEventsEvent>(events));
         sessionListener_->internalEvent(
                     std::make_shared<Event::ConversationModifiedEvent>(
                         conversationId));
+
         sessionListener_->internalEvent(
-                    std::make_shared<Event::SendApiEventsEvent>(
-                        Event::ApiEvents{
-                            Api::Event(Api::EventType::MessageRemoved,
-                            conversationId, msgId, -1)
-                        }));
+                    std::make_shared<Event::MessageRemovedEvent>(
+                        conversationId, msgId));
     }
 }
 
@@ -282,16 +294,23 @@ Event::ApiEvents MessagesImpl::messageModified(int64_t convId, int64_t msgId)
     }
 }
 
-Event::ApiEvents MessagesImpl::conversationRemoved(int64_t convId)
+Event::ApiEvents MessagesImpl::conversationWillBeRemoved(int64_t convId)
 {
     Event::ApiEvents result;
 
     for (auto msgId : allForConversation(convId))
     {
-        remove(msgId);
-        result.emplace(
-                    Api::EventType::MessageRemoved,
-                    convId, msgId, -1);
+        auto removedDao = removeFromCache(msgId);
+        if (removedDao)
+        {
+            auto conversationId = removedDao->conversationId();
+            auto events = removeFromDb(*removedDao);
+            result.insert(events.begin(), events.end());
+
+            sessionListener_->internalEvent(
+                        std::make_shared<Event::MessageRemovedEvent>(
+                            conversationId, msgId));
+        }
     }
     return result;
 }

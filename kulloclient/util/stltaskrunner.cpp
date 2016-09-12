@@ -19,13 +19,13 @@ const auto PRUNING_THRESHOLD = 25;
 
 StlTaskRunner::~StlTaskRunner()
 {
-    kulloAssert(waitCalled_ == true);
+    kulloAssert(state_ == StlTaskRunnerSate::Inactive);
     kulloAssert(futures_.empty());
 }
 
 void StlTaskRunner::runTaskAsync(const std::shared_ptr<Api::Task> &task)
 {
-    if (waitCalled_) return;
+    if (state_ == StlTaskRunnerSate::Inactive) return;
 
     auto future = std::async(
                 std::launch::async,
@@ -60,8 +60,7 @@ void StlTaskRunner::runTaskAsync(const std::shared_ptr<Api::Task> &task)
 
 void StlTaskRunner::wait()
 {
-    kulloAssert(waitCalled_ == false);
-    waitCalled_ = true;
+    kulloAssert(state_ == StlTaskRunnerSate::Active);
 
     ScopedBenchmark benchmark("Waiting for tasks to complete"); K_RAII(benchmark);
 
@@ -70,6 +69,13 @@ void StlTaskRunner::wait()
         if (future.valid()) future.wait();
     }
     futures_.clear();
+
+    state_ = StlTaskRunnerSate::Inactive;
+}
+
+void StlTaskRunner::reset()
+{
+    state_ = StlTaskRunnerSate::Active;
 }
 
 void StlTaskRunner::pruneFinishedTasks()

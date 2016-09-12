@@ -68,5 +68,6 @@ namespace Kullo {
         class DateTime;
         class KulloAddress;
         class MasterKey;
+        class StlTaskRunner;
     }
 }

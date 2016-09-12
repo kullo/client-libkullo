@@ -35,10 +35,11 @@ public:
     virtual int64_t add(const std::unordered_set<std::shared_ptr<Address>> & participants) = 0;
 
     /**
-     * Removes the given conversation and all data that depends on it (messages,
-     * draft, ...)
+     * Triggers removal of the given conversation. This will also remove all
+     * dependencies (messages, drafts, ...). Removal happens asynchronously after
+     * calling this method.
      */
-    virtual void remove(int64_t convId) = 0;
+    virtual void triggerRemoval(int64_t convId) = 0;
 
     /** Returns the participants (excluding the local user) */
     virtual std::unordered_set<std::shared_ptr<Address>> participants(int64_t convId) = 0;

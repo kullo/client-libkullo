@@ -147,13 +147,12 @@ K_TEST_F(ApiMessages, removeWorks)
 
 K_TEST_F(ApiMessages, removeEmitsEvents)
 {
-    uut->remove(data1_.id);
-
-    // No worker event expected
     auto type = std::type_index(typeid(Event::MessageRemovedEvent));
     EXPECT_THAT(sessionListener_->internalEventCount(type), Eq(0));
 
-    // we'd like to get a notification that the message has been deleted
+    uut->remove(data1_.id);
+
+    // a MessageRemoved API event must be emitted
     auto events = sessionListener_->externalEvents();
     EXPECT_THAT(events,
                 Contains(
@@ -162,6 +161,8 @@ K_TEST_F(ApiMessages, removeEmitsEvents)
                         data1_.convId, data1_.id, -1)
                     )
                 );
+
+    EXPECT_THAT(sessionListener_->internalEventCount(type), Eq(1));
 }
 
 K_TEST_F(ApiMessages, conversationWorks)

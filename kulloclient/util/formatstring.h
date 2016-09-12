@@ -16,7 +16,9 @@ public:
     static std::string padRight(const std::string &input, const size_t targetLength, const char paddingChar = ' ');
     static std::string toLower(const std::string &s);
     static void trim(std::string &s);
+    /// Highlights links in HTML-encoded text
     static void highlightLinks(std::string &target);
+    /// Escapes HTML special chars
     static void escapeMessageText(std::string &target);
     static void messageTextToHtml(std::string &target);
     static std::string formatIntegerWithCommas(int value);

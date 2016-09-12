@@ -63,6 +63,11 @@ Tips and Tricks
 Changelog
 ---------
 
+### v55 (2016-09-12)
+
+ * Implement recursive removing of conversations with messages and draft
+ * Allow resetting a StlTaskRunner
+
 ### v54 (2016-08-08)
 
  * Fix HTTP 400 issue when sending message to multiple recipients caused by large keySafe

@@ -13,7 +13,7 @@ class RemovalEventDispatcher : public Event::RemovalEventListener
 public:
     RemovalEventDispatcher(SessionImpl &session);
 
-    Event::ApiEvents conversationRemoved(int64_t convId) override;
+    Event::ApiEvents conversationWillBeRemoved(int64_t convId) override;
     Event::ApiEvents messageRemoved(int64_t convId, int64_t msgId) override;
     Event::ApiEvents draftRemoved(int64_t convId) override;
 

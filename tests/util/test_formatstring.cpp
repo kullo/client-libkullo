@@ -209,10 +209,10 @@ K_TEST_F(FormatString, highlightLinksSpecialChars)
     EXPECT_THAT(str, HasSubstr("</a>"));
     EXPECT_THAT(str, HasSubstr("href=\"https://www.youtube.com/watch?v=5OcTXnLVfFk\""));
 
-    str = "Link https://www.google.de/search?client=ubuntu&q=andinlink ok?";
+    str = "Link https://www.google.de/search?client=ubuntu&amp;q=andinlink ok?";
     Util::FormatString::highlightLinks(str);
     EXPECT_THAT(str, HasSubstr("</a>"));
-    EXPECT_THAT(str, HasSubstr("href=\"https://www.google.de/search?client=ubuntu&q=andinlink\""));
+    EXPECT_THAT(str, HasSubstr("href=\"https://www.google.de/search?client=ubuntu&amp;q=andinlink\""));
 
     str = "Link https://en.wikipedia.org/wiki/Help:URL#Linking_to_URLs ok?";
     Util::FormatString::highlightLinks(str);
@@ -224,18 +224,11 @@ K_TEST_F(FormatString, highlightLinksSpecialChars)
     EXPECT_THAT(str, HasSubstr("</a>"));
     EXPECT_THAT(str, HasSubstr("href=\"https://github.com/kullo?result=2*3\""));
 
-    // & must not be in path
-    // Correct URL for H&M: http://en.wikipedia.org/wiki/H%26M
+    // percent encoding
     str = "Link http://en.wikipedia.org/wiki/H%26M";
     Util::FormatString::highlightLinks(str);
     EXPECT_THAT(str, HasSubstr("</a>"));
     EXPECT_THAT(str, HasSubstr("href=\"http://en.wikipedia.org/wiki/H%26M\""));
-
-    // Don't respect forbidden link
-    str = "Link http://en.wikipedia.org/wiki/H&M";
-    Util::FormatString::highlightLinks(str);
-    EXPECT_THAT(str, Not(HasSubstr("href=\"http://en.wikipedia.org/wiki/H&M\"")));
-    EXPECT_THAT(str, Not(HasSubstr("href=\"http://en.wikipedia.org/wiki/H&amp;M\"")));
 
     // Chrome does not escape "(" and ")" when user copies a link
     // from the address bar. Firefox does.
@@ -253,18 +246,30 @@ K_TEST_F(FormatString, highlightLinksSpecialChars)
     Util::FormatString::highlightLinks(str);
     EXPECT_THAT(str, HasSubstr("</a>"));
     EXPECT_THAT(str, HasSubstr(R"(href="https://www.google.de/maps/place/52%C2%B031%2725.2%22N+13%C2%B022%2706.0%22E/@52.523677,13.368332,173m")"));
+
+    // ; in path, empty fragment
+    str = "Link https://foo.bar/123;456# ok?";
+    Util::FormatString::highlightLinks(str);
+    EXPECT_THAT(str, HasSubstr("</a>"));
+    EXPECT_THAT(str, HasSubstr(R"(href="https://foo.bar/123;456#")"));
+
+    // no path but query and fragment
+    str = "Link https://foo.bar?123;456#home ok?";
+    Util::FormatString::highlightLinks(str);
+    EXPECT_THAT(str, HasSubstr("</a>"));
+    EXPECT_THAT(str, HasSubstr(R"(href="https://foo.bar?123;456#home")"));
 }
 
 K_TEST_F(FormatString, highlightLinkInBrackets)
 {
     std::string str;
 
-    str = "Auf der geilen Seite (http://example.com) habe ich die Infos gefunden.";
+    str = "Auf der Seite (http://example.com) habe ich die Infos gefunden.";
     Util::FormatString::highlightLinks(str);
     EXPECT_THAT(str, HasSubstr("</a>"));
     EXPECT_THAT(str, HasSubstr(R"(href="http://example.com")"));
 
-    str = "Auf der geilen Seite (http://example.com/dir/root_(unix)) habe ich die Infos gefunden.";
+    str = "Auf der Seite (http://example.com/dir/root_(unix)) habe ich die Infos gefunden.";
     Util::FormatString::highlightLinks(str);
     EXPECT_THAT(str, HasSubstr("</a>"));
     EXPECT_THAT(str, HasSubstr(R"|(href="http://example.com/dir/root_(unix)")|"));

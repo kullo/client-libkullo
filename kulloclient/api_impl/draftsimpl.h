@@ -37,7 +37,7 @@ public:
 
     // Event::RemovalEventListener
 
-    Event::ApiEvents conversationRemoved(int64_t convId) override;
+    Event::ApiEvents conversationWillBeRemoved(int64_t convId) override;
 
 private:
     std::shared_ptr<SessionData> sessionData_;

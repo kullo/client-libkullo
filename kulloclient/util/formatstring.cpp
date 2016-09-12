@@ -11,23 +11,35 @@ namespace Util {
 namespace {
 // Some chars must be escaped: .[{}()\*+?|^$
 // See http://www.boost.org/doc/libs/1_56_0/libs/regex/doc/html/boost_regex/syntax/perl_syntax.html
-const std::string _LINKS_IN_MESSAGE_INNERPATTERN(
-          "http(s)?://"                       // scheme
-          "[-a-zA-Z0-9]+(\\.[-a-zA-Z0-9]+)*"  // host
-          "(:[0-9]+)?"                        // port (optional)
-          "(/"                                // path (optional)
-                      "([-0-9a-zA-Z/:_%@!=,\\.\\$\\[\\]\\*\\+\\\\\\(\\)]*)?"
-            "(\\?(&amp;|[-0-9a-zA-Z/:_%@!=,\\.\\$\\[\\]\\*\\+\\\\&])*)?"     // query (optional)
-                     "(#[-0-9a-zA-Z/:_%@!=,\\.\\$\\[\\]\\*\\+\\\\]*)?"       // fragment (optional)
-          ")?"
-        );
+// For the URI spec, see https://tools.ietf.org/html/rfc3986
+
+// [unreserved, sub-delims, :, @] | pct-encoded
+// Addition, not standardized: "[" and "]", which are illegal but commonly used
+// & is replaced by &amp; because these regexes describe HTML-escaped URIs
+const std::string URI_PCHAR = R"(([0-9a-zA-Z\-._~!\$'\(\)\*\+\,;=:@\[\]]|&amp;|(%[0-9a-fA-F]{2})))";
+
+// (/pchar*)*
+const std::string URI_PATH_ABEMPTY = std::string("(/") + URI_PCHAR + "*)*";
+
+// (pchar | [/, ?])*
+const std::string URI_QUERY = std::string("(") + URI_PCHAR + R"(|[/\?])*)";
+const std::string URI_FRAGMENT = URI_QUERY;
+
+const std::string HTTP_URI = std::string(
+            "https?://"                         // scheme
+            "[-a-zA-Z0-9]+(\\.[-a-zA-Z0-9]+)*"  // host
+            "(:[0-9]+)?"                        // port (optional)
+            + URI_PATH_ABEMPTY +                // path (optional)
+            "(\\?" + URI_QUERY + ")?"           // query (optional)
+            "(#" + URI_FRAGMENT + ")?"          // fragment (optional)
+            );
 
 const boost::regex LINKS_IN_MESSAGE_REGEX(
-        std::string("(^|[\\t\\n\\r \\(])(") + _LINKS_IN_MESSAGE_INNERPATTERN + ")"
+        std::string("(^|[\\t\\n\\r \\(])(") + HTTP_URI + ")"
         );
 
 const boost::regex LINKS_IN_BRACKETS_REGEX(
-        std::string("\\((") + _LINKS_IN_MESSAGE_INNERPATTERN + ")\\)"
+        std::string("\\((") + HTTP_URI + ")\\)"
         );
 }
 
