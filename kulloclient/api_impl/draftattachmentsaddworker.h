@@ -7,6 +7,7 @@
 #include "kulloclient/api/DraftAttachmentsAddListener.h"
 #include "kulloclient/api/SessionListener.h"
 #include "kulloclient/api_impl/worker.h"
+#include "kulloclient/db/dbsession.h"
 
 namespace Kullo {
 namespace ApiImpl {
@@ -18,7 +19,7 @@ public:
             int64_t convId,
             const std::string &path,
             const std::string &mimeType,
-            const std::string &dbPath,
+            const Db::SessionConfig &sessionConfig,
             std::shared_ptr<Api::SessionListener> sessionListener,
             std::shared_ptr<Api::DraftAttachmentsAddListener> listener);
 
@@ -30,7 +31,7 @@ private:
     const int64_t convId_;
     const std::string path_;
     const std::string mimeType_;
-    const std::string dbPath_;
+    const Db::SessionConfig sessionConfig_;
 
     // all uses must be synchronized
     std::shared_ptr<Api::SessionListener> sessionListener_;

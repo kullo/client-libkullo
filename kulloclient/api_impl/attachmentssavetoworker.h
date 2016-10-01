@@ -5,6 +5,7 @@
 
 #include "kulloclient/api/LocalError.h"
 #include "kulloclient/api_impl/worker.h"
+#include "kulloclient/db/dbsession.h"
 
 namespace Kullo {
 namespace ApiImpl {
@@ -17,7 +18,7 @@ public:
             int64_t convOrMsgId,
             int64_t attId,
             const std::string &path,
-            const std::string &dbPath);
+            const Db::SessionConfig &sessionConfig);
 
     void work() override;
 
@@ -33,7 +34,7 @@ protected:
     const int64_t convOrMsgId_;
     const int64_t attId_;
     const std::string path_;
-    const std::string dbPath_;
+    const Db::SessionConfig sessionConfig_;
 };
 
 }

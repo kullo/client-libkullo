@@ -47,12 +47,16 @@ public:
 
     int32_t undoneMessages(int64_t convId) override;
 
+    int32_t incomingMessages(int64_t convId) override;
+
+    int32_t outgoingMessages(int64_t convId) override;
+
     Api::DateTime latestMessageTimestamp(int64_t convId) override;
 
     // Event::ConversationsEventListener
 
-    Event::ApiEvents conversationAdded(uint64_t convId) override;
-    Event::ApiEvents conversationModified(uint64_t convId) override;
+    Event::ApiEvents conversationAdded(int64_t convId) override;
+    Event::ApiEvents conversationModified(int64_t convId) override;
 
     // Event::MessagesEventListener
 

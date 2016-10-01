@@ -370,8 +370,6 @@ bool MessageDao::state(MessageState state) const
         return done_;
     case MessageState::Undone:
         return !done_;
-    case MessageState::Any:
-        return true;
     }
 }
 

@@ -28,7 +28,7 @@ public:
         messageData.id = data.msgId;
         messageData.sender = address.toString();
 
-        dbSession_ = Db::makeSession(dbPath_);
+        dbSession_ = Db::makeSession(sessionConfig_);
         Db::migrate(dbSession_);
 
         auto avatarHash = Dao::AvatarDao::store(data.avatar, dbSession_);

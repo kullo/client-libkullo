@@ -22,7 +22,7 @@ namespace Codec {
 class PrivateKeyProvider
 {
 public:
-    PrivateKeyProvider(const std::string &dbPath);
+    PrivateKeyProvider(const Db::SessionConfig &sessionConfig);
     virtual ~PrivateKeyProvider() = default;
 
     /// Get key with the given type and ID from cache or DB. Thread-safe.

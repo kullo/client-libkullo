@@ -93,7 +93,7 @@ std::shared_ptr<Api::AsyncTask> MessageAttachmentsImpl::contentAsync(
 
     return std::make_shared<AsyncTaskImpl>(
                 std::make_shared<MessageAttachmentsContentWorker>(
-                    msgId, attId, sessionData_->dbPath_, listener));
+                    msgId, attId, sessionData_->sessionConfig_, listener));
 }
 
 std::shared_ptr<Api::AsyncTask> MessageAttachmentsImpl::saveToAsync(
@@ -107,7 +107,7 @@ std::shared_ptr<Api::AsyncTask> MessageAttachmentsImpl::saveToAsync(
 
     return std::make_shared<AsyncTaskImpl>(
                 std::make_shared<MessageAttachmentsSaveToWorker>(
-                    msgId, attId, path, sessionData_->dbPath_, listener));
+                    msgId, attId, path, sessionData_->sessionConfig_, listener));
 }
 
 Event::ApiEvents MessageAttachmentsImpl::messageAdded(

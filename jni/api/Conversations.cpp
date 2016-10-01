@@ -100,6 +100,26 @@ CJNIEXPORT jint JNICALL Java_net_kullo_libkullo_api_Conversations_00024CppProxy_
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, 0 /* value doesn't matter */)
 }
 
+CJNIEXPORT jint JNICALL Java_net_kullo_libkullo_api_Conversations_00024CppProxy_native_1incomingMessages(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef, jlong j_convId)
+{
+    try {
+        DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
+        const auto& ref = ::djinni::objectFromHandleAddress<::Kullo::Api::Conversations>(nativeRef);
+        auto r = ref->incomingMessages(::djinni::I64::toCpp(jniEnv, j_convId));
+        return ::djinni::release(::djinni::I32::fromCpp(jniEnv, r));
+    } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, 0 /* value doesn't matter */)
+}
+
+CJNIEXPORT jint JNICALL Java_net_kullo_libkullo_api_Conversations_00024CppProxy_native_1outgoingMessages(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef, jlong j_convId)
+{
+    try {
+        DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
+        const auto& ref = ::djinni::objectFromHandleAddress<::Kullo::Api::Conversations>(nativeRef);
+        auto r = ref->outgoingMessages(::djinni::I64::toCpp(jniEnv, j_convId));
+        return ::djinni::release(::djinni::I32::fromCpp(jniEnv, r));
+    } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, 0 /* value doesn't matter */)
+}
+
 CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_Conversations_00024CppProxy_native_1latestMessageTimestamp(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef, jlong j_convId)
 {
     try {

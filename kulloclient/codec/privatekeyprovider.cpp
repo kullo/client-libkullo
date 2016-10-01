@@ -9,8 +9,8 @@
 namespace Kullo {
 namespace Codec {
 
-PrivateKeyProvider::PrivateKeyProvider(const std::string &dbPath)
-    : session_(Db::makeSession(dbPath))
+PrivateKeyProvider::PrivateKeyProvider(const Db::SessionConfig &sessionConfig)
+    : session_(Db::makeSession(sessionConfig))
 {
 }
 

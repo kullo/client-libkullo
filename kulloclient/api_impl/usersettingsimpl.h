@@ -17,8 +17,7 @@ class UserSettingsImpl :
 public:
     UserSettingsImpl(
             const Db::SharedSessionPtr &dbSession,
-            const std::shared_ptr<Api::Address> &address,
-            const std::shared_ptr<Api::MasterKey> &masterKey);
+            const Util::Credentials &credentials);
 
     // Api::UserSettings
 

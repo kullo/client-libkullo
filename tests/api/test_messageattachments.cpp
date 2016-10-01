@@ -1,8 +1,6 @@
 /* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
 #include "tests/api/apimodeltest.h"
 
-#include <fstream>
-
 #include <kulloclient/api/AsyncTask.h>
 #include <kulloclient/api/MessageAttachments.h>
 #include <kulloclient/api/MessageAttachmentsContentListener.h>
@@ -87,7 +85,7 @@ public:
         data.outpath = TestUtil::tempPath() + "/apimessageattachments-out.txt";
         data.errorOutpath = "/some/non-existing/dir/-.-.-.-.-.-/file.txt";
 
-        dbSession_ = Db::makeSession(dbPath_);
+        dbSession_ = Db::makeSession(sessionConfig_);
         Db::migrate(dbSession_);
 
         insertAttachment(data.msgId);

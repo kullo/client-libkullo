@@ -29,15 +29,15 @@ namespace Kullo {
 namespace ApiImpl {
 
 SessionImpl::SessionImpl(
-        const std::string &dbPath,
+        const Db::SessionConfig sessionConfig,
         Db::SharedSessionPtr dbSession,
-        const std::shared_ptr<Api::Address> &address,
-        const std::shared_ptr<Api::MasterKey> &masterKey,
         std::shared_ptr<Api::SessionListener> listener)
     : sessionData_(
           std::make_shared<SessionData>(
-              dbPath, dbSession,
-              std::make_shared<UserSettingsImpl>(dbSession, address, masterKey)))
+              sessionConfig,
+              dbSession,
+              std::make_shared<UserSettingsImpl>(
+                  dbSession, sessionConfig.credentials)))
     , conversations_(
           std::make_shared<ConversationsImpl>(sessionData_, listener))
     , messages_(

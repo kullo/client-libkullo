@@ -7,9 +7,9 @@ namespace ApiImpl {
 MessageAttachmentsContentWorker::MessageAttachmentsContentWorker(
         int64_t msgId,
         int64_t attId,
-        const std::string &dbPath,
+        const Db::SessionConfig &sessionConfig,
         std::shared_ptr<Api::MessageAttachmentsContentListener> listener)
-    : AttachmentsContentWorker(false, msgId, attId, dbPath)
+    : AttachmentsContentWorker(false, msgId, attId, sessionConfig)
     , listener_(listener)
 {}
 

@@ -19,13 +19,13 @@ DraftAttachmentsAddWorker::DraftAttachmentsAddWorker(
         int64_t convId,
         const std::string &path,
         const std::string &mimeType,
-        const std::string &dbPath,
+        const Db::SessionConfig &sessionConfig,
         std::shared_ptr<Api::SessionListener> sessionListener,
         std::shared_ptr<Api::DraftAttachmentsAddListener> listener)
     : convId_(convId)
     , path_(path)
     , mimeType_(mimeType)
-    , dbPath_(dbPath)
+    , sessionConfig_(sessionConfig)
     , sessionListener_(sessionListener)
     , listener_(listener)
 {}
@@ -52,7 +52,7 @@ void DraftAttachmentsAddWorker::work()
             auto istream = Util::Filesystem::makeIfstream(path_);
             auto hash = Crypto::Hasher::sha512Hex(*istream);
 
-            auto session = Db::makeSession(dbPath_);
+            auto session = Db::makeSession(sessionConfig_);
             SmartSqlite::ScopedTransaction tx(session, SmartSqlite::Immediate);
 
             attachmentId = Dao::AttachmentDao::idForNewDraftAttachment(

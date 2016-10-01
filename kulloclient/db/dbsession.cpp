@@ -3,14 +3,17 @@
 
 #include <iostream>
 #include <sstream>
+#include <string>
 #include <thread>
 
 #include <smartsqlite/connection.h>
 #include <smartsqlite/scopedtransaction.h>
 
 #include "kulloclient/crypto/hasher.h"
+#include "kulloclient/crypto/symmetrickeygenerator.h"
 #include "kulloclient/db/exceptions.h"
 #include "kulloclient/util/assert.h"
+#include "kulloclient/util/filesystem.h"
 #include "kulloclient/util/librarylogger.h"
 #include "kulloclient/util/misc.h"
 
@@ -25,6 +28,26 @@ namespace Db {
 const unsigned int CURRENT_DB_VERSION(9);
 
 namespace {
+
+const std::string SQLITE3_MAGIC = "SQLite format 3";
+
+bool isEncrypted(const std::string &dbFileName)
+{
+    std::unique_ptr<std::istream> stream;
+    try
+    {
+        stream = Util::Filesystem::makeIfstream(dbFileName);
+    }
+    catch (Util::FilesystemError &) {
+        return false;
+    }
+    kulloAssert(stream);
+
+    std::string magicFromFile(SQLITE3_MAGIC.size(), '\0');
+    stream->read(&magicFromFile.front(),
+                static_cast<std::streamsize>(SQLITE3_MAGIC.size()));
+    return stream->good() && (magicFromFile != SQLITE3_MAGIC);
+}
 
 #if KULLO_SQL_TRACING
 void tracingCallback(void *extraArg, const char *sql)
@@ -59,9 +82,19 @@ void profilingCallback(void *, const char *sql, std::uint64_t durationNanos)
 
 }
 
-SharedSessionPtr makeSession(const std::string &dbFileName)
+SharedSessionPtr makeSession(const SessionConfig &config)
 {
-    SharedSessionPtr session = std::make_shared<SmartSqlite::Connection>(dbFileName);
+    auto encrypted = isEncrypted(config.dbFileName);
+    SharedSessionPtr session = std::make_shared<SmartSqlite::Connection>(config.dbFileName);
+
+    if (encrypted)
+    {
+        Log.d() << "Database is encrypted, setting key.";
+        Crypto::SymmetricKeyGenerator keyGen;
+        auto storageKey = keyGen.makeStorageKey(
+                    *config.credentials.address, *config.credentials.masterKey);
+        session->setKey(storageKey.toBase64());
+    }
 
     session->setBusyTimeout(3000);
 #if KULLO_SQL_TRACING

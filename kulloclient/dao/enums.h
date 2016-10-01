@@ -7,18 +7,22 @@ namespace Dao {
 /// Describes the various states that a message can be in.
 enum struct MessageState
 {
-    /// IMessage was read
-    Read = 0,  // explicit first value, used for iteration
-
+    Read,
     Unread,
-
-    /// IMessage is done
     Done,
+    Undone
+};
 
+/// Describes message filters
+enum struct MessagesFilter
+{
+    Read,
+    Unread,
+    Done,
     Undone,
-
-    /// special value for all states (not to be used in state() or setState())
-    Any  // must be the last element, otherwise iteration will break!
+    Incoming,
+    Outgoing,
+    Any
 };
 
 /**

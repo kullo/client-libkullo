@@ -10,7 +10,7 @@ class DraftsEventListener
 {
 public:
     virtual ~DraftsEventListener() = default;
-    virtual ApiEvents draftModified(uint64_t convId) = 0;
+    virtual ApiEvents draftModified(int64_t convId) = 0;
 };
 
 }

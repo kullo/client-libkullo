@@ -8,12 +8,15 @@
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
 
+#include "kulloclient/api/Address.h"
 #include "kulloclient/api/LocalError.h"
+#include "kulloclient/api/MasterKey.h"
 #include "kulloclient/api_impl/sessionimpl.h"
 #include "kulloclient/db/dbsession.h"
 #include "kulloclient/util/assert.h"
 #include "kulloclient/util/exceptions.h"
 #include "kulloclient/util/librarylogger.h"
+#include "kulloclient/util/masterkey.h"
 #include "kulloclient/util/misc.h"
 #include "kulloclient/util/scopedbenchmark.h"
 
@@ -83,13 +86,17 @@ void ClientCreateSessionWorker::cancel()
 
 std::shared_ptr<Api::Session> ClientCreateSessionWorker::makeSession() const
 {
-    // make DB session
-    auto dbSession = Db::makeSession(dbFilePath_);
+    auto credentials = Util::Credentials(
+                std::make_shared<Util::KulloAddress>(address_->toString()),
+                std::make_shared<Util::MasterKey>(masterKey_->dataBlocks()));
+    auto sessionConfig = Db::SessionConfig(dbFilePath_, credentials);
+
+    auto dbSession = Db::makeSession(sessionConfig);
     Db::migrate(dbSession);
     kulloAssert(Db::hasCurrentSchema(dbSession));
 
     return std::make_shared<SessionImpl>(
-                dbFilePath_, dbSession, address_, masterKey_, sessionListener_);
+                sessionConfig, dbSession, sessionListener_);
 }
 
 }

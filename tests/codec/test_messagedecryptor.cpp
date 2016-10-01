@@ -59,7 +59,7 @@ protected:
 
     std::shared_ptr<MockPrivateKeyProvider> makePrivKeyProvider()
     {
-        return std::make_shared<MockPrivateKeyProvider>(dbPath_);
+        return std::make_shared<MockPrivateKeyProvider>(sessionConfig_);
     }
 
     std::unique_ptr<Codec::MessageDecryptor> makeUut(

@@ -33,7 +33,7 @@ public:
 
     // Event::DraftsEventListener
 
-    Event::ApiEvents draftModified(uint64_t convId) override;
+    Event::ApiEvents draftModified(int64_t convId) override;
 
     // Event::RemovalEventListener
 

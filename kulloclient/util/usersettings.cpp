@@ -6,8 +6,8 @@
 namespace Kullo {
 namespace Util {
 
-UserSettings::UserSettings(Credentials &&credentials)
-    : credentials(std::move(credentials))
+UserSettings::UserSettings(const Credentials &credentials)
+    : credentials(credentials)
 {}
 
 Credentials::Credentials(

@@ -7,9 +7,9 @@ namespace ApiImpl {
 DraftAttachmentsContentWorker::DraftAttachmentsContentWorker(
         int64_t convId,
         int64_t attId,
-        const std::string &dbPath,
+        const Db::SessionConfig &sessionConfig,
         std::shared_ptr<Api::DraftAttachmentsContentListener> listener)
-    : AttachmentsContentWorker(true, convId, attId, dbPath)
+    : AttachmentsContentWorker(true, convId, attId, sessionConfig)
     , listener_(listener)
 {}
 

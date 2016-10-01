@@ -79,7 +79,7 @@ public:
      * @param settings Settings for the local user.
      */
     Syncer(
-            const std::string &dbFile,
+            const Db::SessionConfig &sessionConfig,
             const Util::UserSettings &settings,
             const std::shared_ptr<Codec::PrivateKeyProvider> &privKeyProvider);
     ~Syncer();
@@ -94,7 +94,7 @@ public:
 
 private:
     std::chrono::steady_clock::time_point startTime_;
-    std::string dbFile_;
+    Db::SessionConfig sessionConfig_;
     Util::UserSettings settings_;
     std::shared_ptr<Codec::PrivateKeyProvider> privKeyProvider_;
     std::unique_ptr<KeysSyncer> keysSyncer_;

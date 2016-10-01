@@ -10,22 +10,21 @@ namespace Kullo {
 namespace ApiImpl {
 
 struct SessionData {
-    const std::string dbPath_;
+    const Db::SessionConfig sessionConfig_;
     const Db::SharedSessionPtr dbSession_;
     const std::shared_ptr<UserSettingsImpl> userSettings_;
     const std::shared_ptr<Codec::PrivateKeyProvider> privKeyProvider_;
 
     SessionData(
-            const std::string &dbPath,
+            const Db::SessionConfig &sessionConfig,
             Db::SharedSessionPtr dbSession,
             std::shared_ptr<UserSettingsImpl> userSettings)
-        : dbPath_(dbPath)
+        : sessionConfig_(sessionConfig)
         , dbSession_(dbSession)
         , userSettings_(userSettings)
         , privKeyProvider_(
-              std::make_shared<Codec::PrivateKeyProvider>(dbPath_))
+              std::make_shared<Codec::PrivateKeyProvider>(sessionConfig_))
     {
-        kulloAssert(!dbPath_.empty());
         kulloAssert(dbSession_);
         kulloAssert(userSettings_);
     }

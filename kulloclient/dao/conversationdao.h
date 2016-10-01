@@ -33,7 +33,7 @@ public:
     static std::unique_ptr<ConversationResult> all(Db::SharedSessionPtr session);
 
     std::string loadLastMessageTime();
-    std::size_t loadMessageCount(MessageState type);
+    std::size_t loadMessageCount(const MessagesFilter filter);
 
     /**
      * @brief Saves the current state to DB if the state was changed.

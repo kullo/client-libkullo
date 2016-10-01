@@ -17,7 +17,7 @@ class ApiDrafts : public ApiModelTest
 public:
     ApiDrafts()
     {
-        dbSession_ = Db::makeSession(dbPath_);
+        dbSession_ = Db::makeSession(sessionConfig_);
         Db::migrate(dbSession_);
 
         data.convId = 1;

@@ -31,7 +31,7 @@ struct Credentials
  */
 struct UserSettings
 {
-    explicit UserSettings(Credentials &&credentials);
+    explicit UserSettings(const Credentials &credentials);
 
     /// Login credentials of the user
     const Credentials credentials;

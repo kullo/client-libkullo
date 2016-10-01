@@ -17,7 +17,7 @@ public:
             int64_t msgId,
             int64_t attId,
             const std::string &path,
-            const std::string &dbPath,
+            const Db::SessionConfig &sessionConfig,
             std::shared_ptr<Api::MessageAttachmentsSaveToListener> listener);
 
     void cancel() override;

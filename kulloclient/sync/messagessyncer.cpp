@@ -250,10 +250,9 @@ void MessagesSyncer::handleModifiedMessage(const Protocol::Message &httpMsg, Mes
         if (!local.deleted())
         {
             // sync states: local modification > remote modification
-            for (int stateIter = 0; stateIter < static_cast<int>(MessageState::Any); ++stateIter)
+            for (const auto state : std::vector<MessageState>{ MessageState::Read, MessageState::Done })
             {
                 // only use remote state if state was only modified on the server
-                MessageState state = static_cast<MessageState>(stateIter);
                 if ((local.state(state) != remote.state(state)) &&
                         (old->state(state) == local.state(state)))
                 {

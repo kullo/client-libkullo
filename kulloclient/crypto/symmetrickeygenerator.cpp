@@ -23,8 +23,18 @@ SymmetricKey SymmetricKeyGenerator::makeMasterKey() const
     return SymmetricKey(makeRandomKeyPriv(MASTER_KEY_BITS));
 }
 
-SymmetricKey SymmetricKeyGenerator::makeLoginKey(const Util::KulloAddress &user,
-                                                 const Util::MasterKey &masterKey) const
+SymmetricKey SymmetricKeyGenerator::makeStorageKey(
+        const Util::KulloAddress &user,
+        const Util::MasterKey &masterKey) const
+{
+    HKDF hkdf;
+    std::string info = std::string("storage^") + user.toString();
+    return hkdf.expand(SymmetricKeyLoader::fromMasterKey(masterKey), info, STORAGE_KEY_BITS);
+}
+
+SymmetricKey SymmetricKeyGenerator::makeLoginKey(
+        const Util::KulloAddress &user,
+        const Util::MasterKey &masterKey) const
 {
     HKDF hkdf;
     std::string info = std::string("login^") + user.toString();

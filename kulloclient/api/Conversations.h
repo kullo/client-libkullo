@@ -53,6 +53,12 @@ public:
     /** Total number of undone messages */
     virtual int32_t undoneMessages(int64_t convId) = 0;
 
+    /** Total number of incoming messages */
+    virtual int32_t incomingMessages(int64_t convId) = 0;
+
+    /** Total number of outgoing messages */
+    virtual int32_t outgoingMessages(int64_t convId) = 0;
+
     /**
      * Timestamp of the latest message (for sorting). Returns the result of
      * emptyConversationTimestamp() if the conversation has no messages.

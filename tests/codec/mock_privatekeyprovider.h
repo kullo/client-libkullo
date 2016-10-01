@@ -8,8 +8,8 @@
 class MockPrivateKeyProvider : public Kullo::Codec::PrivateKeyProvider
 {
 public:
-    MockPrivateKeyProvider(const std::string &dbPath)
-        : PrivateKeyProvider(dbPath)
+    MockPrivateKeyProvider(const Kullo::Db::SessionConfig &sessionConfig)
+        : PrivateKeyProvider(sessionConfig)
     {
     }
 

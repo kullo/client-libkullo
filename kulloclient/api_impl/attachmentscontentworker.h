@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "kulloclient/api_impl/worker.h"
+#include "kulloclient/db/dbsession.h"
 
 namespace Kullo {
 namespace ApiImpl {
@@ -16,7 +17,7 @@ public:
             bool isDraft,
             int64_t convOrMsgId,
             int64_t attId,
-            const std::string &dbPath);
+            const Db::SessionConfig &sessionConfig);
 
     void work() override;
 
@@ -29,7 +30,7 @@ protected:
     const bool isDraft_;
     const int64_t convOrMsgId_;
     const int64_t attId_;
-    const std::string dbPath_;
+    const Db::SessionConfig sessionConfig_;
 };
 
 }

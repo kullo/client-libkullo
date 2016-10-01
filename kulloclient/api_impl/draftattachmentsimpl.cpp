@@ -53,7 +53,7 @@ std::shared_ptr<Api::AsyncTask> DraftAttachmentsImpl::addAsync(
 
     return std::make_shared<AsyncTaskImpl>(
                 std::make_shared<DraftAttachmentsAddWorker>(
-                    convId, path, mimeType, sessionData_->dbPath_,
+                    convId, path, mimeType, sessionData_->sessionConfig_,
                     sessionListener_, listener));
 }
 
@@ -132,7 +132,7 @@ std::shared_ptr<Api::AsyncTask> DraftAttachmentsImpl::contentAsync(
 
     return std::make_shared<AsyncTaskImpl>(
                 std::make_shared<DraftAttachmentsContentWorker>(
-                    convId, attId, sessionData_->dbPath_, listener));
+                    convId, attId, sessionData_->sessionConfig_, listener));
 }
 
 std::shared_ptr<Api::AsyncTask> DraftAttachmentsImpl::saveToAsync(
@@ -148,7 +148,7 @@ std::shared_ptr<Api::AsyncTask> DraftAttachmentsImpl::saveToAsync(
 
     return std::make_shared<AsyncTaskImpl>(
                 std::make_shared<DraftAttachmentsSaveToWorker>(
-                    convId, attId, path, sessionData_->dbPath_, listener));
+                    convId, attId, path, sessionData_->sessionConfig_, listener));
 }
 
 Event::ApiEvents DraftAttachmentsImpl::draftAttachmentAdded(

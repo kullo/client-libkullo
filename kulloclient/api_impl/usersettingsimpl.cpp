@@ -14,13 +14,8 @@ namespace ApiImpl {
 
 UserSettingsImpl::UserSettingsImpl(
         const Db::SharedSessionPtr &dbSession,
-        const std::shared_ptr<Api::Address> &address,
-        const std::shared_ptr<Api::MasterKey> &masterKey)
-    : userSettings_(
-          Util::UserSettings(
-              Util::Credentials(
-                  std::make_shared<Util::KulloAddress>(address->toString()),
-                  std::make_shared<Util::MasterKey>(masterKey->dataBlocks()))))
+        const Util::Credentials &credentials)
+    : userSettings_(Util::UserSettings(credentials))
     , dao_(dbSession)
 {
     dao_.load(userSettings_);

@@ -58,7 +58,7 @@ public:
         data3_.text = "Are you okay?";
         data3_.footer = "It's me again";
 
-        dbSession_ = Db::makeSession(dbPath_);
+        dbSession_ = Db::makeSession(sessionConfig_);
         Db::migrate(dbSession_);
 
         Dao::ConversationDao convDao(dbSession_);

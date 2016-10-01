@@ -128,8 +128,10 @@ void DraftsImpl::clear(int64_t convId)
     }
 }
 
-Event::ApiEvents DraftsImpl::draftModified(uint64_t convId)
+Event::ApiEvents DraftsImpl::draftModified(int64_t convId)
 {
+    kulloAssert(convId >= Kullo::ID_MIN && convId <= Kullo::ID_MAX);
+
     auto dao = Dao::DraftDao::load(convId, sessionData_->dbSession_);
     if (!dao) throw Db::DatabaseIntegrityError("DraftsImpl::draftModified");
 
@@ -148,18 +150,14 @@ Event::ApiEvents DraftsImpl::draftModified(uint64_t convId)
         drafts_.emplace(convId, *dao);
     }
 
-    using ConvIdType = decltype(Api::Event::conversationId);
-    kulloAssert(convId <= std::numeric_limits<ConvIdType>::max());
-    auto narrowConvId = static_cast<ConvIdType>(convId);
-
     Event::ApiEvents result;
     if (!oldState || oldState != dao->state())
     {
-        result.insert({Api::EventType::DraftStateChanged, narrowConvId, -1, -1});
+        result.insert({Api::EventType::DraftStateChanged, convId, -1, -1});
     }
     if (!oldText || oldText != dao->text())
     {
-        result.insert({Api::EventType::DraftTextChanged, narrowConvId, -1, -1});
+        result.insert({Api::EventType::DraftTextChanged, convId, -1, -1});
     }
     return result;
 }

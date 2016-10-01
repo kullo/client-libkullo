@@ -15,7 +15,7 @@ class MessageAttachmentsContentWorker : public AttachmentsContentWorker
 public:
     MessageAttachmentsContentWorker(
             int64_t msgId, int64_t attId,
-            const std::string &dbPath,
+            const Db::SessionConfig &sessionConfig,
             std::shared_ptr<Api::MessageAttachmentsContentListener> listener);
 
     void cancel() override;

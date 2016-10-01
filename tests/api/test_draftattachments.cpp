@@ -1,8 +1,6 @@
 /* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
 #include "tests/api/apimodeltest.h"
 
-#include <fstream>
-
 #include <kulloclient/api/AsyncTask.h>
 #include <kulloclient/api/DraftAttachmentsAddListener.h>
 #include <kulloclient/api/DraftAttachmentsContentListener.h>
@@ -120,7 +118,7 @@ public:
         data.errorFilepathNonExisting = TestUtil::tempPath() + "/__a-non-existing-file__";
         data.errorFilepathNonReadable = "/etc/shadow"; // A an existing regular file known to be unreadable
 
-        dbSession_ = Db::makeSession(dbPath_);
+        dbSession_ = Db::makeSession(sessionConfig_);
         Db::migrate(dbSession_);
 
         Dao::AttachmentDao dao(dbSession_);

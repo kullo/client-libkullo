@@ -5,21 +5,29 @@
 #include <kulloclient/api/MasterKey.h>
 #include <kulloclient/api_impl/clientcreatesessionworker.h>
 #include <kulloclient/api_impl/usersettingsimpl.h>
+#include <kulloclient/util/kulloaddress.h>
+#include <kulloclient/util/masterkey.h>
+#include <kulloclient/util/usersettings.h>
 
+#include "tests/testdata.h"
 #include "tests/testutil.h"
 
 using namespace testing;
 using namespace Kullo;
 
 ApiModelTest::ApiModelTest()
-    : dbPath_(TestUtil::tempDbFileName())
+    : sessionConfig_(
+          TestUtil::tempDbFileName(),
+          Util::Credentials(
+              std::make_shared<Util::KulloAddress>(address_->toString()),
+              std::make_shared<Util::MasterKey>(masterKey_->pem())))
 {}
 
 void ApiModelTest::makeSession()
 {
     sessionListener_ = std::make_shared<StubSessionListener>();
     session_ = ApiImpl::ClientCreateSessionWorker(
-                address_, masterKey_, dbPath_, sessionListener_, nullptr
+                address_, masterKey_, sessionConfig_.dbFileName, sessionListener_, nullptr
                 ).makeSession();
     sessionListener_->setSession(session_);
     session_->userSettings()->setName("X. Ample User");

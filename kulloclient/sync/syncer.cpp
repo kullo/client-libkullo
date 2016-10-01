@@ -22,10 +22,10 @@ namespace Kullo {
 namespace Sync {
 
 Syncer::Syncer(
-        const std::string &dbFile,
+        const Db::SessionConfig &sessionConfig,
         const UserSettings &settings,
         const std::shared_ptr<Codec::PrivateKeyProvider> &privKeyProvider) :
-    dbFile_(dbFile),
+    sessionConfig_(sessionConfig),
     settings_(settings),
     privKeyProvider_(privKeyProvider)
 {}
@@ -39,7 +39,7 @@ void Syncer::run(
 {
     auto start = std::chrono::steady_clock::now();
 
-    auto session = Db::makeSession(dbFile_);
+    auto session = Db::makeSession(sessionConfig_);
     kulloAssert(Db::hasCurrentSchema(session));
 
     auto httpClient = Registry::httpClientFactory()->createHttpClient();
@@ -142,7 +142,7 @@ void Syncer::downloadAttachmentsForMessage(
 {
     startTime_ = std::chrono::steady_clock::now();
 
-    Db::SharedSessionPtr session = Db::makeSession(dbFile_);
+    Db::SharedSessionPtr session = Db::makeSession(sessionConfig_);
     kulloAssert(Db::hasCurrentSchema(session));
 
     auto httpClient = Registry::httpClientFactory()->createHttpClient();

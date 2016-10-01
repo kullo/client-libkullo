@@ -28,7 +28,7 @@ protected:
     const std::vector<Kullo::id_type> TEST_IDS_INVALID = std::vector<Kullo::id_type>{
         -1, -100, 9007199254740993ll};
 
-    std::string dbPath_;
+    Kullo::Db::SessionConfig sessionConfig_;
     std::shared_ptr<Kullo::Api::Session> session_;
     std::shared_ptr<StubSessionListener> sessionListener_;
 };

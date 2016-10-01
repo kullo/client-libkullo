@@ -10,11 +10,12 @@ namespace Kullo {
 namespace ApiImpl {
 
 AttachmentsContentWorker::AttachmentsContentWorker(
-        bool isDraft, int64_t convOrMsgId, int64_t attId, const std::string &dbPath)
+        bool isDraft, int64_t convOrMsgId, int64_t attId,
+        const Db::SessionConfig &sessionConfig)
     : isDraft_(isDraft)
     , convOrMsgId_(convOrMsgId)
     , attId_(attId)
-    , dbPath_(dbPath)
+    , sessionConfig_(sessionConfig)
 {}
 
 void AttachmentsContentWorker::work()
@@ -25,7 +26,7 @@ void AttachmentsContentWorker::work()
 
     // copy attachment from filesystem to DB
     {
-        auto session = Db::makeSession(dbPath_);
+        auto session = Db::makeSession(sessionConfig_);
         SmartSqlite::ScopedTransaction tx(session);
         (void)tx;  // RAII only
 

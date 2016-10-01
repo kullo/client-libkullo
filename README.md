@@ -63,6 +63,12 @@ Tips and Tricks
 Changelog
 ---------
 
+### v56 (2016-10-01)
+
+ * Add interfaces: Conversations.incomingMessages/outgoingMessages
+ * Initial support for encrypted databases
+ * Update JsonCpp to 1.7.6
+
 ### v55 (2016-09-12)
 
  * Implement recursive removing of conversations with messages and draft

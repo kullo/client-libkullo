@@ -60,31 +60,45 @@ std::string ConversationDao::loadLastMessageTime()
     return row.get<std::string>("last_message_time");
 }
 
-std::size_t ConversationDao::loadMessageCount(MessageState type)
+std::size_t ConversationDao::loadMessageCount(const MessagesFilter filter)
 {
     std::string sqlWherePart;
-    switch (type) {
-    case MessageState::Any:
-        sqlWherePart = "";
+    switch (filter) {
+    case MessagesFilter::Read:
+        sqlWherePart = "read = 1";
         break;
-    case MessageState::Read:
-        sqlWherePart = "AND read = 1";
+    case MessagesFilter::Unread:
+        sqlWherePart = "read = 0";
         break;
-    case MessageState::Unread:
-        sqlWherePart = "AND read = 0";
+    case MessagesFilter::Done:
+        sqlWherePart = "done = 1";
         break;
-    case MessageState::Done:
-        sqlWherePart = "AND done = 1";
+    case MessagesFilter::Undone:
+        sqlWherePart = "done = 0";
         break;
-    case MessageState::Undone:
-        sqlWherePart = "AND done = 0";
+    case MessagesFilter::Incoming:
+        for (const auto &participant : participantsList())
+        {
+            if (!sqlWherePart.empty()) sqlWherePart += " OR ";
+            sqlWherePart += "sender == '" + participant + "'";
+        }
+        break;
+    case MessagesFilter::Outgoing:
+        for (const auto &participant : participantsList())
+        {
+            if (!sqlWherePart.empty()) sqlWherePart += " AND ";
+            sqlWherePart += "sender != '" + participant + "'";
+        }
+        break;
+    case MessagesFilter::Any:
+        sqlWherePart = "1 = 1"; // constant true expression
         break;
     }
 
     const std::string sql = "SELECT count(id) AS count "
                             "FROM messages "
                             "WHERE conversation_id = :conversation_id "
-                            "AND deleted = 0 AND old = 0 " + sqlWherePart;
+                            "AND deleted = 0 AND old = 0 AND (" + sqlWherePart + ")";
     auto stmt = session_->prepare(sql);
     stmt.bind(":conversation_id", id_);
     SmartSqlite::Row row = stmt.execWithSingleResult();

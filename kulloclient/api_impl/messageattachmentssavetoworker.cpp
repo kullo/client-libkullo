@@ -6,9 +6,9 @@ namespace ApiImpl {
 
 MessageAttachmentsSaveToWorker::MessageAttachmentsSaveToWorker(
         int64_t convId, int64_t attId,
-        const std::string &path, const std::string &dbPath,
+        const std::string &path, const Db::SessionConfig &sessionConfig,
         std::shared_ptr<Api::MessageAttachmentsSaveToListener> listener)
-    : AttachmentsSaveToWorker(false, convId, attId, path, dbPath)
+    : AttachmentsSaveToWorker(false, convId, attId, path, sessionConfig)
     , listener_(listener)
 {}
 

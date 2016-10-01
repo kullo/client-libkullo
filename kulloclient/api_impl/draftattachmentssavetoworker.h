@@ -17,7 +17,7 @@ public:
             int64_t convId,
             int64_t attId,
             const std::string &path,
-            const std::string &dbPath,
+            const Db::SessionConfig &sessionConfig,
             std::shared_ptr<Api::DraftAttachmentsSaveToListener> listener);
 
     void cancel() override;

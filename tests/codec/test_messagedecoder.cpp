@@ -77,7 +77,7 @@ protected:
 
     std::shared_ptr<Codec::PrivateKeyProvider> makePrivKeyProvider()
     {
-        return std::make_shared<MockPrivateKeyProvider>(dbPath_);
+        return std::make_shared<MockPrivateKeyProvider>(sessionConfig_);
     }
 
     Json::Value sender_;

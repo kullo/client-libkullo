@@ -49,28 +49,38 @@ void DecryptingFilter::write(
         Util::Sink &sink, const unsigned char *data, std::size_t length)
 {
     auto &buf = impl_->buffer_;
-    auto tagSize = impl_->cipher_->tag_size();
+    auto minFinalSize = impl_->cipher_->minimum_final_size();
 
     if (!impl_->writtenTo_)
     {
-        auto out = impl_->cipher_->start(impl_->iv_.data(), impl_->iv_.size());
-        sink.write(out.data(), out.size());
+        impl_->cipher_->start(impl_->iv_.data(), impl_->iv_.size());
         impl_->writtenTo_ = true;
-        buf.reserve(tagSize);
+        buf.reserve(minFinalSize);
     }
 
-    // preserve only (potential) tag, but limit it to data's length
-    auto dataBytesToKeep = std::min(tagSize, length);
-    auto dataBytesToWrite = length - dataBytesToKeep;
+    // all bytes that can be written right now (excluding bytes for final update)
+    auto totalBytesAvailable = buf.size() + length > minFinalSize
+            ? buf.size() + length - minFinalSize
+            : size_t{0};
 
-    // preserve what is necessary to complete the (potential) tag from data,
-    // but don't exceed the buffer's length
-    auto bufferBytesToKeep = std::min(tagSize - dataBytesToKeep, buf.size());
-    auto bufferBytesToWrite = buf.size() - bufferBytesToKeep;
+    // writing must take place in multiples of update_granularity bytes
+    auto totalBytesToWrite =
+            totalBytesAvailable
+            - totalBytesAvailable % impl_->cipher_->update_granularity();
 
-    // write as many data bytes as possible to sink
-    doWrite(sink, buf.data(), bufferBytesToWrite);
-    doWrite(sink, data, dataBytesToWrite);
+    auto bufferBytesToWrite = std::min(totalBytesToWrite, buf.size());
+    auto bufferBytesToKeep = buf.size() - bufferBytesToWrite;
+
+    auto dataBytesToWrite = totalBytesToWrite - bufferBytesToWrite;
+
+    // copy data to write in one contiguous buffer
+    std::vector<unsigned char> writeBuf;
+    std::copy(buf.data(), buf.data() + bufferBytesToWrite, std::back_inserter(writeBuf));
+    std::copy(data, data + dataBytesToWrite, std::back_inserter(writeBuf));
+    kulloAssert(writeBuf.size() == totalBytesToWrite);
+
+    // write data to sink
+    doWrite(sink, writeBuf.data(), writeBuf.size());
 
     // new buffer contents = preserved from old buffer + preserved from data
     if (bufferBytesToWrite > 0)

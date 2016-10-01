@@ -13,6 +13,22 @@ class SymmetricKeyGenerator : public KulloTest
 {
 };
 
+K_TEST_F(SymmetricKeyGenerator, makeStorageKeyWorks)
+{
+    auto inputMasterKey = Util::MasterKey(
+                Util::to_vector("hFtWoAyknKOorIBXUjgOptpVwCfmOFUN"));
+    auto expectedKey = Crypto::SymmetricKey(
+                "1732ab5e72af1434a26031af32cdbb24"
+                "cc42842de09035732196eddefef40ff8"
+                "f9cedb765ecb8889b617594d3d1b10af"
+                "ac40fd769a8193eaee40433ff474b00d");
+
+    Crypto::SymmetricKeyGenerator keyGen;
+    EXPECT_THAT(keyGen.makeStorageKey(
+                    Util::KulloAddress("hi#kullo.net"), inputMasterKey),
+                Eq(expectedKey));
+}
+
 K_TEST_F(SymmetricKeyGenerator, makeLoginKeyDerivesTheRightKeyFromBlockList)
 {
     auto input = std::string(
@@ -26,17 +42,31 @@ K_TEST_F(SymmetricKeyGenerator, makeLoginKeyDerivesTheRightKeyFromBlockList)
                 "-----END KULLO PRIVATE MASTER KEY-----\n"
                 );
     auto inputMasterKey = Util::MasterKey(input);
-    auto expectedKey = Crypto::SymmetricKey("481acd52464821ddadeff998e1be88922fe8ce8cd8795172115d6f8852997f4cefe721ee801ece84e0297c6045ee41ee5ac2748a76e34edb9ff99c4157d8528e");
+    auto expectedKey = Crypto::SymmetricKey(
+                "481acd52464821ddadeff998e1be8892"
+                "2fe8ce8cd8795172115d6f8852997f4c"
+                "efe721ee801ece84e0297c6045ee41ee"
+                "5ac2748a76e34edb9ff99c4157d8528e");
 
     Crypto::SymmetricKeyGenerator keyGen;
-    EXPECT_THAT(keyGen.makeLoginKey(Util::KulloAddress("hi#kullo.net"), inputMasterKey), Eq(expectedKey));
+    EXPECT_THAT(keyGen.makeLoginKey(
+                    Util::KulloAddress("hi#kullo.net"), inputMasterKey),
+                Eq(expectedKey));
 }
 
 K_TEST_F(SymmetricKeyGenerator, makeLoginKeyDerivesTheRightKeyFromBinary)
 {
-    auto inputMasterKey = Util::MasterKey(Util::to_vector("hFtWoAyknKOorIBXUjgOptpVwCfmOFUN"));
-    auto expectedKey = Crypto::SymmetricKey("481acd52464821ddadeff998e1be88922fe8ce8cd8795172115d6f8852997f4cefe721ee801ece84e0297c6045ee41ee5ac2748a76e34edb9ff99c4157d8528e");
+    auto inputMasterKey = Util::MasterKey(
+                Util::to_vector("hFtWoAyknKOorIBXUjgOptpVwCfmOFUN"));
+    auto expectedKey = Crypto::SymmetricKey(
+                "481acd52464821ddadeff998e1be8892"
+                "2fe8ce8cd8795172115d6f8852997f4c"
+                "efe721ee801ece84e0297c6045ee41ee"
+                "5ac2748a76e34edb9ff99c4157d8528e");
 
     Crypto::SymmetricKeyGenerator keyGen;
-    EXPECT_THAT(keyGen.makeLoginKey(Util::KulloAddress("hi#kullo.net"), inputMasterKey), Eq(expectedKey));
+    EXPECT_THAT(keyGen.makeLoginKey(
+                    Util::KulloAddress("hi#kullo.net"),
+                    inputMasterKey),
+                Eq(expectedKey));
 }

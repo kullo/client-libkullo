@@ -28,7 +28,7 @@ SyncerWorker::SyncerWorker(
         std::shared_ptr<Api::SyncerListener> listener)
     : shouldCancel_(std::make_shared<std::atomic<bool>>(false))
     , syncer_(
-          sessionData->dbPath_,
+          sessionData->sessionConfig_,
           sessionData->userSettings_->userSettings(),
           sessionData->privKeyProvider_)
     , sessionListener_(sessionListener)

@@ -16,7 +16,7 @@ public:
     DraftAttachmentsContentWorker(
             int64_t convId,
             int64_t attId,
-            const std::string &dbPath,
+            const Db::SessionConfig &sessionConfig,
             std::shared_ptr<Api::DraftAttachmentsContentListener> listener);
 
     void cancel() override;

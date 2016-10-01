@@ -113,7 +113,7 @@ int32_t ConversationsImpl::totalMessages(int64_t convId)
 
     auto iter = conversations_.find(convId);
     return (iter != conversations_.end())
-            ? iter->second.loadMessageCount(Dao::MessageState::Any)
+            ? iter->second.loadMessageCount(Dao::MessagesFilter::Any)
             : 0;
 }
 
@@ -123,7 +123,7 @@ int32_t ConversationsImpl::unreadMessages(int64_t convId)
 
     auto iter = conversations_.find(convId);
     return (iter != conversations_.end())
-            ? iter->second.loadMessageCount(Dao::MessageState::Unread)
+            ? iter->second.loadMessageCount(Dao::MessagesFilter::Unread)
             : 0;
 }
 
@@ -133,7 +133,27 @@ int32_t ConversationsImpl::undoneMessages(int64_t convId)
 
     auto iter = conversations_.find(convId);
     return (iter != conversations_.end())
-            ? iter->second.loadMessageCount(Dao::MessageState::Undone)
+            ? iter->second.loadMessageCount(Dao::MessagesFilter::Undone)
+            : 0;
+}
+
+int32_t ConversationsImpl::incomingMessages(int64_t convId)
+{
+    kulloAssert(convId >= Kullo::ID_MIN && convId <= Kullo::ID_MAX);
+
+    auto iter = conversations_.find(convId);
+    return (iter != conversations_.end())
+            ? iter->second.loadMessageCount(Dao::MessagesFilter::Incoming)
+            : 0;
+}
+
+int32_t ConversationsImpl::outgoingMessages(int64_t convId)
+{
+    kulloAssert(convId >= Kullo::ID_MIN && convId <= Kullo::ID_MAX);
+
+    auto iter = conversations_.find(convId);
+    return (iter != conversations_.end())
+            ? iter->second.loadMessageCount(Dao::MessagesFilter::Outgoing)
             : 0;
 }
 
@@ -180,8 +200,10 @@ Api::DateTime ConversationsImpl::latestMessageTimestamp(int64_t convId)
     return *result;
 }
 
-Event::ApiEvents ConversationsImpl::conversationAdded(uint64_t convId)
+Event::ApiEvents ConversationsImpl::conversationAdded(int64_t convId)
 {
+    kulloAssert(convId >= Kullo::ID_MIN && convId <= Kullo::ID_MAX);
+
     auto dao = Dao::ConversationDao::load(convId, sessionData_->dbSession_);
     if (!dao) throw Db::DatabaseIntegrityError(
                 "ConversationsImpl::conversationAdded");
@@ -192,8 +214,10 @@ Event::ApiEvents ConversationsImpl::conversationAdded(uint64_t convId)
     return {Api::Event(Api::EventType::ConversationAdded, convId, -1, -1)};
 }
 
-Event::ApiEvents ConversationsImpl::conversationModified(uint64_t convId)
+Event::ApiEvents ConversationsImpl::conversationModified(int64_t convId)
 {
+    kulloAssert(convId >= Kullo::ID_MIN && convId <= Kullo::ID_MAX);
+
     auto dao = Dao::ConversationDao::load(convId, sessionData_->dbSession_);
     if (!dao) throw Db::DatabaseIntegrityError(
                 "ConversationsImpl::conversationModified");

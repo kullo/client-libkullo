@@ -15,14 +15,19 @@ class SymmetricKeyGenerator
 {
 public:
     static size_t const MASTER_KEY_BITS = 256;
+    static size_t const STORAGE_KEY_BITS = 512;
     static size_t const LOGIN_KEY_BITS = 512;
     static size_t const PRIVATE_DATA_KEY_BITS = 256;
     static size_t const MESSAGE_SYMM_KEY_BITS = 256;
 
     std::vector<unsigned char> makeRandomIV(size_t bytes) const;
     SymmetricKey makeMasterKey() const;
-    SymmetricKey makeLoginKey(Util::KulloAddress const& user,
-                              Util::MasterKey const& masterKey) const;
+    SymmetricKey makeStorageKey(
+            Util::KulloAddress const& user,
+            Util::MasterKey const& masterKey) const;
+    SymmetricKey makeLoginKey(
+            Util::KulloAddress const& user,
+            Util::MasterKey const& masterKey) const;
     SymmetricKey makePrivateDataKey() const;
     SymmetricKey makeMessageSymmKey() const;
 

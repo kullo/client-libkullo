@@ -22,10 +22,8 @@ class SessionImpl : public Api::Session, public Event::EventListeners
 {
 public:
     SessionImpl(
-            const std::string &dbPath,
+            const Db::SessionConfig sessionConfig,
             Db::SharedSessionPtr dbSession,
-            const std::shared_ptr<Api::Address> &address,
-            const std::shared_ptr<Api::MasterKey> &masterKey,
             std::shared_ptr<Api::SessionListener> listener);
 
     // Api::Session impl

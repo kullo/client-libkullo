@@ -1,7 +1,6 @@
 /* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
 #include "kulloclient/api_impl/attachmentssavetoworker.h"
 
-#include <fstream>
 #include <iostream>
 #include <smartsqlite/scopedtransaction.h>
 
@@ -16,12 +15,12 @@ namespace ApiImpl {
 
 AttachmentsSaveToWorker::AttachmentsSaveToWorker(
         bool isDraft, int64_t convOrMsgId, int64_t attId,
-        const std::string &path, const std::string &dbPath)
+        const std::string &path, const Db::SessionConfig &sessionConfig)
     : isDraft_(isDraft)
     , convOrMsgId_(convOrMsgId)
     , attId_(attId)
     , path_(path)
-    , dbPath_(dbPath)
+    , sessionConfig_(sessionConfig)
 {}
 
 namespace {
@@ -45,7 +44,7 @@ void AttachmentsSaveToWorker::work()
     try
     {
         {
-            auto session = Db::makeSession(dbPath_);
+            auto session = Db::makeSession(sessionConfig_);
             SmartSqlite::ScopedTransaction tx(session);
 
             auto isDraft = isDraft_ ? Dao::IsDraft::Yes : Dao::IsDraft::No;
