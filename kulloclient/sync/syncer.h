@@ -9,6 +9,7 @@
 
 #include "kulloclient/kulloclient-forwards.h"
 #include "kulloclient/types.h"
+#include "kulloclient/api/DraftPart.h"
 #include "kulloclient/codec/privatekeyprovider.h"
 #include "kulloclient/sync/definitions.h"
 #include "kulloclient/util/usersettings.h"
@@ -65,9 +66,10 @@ public:
 
         std::function<void(
                 id_type conversationId,
+                Api::DraftPart part,
                 std::size_t size,
-                std::size_t sizeAllowed)>
-        draftAttachmentsTooBig;
+                std::size_t sizeMax)>
+        draftPartTooBig;
 
         std::function<void(const std::string &key)>
         profileModified;

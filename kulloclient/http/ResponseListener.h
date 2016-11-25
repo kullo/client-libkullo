@@ -9,16 +9,17 @@
 namespace Kullo { namespace Http {
 
 enum class ProgressResult;
+struct TransferProgress;
 
 class ResponseListener {
 public:
     virtual ~ResponseListener() {}
 
     /**
-     * Returns the progress made on upload and download, measured in bytes. The
-     * request can be canceled by returning the appropriate code.
+     * Called when there's progress made on upload or download.
+     * The request can be canceled by returning the appropriate code.
      */
-    virtual ProgressResult progress(int64_t uploadTransferred, int64_t uploadTotal, int64_t downloadTransferred, int64_t downloadTotal) = 0;
+    virtual ProgressResult progressed(const TransferProgress & progress) = 0;
 
     virtual void dataReceived(const std::vector<uint8_t> & data) = 0;
 };

@@ -29,6 +29,7 @@ Api::LocalError toLocalError(std::exception_ptr exptr)
 {
     kulloAssert(exptr);
     try {std::rethrow_exception(exptr);}
+    catch (Util::FileTooBigError) {return Api::LocalError::FileTooBig;}
     catch (Util::FilesystemError) {return Api::LocalError::Filesystem;}
     catch (fs::filesystem_error)  {return Api::LocalError::Filesystem;}
     catch (std::ios_base::failure){return Api::LocalError::Filesystem;}

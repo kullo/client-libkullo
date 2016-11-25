@@ -9,7 +9,7 @@
 namespace Kullo {
 namespace Util {
 
-class FormatString
+class Strings
 {
 public:
     static std::string padLeft(const std::string &input, const size_t targetLength, const char paddingChar = ' ');
@@ -21,7 +21,8 @@ public:
     /// Escapes HTML special chars
     static void escapeMessageText(std::string &target);
     static void messageTextToHtml(std::string &target);
-    static std::string formatIntegerWithCommas(int value);
+    /// Formats integers to be easier on the human eye
+    static std::string formatReadable(std::int64_t value);
 };
 
 template<typename InputIt>

@@ -19,4 +19,6 @@ http/Response.h
 http/ResponseError.h
 http/ResponseListener.cpp
 http/ResponseListener.h
+http/TransferProgress.cpp
+http/TransferProgress.h
 )

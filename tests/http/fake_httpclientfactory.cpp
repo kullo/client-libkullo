@@ -1,9 +1,10 @@
 /* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
 #include "tests/http/fake_httpclientfactory.h"
 
+#include <regex>
+
 #include <jsoncpp/jsoncpp.h>
 
-#include <boost/regex.hpp>
 #include <kulloclient/http/HttpHeader.h>
 #include <kulloclient/http/Request.h>
 #include <kulloclient/http/RequestListener.h>
@@ -175,9 +176,9 @@ Http::Response FakeHttpClient::sendRequest(const Kullo::Http::Request &request,
         statusCode = validateAuth(request.headers);
         if (statusCode == 200)
         {
-            static const boost::regex keyRegex(R"(/profile/([a-z_]+)\?)");
-            boost::smatch match;
-            if (!boost::regex_search(request.url, match, keyRegex))
+            static const std::regex keyRegex(R"(/profile/([a-z_]+)\?)");
+            std::smatch match;
+            if (!std::regex_search(request.url, match, keyRegex))
             {
                 kulloAssertionFailed("Regex didn't match.");
             }

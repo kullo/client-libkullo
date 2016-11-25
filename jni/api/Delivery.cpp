@@ -19,7 +19,7 @@ CJNIEXPORT void JNICALL Java_net_kullo_libkullo_api_Delivery_00024CppProxy_nativ
 {
     try {
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
-        delete reinterpret_cast<djinni::CppProxyHandle<::Kullo::Api::Delivery>*>(nativeRef);
+        delete reinterpret_cast<::djinni::CppProxyHandle<::Kullo::Api::Delivery>*>(nativeRef);
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, )
 }
 

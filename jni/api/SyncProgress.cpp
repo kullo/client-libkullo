@@ -13,29 +13,35 @@ SyncProgress::~SyncProgress() = default;
 auto SyncProgress::fromCpp(JNIEnv* jniEnv, const CppType& c) -> ::djinni::LocalRef<JniType> {
     const auto& data = ::djinni::JniClass<SyncProgress>::get();
     auto r = ::djinni::LocalRef<JniType>{jniEnv->NewObject(data.clazz.get(), data.jconstructor,
-                                                           ::djinni::get(::djinni::I64::fromCpp(jniEnv, c.countLeft)),
-                                                           ::djinni::get(::djinni::I64::fromCpp(jniEnv, c.countProcessed)),
-                                                           ::djinni::get(::djinni::I64::fromCpp(jniEnv, c.countTotal)),
-                                                           ::djinni::get(::djinni::I64::fromCpp(jniEnv, c.countNew)),
-                                                           ::djinni::get(::djinni::I64::fromCpp(jniEnv, c.countNewUnread)),
-                                                           ::djinni::get(::djinni::I64::fromCpp(jniEnv, c.countModified)),
-                                                           ::djinni::get(::djinni::I64::fromCpp(jniEnv, c.countDeleted)),
+                                                           ::djinni::get(::djinni::I64::fromCpp(jniEnv, c.incomingMessagesProcessed)),
+                                                           ::djinni::get(::djinni::I64::fromCpp(jniEnv, c.incomingMessagesTotal)),
+                                                           ::djinni::get(::djinni::I64::fromCpp(jniEnv, c.incomingMessagesNew)),
+                                                           ::djinni::get(::djinni::I64::fromCpp(jniEnv, c.incomingMessagesNewUnread)),
+                                                           ::djinni::get(::djinni::I64::fromCpp(jniEnv, c.incomingMessagesModified)),
+                                                           ::djinni::get(::djinni::I64::fromCpp(jniEnv, c.incomingMessagesDeleted)),
+                                                           ::djinni::get(::djinni::I64::fromCpp(jniEnv, c.incomingAttachmentsDownloadedBytes)),
+                                                           ::djinni::get(::djinni::I64::fromCpp(jniEnv, c.incomingAttachmentsTotalBytes)),
+                                                           ::djinni::get(::djinni::I64::fromCpp(jniEnv, c.outgoingMessagesUploadedBytes)),
+                                                           ::djinni::get(::djinni::I64::fromCpp(jniEnv, c.outgoingMessagesTotalBytes)),
                                                            ::djinni::get(::djinni::I64::fromCpp(jniEnv, c.runTimeMs)))};
     ::djinni::jniExceptionCheck(jniEnv);
     return r;
 }
 
 auto SyncProgress::toCpp(JNIEnv* jniEnv, JniType j) -> CppType {
-    ::djinni::JniLocalScope jscope(jniEnv, 9);
+    ::djinni::JniLocalScope jscope(jniEnv, 12);
     assert(j != nullptr);
     const auto& data = ::djinni::JniClass<SyncProgress>::get();
-    return {::djinni::I64::toCpp(jniEnv, jniEnv->GetLongField(j, data.field_countLeft)),
-            ::djinni::I64::toCpp(jniEnv, jniEnv->GetLongField(j, data.field_countProcessed)),
-            ::djinni::I64::toCpp(jniEnv, jniEnv->GetLongField(j, data.field_countTotal)),
-            ::djinni::I64::toCpp(jniEnv, jniEnv->GetLongField(j, data.field_countNew)),
-            ::djinni::I64::toCpp(jniEnv, jniEnv->GetLongField(j, data.field_countNewUnread)),
-            ::djinni::I64::toCpp(jniEnv, jniEnv->GetLongField(j, data.field_countModified)),
-            ::djinni::I64::toCpp(jniEnv, jniEnv->GetLongField(j, data.field_countDeleted)),
+    return {::djinni::I64::toCpp(jniEnv, jniEnv->GetLongField(j, data.field_incomingMessagesProcessed)),
+            ::djinni::I64::toCpp(jniEnv, jniEnv->GetLongField(j, data.field_incomingMessagesTotal)),
+            ::djinni::I64::toCpp(jniEnv, jniEnv->GetLongField(j, data.field_incomingMessagesNew)),
+            ::djinni::I64::toCpp(jniEnv, jniEnv->GetLongField(j, data.field_incomingMessagesNewUnread)),
+            ::djinni::I64::toCpp(jniEnv, jniEnv->GetLongField(j, data.field_incomingMessagesModified)),
+            ::djinni::I64::toCpp(jniEnv, jniEnv->GetLongField(j, data.field_incomingMessagesDeleted)),
+            ::djinni::I64::toCpp(jniEnv, jniEnv->GetLongField(j, data.field_incomingAttachmentsDownloadedBytes)),
+            ::djinni::I64::toCpp(jniEnv, jniEnv->GetLongField(j, data.field_incomingAttachmentsTotalBytes)),
+            ::djinni::I64::toCpp(jniEnv, jniEnv->GetLongField(j, data.field_outgoingMessagesUploadedBytes)),
+            ::djinni::I64::toCpp(jniEnv, jniEnv->GetLongField(j, data.field_outgoingMessagesTotalBytes)),
             ::djinni::I64::toCpp(jniEnv, jniEnv->GetLongField(j, data.field_runTimeMs))};
 }
 

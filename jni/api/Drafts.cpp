@@ -16,7 +16,7 @@ CJNIEXPORT void JNICALL Java_net_kullo_libkullo_api_Drafts_00024CppProxy_nativeD
 {
     try {
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
-        delete reinterpret_cast<djinni::CppProxyHandle<::Kullo::Api::Drafts>*>(nativeRef);
+        delete reinterpret_cast<::djinni::CppProxyHandle<::Kullo::Api::Drafts>*>(nativeRef);
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, )
 }
 

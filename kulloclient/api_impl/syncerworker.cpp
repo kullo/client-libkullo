@@ -15,6 +15,7 @@
 #include "kulloclient/event/messageremovedevent.h"
 #include "kulloclient/event/senderaddedevent.h"
 #include "kulloclient/event/usersettingmodifiedevent.h"
+#include "kulloclient/sync/definitions.h"
 #include "kulloclient/sync/exceptions.h"
 #include "kulloclient/util/assert.h"
 #include "kulloclient/util/librarylogger.h"
@@ -151,18 +152,19 @@ void SyncerWorker::setupEvents()
                       conversationId, attachmentId));
     };
 
-    syncer_.events.draftAttachmentsTooBig =
+    syncer_.events.draftPartTooBig =
             [this](
             id_type conversationId,
+            Api::DraftPart part,
             std::size_t size,
-            std::size_t sizeAllowed)
+            std::size_t maxSize)
     {
         std::lock_guard<std::mutex> lock(mutex_); K_RAII(lock);
         if (listener_)
         {
             K_UNUSED(size);
-            K_UNUSED(sizeAllowed);
-            listener_->draftAttachmentsTooBig(conversationId);
+            K_UNUSED(maxSize);
+            listener_->draftPartTooBig(conversationId, part, size, maxSize);
         }
     };
 
@@ -178,14 +180,18 @@ void SyncerWorker::setupEvents()
         std::lock_guard<std::mutex> lock(mutex_); K_RAII(lock);
         if (listener_)
         {
+            Log.d() << "Sync progress: " << progress;
             listener_->progressed(Api::SyncProgress(
-                                      progress.messages.countLeft,
-                                      progress.messages.countProcessed,
-                                      progress.messages.countTotal,
-                                      progress.messages.countNew,
-                                      progress.messages.countNewUnread,
-                                      progress.messages.countModified,
-                                      progress.messages.countDeleted,
+                                      progress.incomingMessages.processedMessages,
+                                      progress.incomingMessages.totalMessages,
+                                      progress.incomingMessages.newMessages,
+                                      progress.incomingMessages.newUnreadMessages,
+                                      progress.incomingMessages.modifiedMessages,
+                                      progress.incomingMessages.deletedMessages,
+                                      progress.incomingAttachments.downloadedBytes,
+                                      progress.incomingAttachments.totalBytes,
+                                      progress.outgoingMessages.uploadedBytes,
+                                      progress.outgoingMessages.totalBytes,
                                       progress.runTimeMs
                                       ));
         }

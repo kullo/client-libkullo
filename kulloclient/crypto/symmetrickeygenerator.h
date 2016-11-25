@@ -15,7 +15,7 @@ class SymmetricKeyGenerator
 {
 public:
     static size_t const MASTER_KEY_BITS = 256;
-    static size_t const STORAGE_KEY_BITS = 512;
+    static size_t const STORAGE_KEY_BITS = 768;
     static size_t const LOGIN_KEY_BITS = 512;
     static size_t const PRIVATE_DATA_KEY_BITS = 256;
     static size_t const MESSAGE_SYMM_KEY_BITS = 256;

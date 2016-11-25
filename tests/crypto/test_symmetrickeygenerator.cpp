@@ -21,7 +21,9 @@ K_TEST_F(SymmetricKeyGenerator, makeStorageKeyWorks)
                 "1732ab5e72af1434a26031af32cdbb24"
                 "cc42842de09035732196eddefef40ff8"
                 "f9cedb765ecb8889b617594d3d1b10af"
-                "ac40fd769a8193eaee40433ff474b00d");
+                "ac40fd769a8193eaee40433ff474b00d"
+                "0c14e57ae61c2d9d6fabeb9127f35b2c"
+                "f4affcc1d01c7e5008254693771d23ca");
 
     Crypto::SymmetricKeyGenerator keyGen;
     EXPECT_THAT(keyGen.makeStorageKey(

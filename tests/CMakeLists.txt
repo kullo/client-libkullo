@@ -54,7 +54,6 @@ set(source_files
     util/test_exceptions.cpp
     util/test_filesystem.cpp
     util/test_filterchain.cpp
-    util/test_formatstring.cpp
     util/test_gzip.cpp
     util/test_gzipdecompressingfilter.cpp
     util/test_hex.cpp
@@ -62,6 +61,7 @@ set(source_files
     util/test_masterkey.cpp
     util/test_mimemultipart.cpp
     util/test_stacktrace.cpp
+    util/test_strings.cpp
     util/test_urlencoding.cpp
     util/test_usersettings.cpp
     dbtest.cpp

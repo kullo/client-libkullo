@@ -76,6 +76,32 @@ std::unique_ptr<AttachmentResult> AttachmentDao::allForMessage(IsDraft draft, id
     return make_unique<AttachmentResult>(std::move(stmt), session);
 }
 
+std::size_t AttachmentDao::sizeOfAllForMessage(IsDraft draft, id_type messageId, SharedSessionPtr session)
+{
+    kulloAssert(session);
+
+    auto stmt = session->prepare(
+                "SELECT sum(size) "
+                "FROM attachments "
+                "WHERE draft = :draft AND message_id = :message_id");
+    stmt.bind(":draft", (draft == IsDraft::Yes));
+    stmt.bind(":message_id", messageId);
+
+    return stmt.execWithSingleResult().get<std::size_t>(0);
+}
+
+std::size_t AttachmentDao::sizeOfAllDownloadable(SharedSessionPtr session)
+{
+    kulloAssert(session);
+
+    auto stmt = session->prepare(
+                "SELECT sum(a.size) "
+                "FROM attachments a NATURAL JOIN attachments_content ac "
+                "WHERE length(ac.content) IS NULL AND a.draft = 0");
+
+    return stmt.execWithSingleResult().get<std::size_t>(0);
+}
+
 std::unique_ptr<AttachmentResult> AttachmentDao::all(
         IsDraft draft, SharedSessionPtr session)
 {
@@ -96,7 +122,7 @@ bool AttachmentDao::allAttachmentsDownloaded(
 {
     auto stmt = session->prepare(
                 "SELECT count(idx) FROM attachments_content "
-                "WHERE message_id = :id AND content IS NULL");
+                "WHERE message_id = :id AND length(content) IS NULL");
     stmt.bind(":id", msgId);
 
     auto notYetDownloadedAttachments = stmt.execWithSingleResult().get<int>(0);
@@ -282,7 +308,7 @@ void AttachmentDao::saveContent(std::ostream &stream) const
     bool isNull;
     {
         auto stmt = session_->prepare(
-                    "SELECT rowid, content IS NULL AS content_is_null FROM attachments_content "
+                    "SELECT rowid, length(content) IS NULL AS content_is_null FROM attachments_content "
                     "WHERE draft = :draft AND message_id = :message_id AND idx = :idx");
         stmt.bind(":draft", draft_);
         stmt.bind(":message_id", messageId_);
@@ -323,7 +349,9 @@ void AttachmentDao::setContent(const std::vector<unsigned char> &content)
     setContent(stream);
 }
 
-void AttachmentDao::setContent(std::istream &input)
+void AttachmentDao::setContent(
+        std::istream &input,
+        const std::function<void(const unsigned char *data, std::size_t length, const Progress &progress)> &callback)
 {
     const std::string savepointName =
             std::string("attachmentdao_") + std::to_string(draft_) +
@@ -362,25 +390,33 @@ void AttachmentDao::setContent(std::istream &input)
                                       "content", rowid,
                                       SmartSqlite::Blob::READWRITE);
 
-        char buffer[STREAM_BUF_SIZE];
-        size_t bytesWritten = 0;
+        unsigned char buffer[STREAM_BUF_SIZE];
+
+        Progress progress;
+        progress.bytesProcessed = 0;
+        progress.bytesTotal = size_;
+
         while (input)
         {
-            input.read(buffer, sizeof(buffer));
-            if (bytesWritten + input.gcount() > size_)
+            input.read(reinterpret_cast<char*>(buffer), sizeof(buffer));
+            const auto bytesReadCount = input.gcount();
+            if (progress.bytesProcessed + bytesReadCount > size_)
             {
                 throw Db::DatabaseIntegrityError(
                             "AttachmentDao::setContent: The stored size is "
                             "smaller than the stream size");
             }
-            blob.write(buffer, input.gcount(), bytesWritten);
-            bytesWritten += input.gcount();
+
+            blob.write(buffer, input.gcount(), progress.bytesProcessed /* offset */);
+            progress.bytesProcessed += bytesReadCount;
+
+            callback(&buffer[0], bytesReadCount, progress);
         }
         if (input.bad())
         {
             throw Util::FilesystemError("Failed to read attachment from stream");
         }
-        if (bytesWritten < size_)
+        if (progress.bytesProcessed < size_)
         {
             throw Db::DatabaseIntegrityError(
                         "AttachmentDao::setContent: The stored size is larger "

@@ -25,9 +25,14 @@ public:
     {
     }
 
-    void draftAttachmentsTooBig(int64_t convId) override
+    void draftPartTooBig(
+            int64_t convId, Api::DraftPart part,
+            int64_t currentSize, int64_t maxSize) override
     {
         K_UNUSED(convId);
+        K_UNUSED(part);
+        K_UNUSED(currentSize);
+        K_UNUSED(maxSize);
     }
     void progressed(const Api::SyncProgress & progress) override
     {

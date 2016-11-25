@@ -13,6 +13,7 @@
 #include "kulloclient/http/HttpClient.h"
 #include "kulloclient/protocol/httpstructs.h"
 #include "kulloclient/protocol/publickeysclient.h"
+#include "kulloclient/sync/definitions.h"
 #include "kulloclient/util/misc.h"
 #include "kulloclient/util/usersettings.h"
 
@@ -26,6 +27,10 @@ public:
     struct {
         std::function<void(id_type conversationId, id_type messageId)>
         messageModified;
+
+        /// Emitted when the syncer has made progress.
+        std::function<void(SyncOutgoingMessagesProgress progress)>
+        progressed;
     } events;
 
     /**
@@ -42,14 +47,17 @@ public:
     ~MessagesSender();
 
     /// Start the syncer.
-    void run(std::shared_ptr<std::atomic<bool>> shouldCancel);
+    void run(
+            std::shared_ptr<std::atomic<bool>> shouldCancel,
+            std::size_t previouslyUploaded);
 
 private:
     void sendMessage(
             id_type currentConversationId,
             id_type currentMessageId,
             const Util::KulloAddress &currentRecipient,
-            Protocol::SendableMessage sendableMsg);
+            Protocol::SendableMessage sendableMsg,
+            std::size_t estimatedSize);
     void handleNotFound(
             id_type currentConversationId,
             id_type currentMessageId,
@@ -59,6 +67,11 @@ private:
     Protocol::PublicKeysClient keysClient_;
     std::unique_ptr<Protocol::MessagesClient> messagesClient_;
     std::shared_ptr<Codec::PrivateKeyProvider> privKeyProvider_;
+
+    // clang does not yet support std::atomic with int64_t
+    std::atomic<size_t> previouslyUploaded_{0};
+    std::atomic<size_t> estimatedRemaining_{0};
+    SyncOutgoingMessagesProgress progress_;
 
     K_DISABLE_COPY(MessagesSender);
 };

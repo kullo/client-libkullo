@@ -13,8 +13,8 @@
 #include "kulloclient/event/messageremovedevent.h"
 #include "kulloclient/event/sendapieventsevent.h"
 #include "kulloclient/util/assert.h"
-#include "kulloclient/util/formatstring.h"
 #include "kulloclient/util/misc.h"
+#include "kulloclient/util/strings.h"
 
 namespace Kullo {
 namespace ApiImpl {
@@ -209,7 +209,7 @@ std::string MessagesImpl::text(int64_t msgId)
 std::string MessagesImpl::textAsHtml(int64_t msgId)
 {
     auto result = text(msgId);
-    Util::FormatString::messageTextToHtml(result);
+    Util::Strings::messageTextToHtml(result);
     return result;
 }
 

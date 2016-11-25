@@ -2,7 +2,8 @@
 #include "kulloclient/util/kulloaddress.h"
 
 #include <algorithm>
-#include <boost/regex.hpp>
+#include <regex>
+#include <ostream>
 
 #include "kulloclient/util/misc.h"
 
@@ -10,32 +11,28 @@ namespace Kullo {
 namespace Util {
 
 namespace {
-// Boost Regular Expressions (Perl Syntax)
-// See http://www.boost.org/doc/libs/1_56_0/libs/regex/doc/html/boost_regex/syntax/perl_syntax.html
+// ECMAScript (the default)
+// See http://en.cppreference.com/w/cpp/regex/ecmascript
 //
 // check domain name
 // alphanum with embedded minus: [a-z0-9]+(?:-[a-z0-9]+)*
-const boost::regex DOMAIN_REGEX = boost::regex(
-                "\\A"                                // start of the string
+const auto DOMAIN_REGEX = std::regex(
                     "(?:"
                         "[a-z0-9]+(?:-[a-z0-9]+)*"
                     "\\.)+"
                     "[a-z][a-z0-9]*(?:-[a-z0-9]+)*"
-                "\\z"                                // end of the string
             );
 const int DOMAIN_MAX_LENGTH = 255;
 
 // check username
 // X with embedded separators: X([.-_]X)*
 // X is alphanumeric and lowercase.
-const boost::regex USERNAME_REGEX = boost::regex(
-                "\\A"                                // start of the string
+const auto USERNAME_REGEX = std::regex(
                     "[a-z0-9]+"                      // username part
                     "(?:"
-                        "[\\.\\-_]"                  // separator: .-_
+                        "[-\\._]"                    // separator: -._
                         "[a-z0-9]+"                  // username part
                     ")*"
-                "\\z"                                // end of the string
             );
 const int USERNAME_MAX_LENGTH = 64;
 }
@@ -52,12 +49,12 @@ KulloAddress::KulloAddress(const std::string &address)
     std::transform(address.cbegin(), hashPos, std::back_inserter(username_), ::tolower);
     std::transform(hashPos + 1, address.cend(), std::back_inserter(domain_), ::tolower);
 
-    if (username_.length() > USERNAME_MAX_LENGTH || !boost::regex_match(username_, USERNAME_REGEX))
+    if (username_.length() > USERNAME_MAX_LENGTH || !std::regex_match(username_, USERNAME_REGEX))
     {
         throw std::invalid_argument("KulloAddress(): invalid username");
     }
 
-    if (domain_.length() > DOMAIN_MAX_LENGTH || !boost::regex_match(domain_, DOMAIN_REGEX))
+    if (domain_.length() > DOMAIN_MAX_LENGTH || !std::regex_match(domain_, DOMAIN_REGEX))
     {
         throw std::invalid_argument("KulloAddress(): invalid domain name");
     }

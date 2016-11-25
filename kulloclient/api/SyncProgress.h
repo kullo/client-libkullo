@@ -8,33 +8,45 @@
 
 namespace Kullo { namespace Api {
 
+/** Encodes a progress update during syncing. Unknown totals are set to 0. */
 struct SyncProgress final {
-    /** stats about messages */
-    int64_t countLeft;
-    int64_t countProcessed;
-    int64_t countTotal;
-    int64_t countNew;
-    int64_t countNewUnread;
-    int64_t countModified;
-    int64_t countDeleted;
-    /** Run time of the current sync in milliseconds */
+    /** inbox (unit: messages) */
+    int64_t incomingMessagesProcessed;
+    int64_t incomingMessagesTotal;
+    int64_t incomingMessagesNew;
+    int64_t incomingMessagesNewUnread;
+    int64_t incomingMessagesModified;
+    int64_t incomingMessagesDeleted;
+    /** incoming attachments (unit: bytes) */
+    int64_t incomingAttachmentsDownloadedBytes;
+    int64_t incomingAttachmentsTotalBytes;
+    /** outgoing messages + attachments (unit: uncompressed bytes) */
+    int64_t outgoingMessagesUploadedBytes;
+    int64_t outgoingMessagesTotalBytes;
+    /** Run time of the current sync (unit: milliseconds) */
     int64_t runTimeMs;
 
-    SyncProgress(int64_t countLeft_,
-                 int64_t countProcessed_,
-                 int64_t countTotal_,
-                 int64_t countNew_,
-                 int64_t countNewUnread_,
-                 int64_t countModified_,
-                 int64_t countDeleted_,
+    SyncProgress(int64_t incomingMessagesProcessed_,
+                 int64_t incomingMessagesTotal_,
+                 int64_t incomingMessagesNew_,
+                 int64_t incomingMessagesNewUnread_,
+                 int64_t incomingMessagesModified_,
+                 int64_t incomingMessagesDeleted_,
+                 int64_t incomingAttachmentsDownloadedBytes_,
+                 int64_t incomingAttachmentsTotalBytes_,
+                 int64_t outgoingMessagesUploadedBytes_,
+                 int64_t outgoingMessagesTotalBytes_,
                  int64_t runTimeMs_)
-    : countLeft(std::move(countLeft_))
-    , countProcessed(std::move(countProcessed_))
-    , countTotal(std::move(countTotal_))
-    , countNew(std::move(countNew_))
-    , countNewUnread(std::move(countNewUnread_))
-    , countModified(std::move(countModified_))
-    , countDeleted(std::move(countDeleted_))
+    : incomingMessagesProcessed(std::move(incomingMessagesProcessed_))
+    , incomingMessagesTotal(std::move(incomingMessagesTotal_))
+    , incomingMessagesNew(std::move(incomingMessagesNew_))
+    , incomingMessagesNewUnread(std::move(incomingMessagesNewUnread_))
+    , incomingMessagesModified(std::move(incomingMessagesModified_))
+    , incomingMessagesDeleted(std::move(incomingMessagesDeleted_))
+    , incomingAttachmentsDownloadedBytes(std::move(incomingAttachmentsDownloadedBytes_))
+    , incomingAttachmentsTotalBytes(std::move(incomingAttachmentsTotalBytes_))
+    , outgoingMessagesUploadedBytes(std::move(outgoingMessagesUploadedBytes_))
+    , outgoingMessagesTotalBytes(std::move(outgoingMessagesTotalBytes_))
     , runTimeMs(std::move(runTimeMs_))
     {}
 };

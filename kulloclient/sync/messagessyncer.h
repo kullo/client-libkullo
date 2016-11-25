@@ -75,11 +75,11 @@ public:
         conversationModified;
 
         /// Emitted when the syncer has made progress.
-        std::function<void(SyncMessagesProgress progress)>
+        std::function<void(SyncIncomingMessagesProgress progress)>
         progressed;
 
         /// Emitted when the syncer has finished successfully.
-        std::function<void(SyncMessagesProgress progress)>
+        std::function<void(SyncIncomingMessagesProgress progress)>
         finished;
     } events;
 
@@ -140,7 +140,7 @@ private:
     std::shared_ptr<Codec::PrivateKeyProvider> privKeyProvider_;
     std::unique_ptr<Crypto::SymmetricKey> privateDataKey_;
 
-    SyncMessagesProgress progress_;
+    SyncIncomingMessagesProgress progress_;
 
     using clock = std::chrono::steady_clock;
     clock::time_point lastYield_;

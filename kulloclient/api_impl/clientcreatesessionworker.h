@@ -23,7 +23,7 @@ public:
     void cancel() override;
 
     /// Synchronously creates a session
-    std::shared_ptr<Api::Session> makeSession() const;
+    std::shared_ptr<Api::Session> makeSession();
 
 private:
     // not synchronized, non-threadsafe stuff is only used from work()

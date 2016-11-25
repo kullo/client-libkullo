@@ -2,9 +2,9 @@
 #include "kulloclient/util/datetime.h"
 
 #include <cstdlib>
+#include <regex>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 #include <boost/format.hpp>
-#include <boost/regex.hpp>
 
 #include "kulloclient/util/assert.h"
 #include "kulloclient/util/exceptions.h"
@@ -15,11 +15,11 @@ namespace Kullo {
 namespace Util {
 
 namespace {
-const boost::regex RFC3339_REGEX(
+const std::regex RFC3339_REGEX(
         /* yyyy-mm-ddT     */ R"#((\d{4})-(\d{2})-(\d{2})T)#"
         /* hh:mm:ss[.ffff] */ R"#((\d{2}):(\d{2}):(\d{2})(?:\.\d+)?)#"
         /* Z|(+|-)hh:mm    */ R"#((?:Z|(\+|-)(\d{2}):(\d{2})))#",
-        boost::regex::perl | boost::regex::icase);
+        std::regex::icase);
 }
 
 struct DateTime::Impl
@@ -111,8 +111,8 @@ DateTime::DateTime(const std::string &str)
 {
     if (str.empty()) throw EmptyDateTime();
 
-    boost::cmatch matches;
-    if (boost::regex_match(str.c_str(), matches, RFC3339_REGEX))
+    std::cmatch matches;
+    if (std::regex_match(str.c_str(), matches, RFC3339_REGEX))
     {
         size_t pos = 1;  // skip full match
         int year = std::atoi(matches[pos++].first);

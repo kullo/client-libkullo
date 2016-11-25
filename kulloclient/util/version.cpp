@@ -31,7 +31,7 @@ namespace Kullo {
 namespace Util {
 
 namespace {
-const std::string LIBKULLO_VERSION = "v56";
+const std::string LIBKULLO_VERSION = "v57";
 const std::string LIBKULLO_USER_AGENT = "libkulloclient/" + LIBKULLO_VERSION + " (" KULLO_OS ")";
 }
 

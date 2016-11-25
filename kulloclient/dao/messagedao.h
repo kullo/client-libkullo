@@ -44,6 +44,7 @@ public:
                                                   Db::SharedSessionPtr session);
 
     static std::unique_ptr<MessageResult> all(Db::SharedSessionPtr session);
+    static std::size_t sizeOfAllUndelivered(Db::SharedSessionPtr session);
 
     bool operator==(const MessageDao &other) const;
     bool operator!=(const MessageDao &other) const;

@@ -1,5 +1,6 @@
 /* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
 #include <kulloclient/crypto/hasher.h>
+#include <kulloclient/util/binary.h>
 #include <kulloclient/util/hex.h>
 
 #include "tests/kullotest.h"
@@ -150,13 +151,15 @@ K_TEST_F(HasherTest, sha512)
 
     for (unsigned int i = 0; i < SHA_512_TEST_VECTORS.size(); ++i)
     {
-        auto in = Util::Hex::decode(SHA_512_TEST_VECTORS[i]);
+        auto inData = Util::Hex::decode(SHA_512_TEST_VECTORS[i]);
+        std::istringstream inStream(Util::to_string(inData));
         auto expectedOutHex = SHA_512_TEST_RESULTS[i];
         auto expectedOutRaw = Util::Hex::decode(SHA_512_TEST_RESULTS[i]);
 
         SCOPED_TRACE(i);
-        EXPECT_THAT(Crypto::Hasher::sha512Hex(in), Eq(expectedOutHex));
-        EXPECT_THAT(Crypto::Hasher::sha512(in), Eq(expectedOutRaw));
+        EXPECT_THAT(Crypto::Hasher::sha512(inData), Eq(expectedOutRaw));
+        EXPECT_THAT(Crypto::Hasher::sha512Hex(inData), Eq(expectedOutHex));
+        EXPECT_THAT(Crypto::Hasher::sha512Hex(inStream), Eq(expectedOutHex));
     }
 }
 

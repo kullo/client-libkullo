@@ -27,7 +27,7 @@ std::atomic<bool> staticallyInitialized_ { false };
 static void sqliteLogCallback(void *extraArg, int errcode, char *message)
 {
     K_UNUSED(extraArg);
-    Log.e() << "[SQLite] " << SmartSqlite::errcodeToString(errcode)
+    Log.w() << "[SQLite] " << SmartSqlite::errcodeToString(errcode)
             << ": " << message;
 }
 

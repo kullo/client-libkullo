@@ -30,10 +30,10 @@ enum struct MessagesFilter
  */
 enum struct DraftState
 {
-    /// IDraft can be safely edited
-    Editing = 0,  // explicit first value, used for iteration
+    /// draft can be safely edited
+    Editing = 0,  // value must not be changed because DB relies on it
 
-    /// IDraft is enqueued to be sent
+    /// draft is enqueued to be sent
     Sending
 };
 

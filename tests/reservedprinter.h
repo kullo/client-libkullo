@@ -19,7 +19,7 @@ public:
     {
         K_UNUSED(ut);
         K_UNUSED(iteration);
-        // Skip stats at the biginning
+        // Skip stats at the beginning
         // listener_->OnTestIterationStart(ut, iteration);
     }
     void OnEnvironmentsSetUpStart(const ::testing::UnitTest& ut) override

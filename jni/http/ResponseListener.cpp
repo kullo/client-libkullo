@@ -3,6 +3,7 @@
 
 #include "ResponseListener.h"  // my header
 #include "ProgressResult.h"
+#include "TransferProgress.h"
 #include "jni/support-lib/jni/Marshal.hpp"
 
 namespace JNI { namespace Kullo { namespace Http {
@@ -16,19 +17,16 @@ CJNIEXPORT void JNICALL Java_net_kullo_libkullo_http_ResponseListener_00024CppPr
 {
     try {
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
-        delete reinterpret_cast<djinni::CppProxyHandle<::Kullo::Http::ResponseListener>*>(nativeRef);
+        delete reinterpret_cast<::djinni::CppProxyHandle<::Kullo::Http::ResponseListener>*>(nativeRef);
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, )
 }
 
-CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_http_ResponseListener_00024CppProxy_native_1progress(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef, jlong j_uploadTransferred, jlong j_uploadTotal, jlong j_downloadTransferred, jlong j_downloadTotal)
+CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_http_ResponseListener_00024CppProxy_native_1progressed(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef, jobject j_progress)
 {
     try {
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
         const auto& ref = ::djinni::objectFromHandleAddress<::Kullo::Http::ResponseListener>(nativeRef);
-        auto r = ref->progress(::djinni::I64::toCpp(jniEnv, j_uploadTransferred),
-                               ::djinni::I64::toCpp(jniEnv, j_uploadTotal),
-                               ::djinni::I64::toCpp(jniEnv, j_downloadTransferred),
-                               ::djinni::I64::toCpp(jniEnv, j_downloadTotal));
+        auto r = ref->progressed(::JNI::Kullo::Http::TransferProgress::toCpp(jniEnv, j_progress));
         return ::djinni::release(::JNI::Kullo::Http::ProgressResult::fromCpp(jniEnv, r));
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, 0 /* value doesn't matter */)
 }

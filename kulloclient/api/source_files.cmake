@@ -23,6 +23,7 @@ api/DraftAttachments.h
 api/DraftAttachmentsAddListener.h
 api/DraftAttachmentsContentListener.h
 api/DraftAttachmentsSaveToListener.h
+api/DraftPart.h
 api/DraftState.h
 api/Drafts.h
 api/Event.h

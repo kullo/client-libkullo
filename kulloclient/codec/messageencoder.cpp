@@ -152,14 +152,6 @@ EncodedMessage MessageEncoder::encodeMessage(
             encodeAttachments(message, std::move(attachments));
 
     message.content = to_vector(Json::FastWriter().write(messageContentJson));
-
-    if (message.content.size() > MESSAGE_CONTENT_MAX_BYTES)
-    {
-        throw InvalidContentFormat(
-                    std::string("content too large: ") +
-                    std::to_string(message.content.size()));
-    }
-
     return message;
 }
 

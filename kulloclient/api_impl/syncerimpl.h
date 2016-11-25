@@ -42,7 +42,9 @@ private:
 
         // Api::SyncerListener implementation
         void started() override;
-        void draftAttachmentsTooBig(int64_t convId) override;
+        void draftPartTooBig(
+                int64_t convId, Api::DraftPart part,
+                int64_t currentSize, int64_t maxSize) override;
         void progressed(const Api::SyncProgress & progress) override;
         void finished() override;
         void error(Api::NetworkError error) override;

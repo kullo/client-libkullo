@@ -34,7 +34,7 @@ private:
         ~JavaProxy();
 
         void started() override;
-        void draftAttachmentsTooBig(int64_t convId) override;
+        void draftPartTooBig(int64_t convId, ::Kullo::Api::DraftPart part, int64_t currentSize, int64_t maxSize) override;
         void progressed(const ::Kullo::Api::SyncProgress & progress) override;
         void finished() override;
         void error(::Kullo::Api::NetworkError error) override;
@@ -45,7 +45,7 @@ private:
 
     const ::djinni::GlobalRef<jclass> clazz { ::djinni::jniFindClass("net/kullo/libkullo/api/SyncerListener") };
     const jmethodID method_started { ::djinni::jniGetMethodID(clazz.get(), "started", "()V") };
-    const jmethodID method_draftAttachmentsTooBig { ::djinni::jniGetMethodID(clazz.get(), "draftAttachmentsTooBig", "(J)V") };
+    const jmethodID method_draftPartTooBig { ::djinni::jniGetMethodID(clazz.get(), "draftPartTooBig", "(JLnet/kullo/libkullo/api/DraftPart;JJ)V") };
     const jmethodID method_progressed { ::djinni::jniGetMethodID(clazz.get(), "progressed", "(Lnet/kullo/libkullo/api/SyncProgress;)V") };
     const jmethodID method_finished { ::djinni::jniGetMethodID(clazz.get(), "finished", "()V") };
     const jmethodID method_error { ::djinni::jniGetMethodID(clazz.get(), "error", "(Lnet/kullo/libkullo/api/NetworkError;)V") };

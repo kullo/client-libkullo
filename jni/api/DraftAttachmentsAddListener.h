@@ -33,6 +33,7 @@ private:
         JavaProxy(JniType j);
         ~JavaProxy();
 
+        void progressed(int64_t convId, int64_t attId, int64_t bytesProcessed, int64_t bytesTotal) override;
         void finished(int64_t convId, int64_t attId, const std::string & path) override;
         void error(int64_t convId, const std::string & path, ::Kullo::Api::LocalError error) override;
 
@@ -41,6 +42,7 @@ private:
     };
 
     const ::djinni::GlobalRef<jclass> clazz { ::djinni::jniFindClass("net/kullo/libkullo/api/DraftAttachmentsAddListener") };
+    const jmethodID method_progressed { ::djinni::jniGetMethodID(clazz.get(), "progressed", "(JJJJ)V") };
     const jmethodID method_finished { ::djinni::jniGetMethodID(clazz.get(), "finished", "(JJLjava/lang/String;)V") };
     const jmethodID method_error { ::djinni::jniGetMethodID(clazz.get(), "error", "(JLjava/lang/String;Lnet/kullo/libkullo/api/LocalError;)V") };
 };

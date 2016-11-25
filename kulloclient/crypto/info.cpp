@@ -7,7 +7,7 @@
 #include <botan/botan_all.h>
 
 #include "kulloclient/util/assert.h"
-#include "kulloclient/util/formatstring.h"
+#include "kulloclient/util/strings.h"
 
 namespace Kullo {
 namespace Crypto {
@@ -49,10 +49,10 @@ std::string getImpls(
 std::map<std::string, std::string> Info::getImplementationInfos()
 {
     std::map<std::string, std::string> out;
-    out["AES-256"] = getImpls(
-                Botan::BlockCipher::providers,
-                Botan::BlockCipher::create,
-                "AES-256");
+
+    // The providers() interface does not list AES providers anymore
+    // https://github.com/randombit/botan/pull/623/files
+    out["AES-256"] = Botan::BlockCipher::create("AES-256")->provider();
     out["HMAC(SHA-1)"] = getImpls(
                 Botan::MessageAuthenticationCode::providers,
                 Botan::MessageAuthenticationCode::create,
@@ -69,6 +69,7 @@ std::map<std::string, std::string> Info::getImplementationInfos()
                 Botan::HashFunction::providers,
                 Botan::HashFunction::create,
                 "SHA-512");
+
     return out;
 }
 

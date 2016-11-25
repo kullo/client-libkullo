@@ -47,6 +47,15 @@ public:
     virtual ~FilesystemError() = default;
 };
 
+/// An exception for errors when a file is too big.
+class FileTooBigError : public Util::BaseException
+{
+public:
+    /// @copydoc BaseException::BaseException(const std::string&)
+    FileTooBigError(const std::string &message = "") throw() : BaseException(message) {}
+    virtual ~FileTooBigError() = default;
+};
+
 /// An exception for errors while decompressing Gzip data.
 class GZipStreamError : public Util::BaseException
 {

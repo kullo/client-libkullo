@@ -84,7 +84,7 @@ void ClientCreateSessionWorker::cancel()
     listener_.reset();
 }
 
-std::shared_ptr<Api::Session> ClientCreateSessionWorker::makeSession() const
+std::shared_ptr<Api::Session> ClientCreateSessionWorker::makeSession()
 {
     auto credentials = Util::Credentials(
                 std::make_shared<Util::KulloAddress>(address_->toString()),
@@ -92,7 +92,15 @@ std::shared_ptr<Api::Session> ClientCreateSessionWorker::makeSession() const
     auto sessionConfig = Db::SessionConfig(dbFilePath_, credentials);
 
     auto dbSession = Db::makeSession(sessionConfig);
-    Db::migrate(dbSession);
+    if (!Db::hasCurrentSchema(dbSession))
+    {
+        std::lock_guard<std::mutex> lock(mutex_); K_RAII(lock);
+        if (listener_)
+        {
+            listener_->migrationStarted(address_);
+        }
+        Db::migrate(dbSession);
+    }
     kulloAssert(Db::hasCurrentSchema(dbSession));
 
     return std::make_shared<SessionImpl>(

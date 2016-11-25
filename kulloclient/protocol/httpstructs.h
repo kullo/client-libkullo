@@ -71,6 +71,9 @@ struct MessageSent : IdLastModified
     /// The date and time when the server received the message
     Util::DateTime dateReceived;
 
+    /// Total size of the request body sent
+    std::size_t size = 0;
+
     MessageSent(Util::DateTime dateReceived)
         : dateReceived(std::move(dateReceived))
     {}

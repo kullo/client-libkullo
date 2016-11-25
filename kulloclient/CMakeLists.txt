@@ -126,7 +126,6 @@ kullo_add_simple_library(
     util/exceptions.cpp
     util/filesystem.cpp
     util/filterchain.cpp
-    util/formatstring.cpp
     util/gzip.cpp
     util/gzipdecompressingfilter.cpp
     util/hex.cpp
@@ -138,6 +137,7 @@ kullo_add_simple_library(
     util/scopedbenchmark.cpp
     util/stacktrace.cpp
     util/stltaskrunner.cpp
+    util/strings.cpp
     util/urlencoding.cpp
     util/usersettings.cpp
     util/version.cpp
@@ -145,15 +145,14 @@ kullo_add_simple_library(
 
 kullo_get_target_name(target_name)
 target_link_libraries(${target_name}
-	PUBLIC
-	    # from this project
-		botan
-		jsoncpp
-		nowide
+    PUBLIC
+        # from this project
+        botan
+        jsoncpp
+        nowide
 
-	    # from other projects in workspace
-		boost_filesystem
-		boost_regex
-		smartsqlite
-                z
+        # from other projects in workspace
+        boost_filesystem
+        smartsqlite
+        z
 )

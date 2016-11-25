@@ -15,6 +15,17 @@ DraftAttachmentsAddListener::JavaProxy::JavaProxy(JniType j) : Handle(::djinni::
 
 DraftAttachmentsAddListener::JavaProxy::~JavaProxy() = default;
 
+void DraftAttachmentsAddListener::JavaProxy::progressed(int64_t c_convId, int64_t c_attId, int64_t c_bytesProcessed, int64_t c_bytesTotal) {
+    auto jniEnv = ::djinni::jniGetThreadEnv();
+    ::djinni::JniLocalScope jscope(jniEnv, 10);
+    const auto& data = ::djinni::JniClass<::JNI::Kullo::Api::DraftAttachmentsAddListener>::get();
+    jniEnv->CallVoidMethod(Handle::get().get(), data.method_progressed,
+                           ::djinni::get(::djinni::I64::fromCpp(jniEnv, c_convId)),
+                           ::djinni::get(::djinni::I64::fromCpp(jniEnv, c_attId)),
+                           ::djinni::get(::djinni::I64::fromCpp(jniEnv, c_bytesProcessed)),
+                           ::djinni::get(::djinni::I64::fromCpp(jniEnv, c_bytesTotal)));
+    ::djinni::jniExceptionCheck(jniEnv);
+}
 void DraftAttachmentsAddListener::JavaProxy::finished(int64_t c_convId, int64_t c_attId, const std::string & c_path) {
     auto jniEnv = ::djinni::jniGetThreadEnv();
     ::djinni::JniLocalScope jscope(jniEnv, 10);

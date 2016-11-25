@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <iosfwd>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -28,6 +29,21 @@ public:
 
     /// SHA256, shortened to 8 bytes. Not safe for cryptography!
     static std::int64_t eightByteHash(const std::vector<unsigned char> &data);
+};
+
+class HasherImpl;
+
+class Sha512Hasher
+{
+public:
+    Sha512Hasher();
+    ~Sha512Hasher();
+    void update(const std::vector<unsigned char> &data);
+    void update(const unsigned char *data, std::size_t length);
+    std::string hexDigest();
+
+private:
+    std::unique_ptr<HasherImpl> impl_;
 };
 
 }

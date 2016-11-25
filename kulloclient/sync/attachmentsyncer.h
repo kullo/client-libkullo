@@ -10,6 +10,7 @@
 #include "kulloclient/db/dbsession.h"
 #include "kulloclient/http/HttpClient.h"
 #include "kulloclient/protocol/httpstructs.h"
+#include "kulloclient/sync/definitions.h"
 #include "kulloclient/util/misc.h"
 
 namespace Kullo {
@@ -30,6 +31,10 @@ public:
          */
         std::function<void(id_type conversationId, id_type messageId)>
         messageAttachmentsDownloaded;
+
+        /// Emitted when the syncer has made progress.
+        std::function<void(SyncIncomingAttachmentsProgress progress)>
+        progressed;
     } events;
 
     /**
@@ -44,15 +49,21 @@ public:
             const std::shared_ptr<Http::HttpClient> &httpClient);
     ~AttachmentSyncer();
 
+    SyncIncomingAttachmentsProgress initialProgress();
+
     /// @brief Start the syncer.
     void run(std::shared_ptr<std::atomic<bool>> shouldCancel);
 
-    void downloadForMessage(
+    size_t downloadForMessage(
             int64_t msgId, std::shared_ptr<std::atomic<bool>> shouldCancel);
 
 private:
     Db::SharedSessionPtr session_;
     std::unique_ptr<Protocol::MessagesClient> client_;
+    std::atomic<size_t> previouslyDownloaded_ {0};
+    std::atomic<size_t> estimatedRemaining_ {0};
+
+    SyncIncomingAttachmentsProgress progress_;
 
     K_DISABLE_COPY(AttachmentSyncer);
 };

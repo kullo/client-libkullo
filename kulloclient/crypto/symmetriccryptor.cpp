@@ -16,7 +16,35 @@ const std::string SymmetricCryptor::ATTACHMENTS_IV = "attachments";
 const size_t SymmetricCryptor::RANDOM_IV_BYTES = 128 / 8;
 
 namespace {
+
 const std::string CIPHER = "AES-256/GCM";
+
+std::vector<unsigned char> crypt(
+        const std::vector<unsigned char> &input,
+        const SymmetricKey &key,
+        const std::vector<unsigned char> &iv,
+        Botan::Cipher_Dir direction)
+{
+    if (!input.size()) return std::vector<unsigned char>();
+
+    try
+    {
+        std::unique_ptr<Botan::Cipher_Mode> cipher(
+                    Botan::get_cipher_mode(CIPHER, direction));
+        cipher->set_key(key.priv()->key);
+        cipher->start(iv.data(), iv.size());
+        auto result = Botan::secure_vector<unsigned char>(
+                    input.begin(), input.end());
+        cipher->finish(result);
+        return Botan::unlock(result);
+    }
+    catch (Botan::Integrity_Failure&)
+    {
+        std::throw_with_nested(
+                    Crypto::IntegrityFailure("SymmetricCryptor::crypt"));
+    }
+}
+
 }
 
 std::vector<unsigned char> SymmetricCryptor::encrypt(
@@ -25,7 +53,7 @@ std::vector<unsigned char> SymmetricCryptor::encrypt(
         const std::vector<unsigned char> &iv,
         PrependIV prependIV) const
 {
-    auto result = crypt(plaintext, key, iv, ENCRYPT);
+    auto result = crypt(plaintext, key, iv, Botan::ENCRYPTION);
     if (prependIV == PrependIV::True)
     {
         result.insert(result.begin(), iv.cbegin(), iv.cend());
@@ -43,7 +71,7 @@ std::vector<unsigned char> SymmetricCryptor::decrypt(
     auto ciphertextBegin = ivAndCiphertext.cbegin() + ivLength;
     std::vector<unsigned char> iv(ivAndCiphertext.cbegin(), ciphertextBegin);
     std::vector<unsigned char> ciphertext(ciphertextBegin, ivAndCiphertext.cend());
-    return crypt(ciphertext, key, iv, DECRYPT);
+    return crypt(ciphertext, key, iv, Botan::DECRYPTION);
 }
 
 std::vector<unsigned char> SymmetricCryptor::decrypt(
@@ -51,42 +79,7 @@ std::vector<unsigned char> SymmetricCryptor::decrypt(
         const SymmetricKey &key,
         const std::vector<unsigned char> &iv) const
 {
-    return crypt(ciphertext, key, iv, DECRYPT);
-}
-
-std::vector<unsigned char> SymmetricCryptor::crypt(
-        const std::vector<unsigned char> &input,
-        const SymmetricKey &key,
-        const std::vector<unsigned char> &iv,
-        SymmetricCryptor::Direction direction) const
-{
-    if (!input.size()) return std::vector<unsigned char>();
-
-    // initialization to make the compiler happy
-    Botan::Cipher_Dir dir = Botan::ENCRYPTION;
-    switch (direction)
-    {
-    case ENCRYPT:
-        dir = Botan::ENCRYPTION;
-        break;
-    case DECRYPT:
-        dir = Botan::DECRYPTION;
-        break;
-    }
-
-    Botan::secure_vector<Botan::byte> output;
-    try
-    {
-        Botan::Pipe pipe(get_cipher(CIPHER, key.priv()->key, iv, dir));
-        pipe.process_msg(input);
-        output = pipe.read_all(0);
-    }
-    catch (Botan::Integrity_Failure&)
-    {
-        std::throw_with_nested(
-                    Crypto::IntegrityFailure("SymmetricCryptor::crypt"));
-    }
-    return std::vector<unsigned char>(output.cbegin(), output.cend());
+    return crypt(ciphertext, key, iv, Botan::DECRYPTION);
 }
 
 }

@@ -15,6 +15,12 @@ class DraftAttachmentsAddListener {
 public:
     virtual ~DraftAttachmentsAddListener() {}
 
+    /**
+     * Indicates progress when adding an attachment.
+     * Note: not guaranteed to be called at any specific point.
+     */
+    virtual void progressed(int64_t convId, int64_t attId, int64_t bytesProcessed, int64_t bytesTotal) = 0;
+
     virtual void finished(int64_t convId, int64_t attId, const std::string & path) = 0;
 
     virtual void error(int64_t convId, const std::string & path, LocalError error) = 0;

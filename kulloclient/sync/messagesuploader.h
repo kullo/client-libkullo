@@ -7,10 +7,12 @@
 #include <string>
 
 #include "kulloclient/kulloclient-forwards.h"
+#include "kulloclient/api/DraftPart.h"
 #include "kulloclient/codec/codecstructs.h"
 #include "kulloclient/db/dbsession.h"
 #include "kulloclient/http/HttpClient.h"
 #include "kulloclient/protocol/httpstructs.h"
+#include "kulloclient/sync/definitions.h"
 #include "kulloclient/sync/messageadder.h"
 #include "kulloclient/util/delivery.h"
 #include "kulloclient/util/misc.h"
@@ -55,9 +57,14 @@ public:
 
         std::function<void(
                 id_type conversationId,
-                std::size_t size,
-                std::size_t sizeAllowed)>
-        draftAttachmentsTooBig;
+                Api::DraftPart part,
+                std::size_t currentSize,
+                std::size_t maxSize)>
+        draftPartTooBig;
+
+        /// Emitted when the syncer has made progress.
+        std::function<void(SyncOutgoingMessagesProgress progress)>
+        progressed;
     } events;
 
     /**
@@ -75,6 +82,8 @@ public:
             const std::shared_ptr<Http::HttpClient> &httpClient);
     ~MessagesUploader();
 
+    SyncOutgoingMessagesProgress initialProgress();
+
     /// Start the syncer.
     void run(std::shared_ptr<std::atomic<bool>> shouldCancel);
 
@@ -90,6 +99,9 @@ private:
     bool ensureSizeLimitCompliance(
             const Protocol::SendableMessage &sendableMsg,
             Dao::DraftDao &draft);
+    bool checkAndHandleSizeLimit(
+            Dao::DraftDao &draft, Api::DraftPart part,
+            std::size_t size, std::size_t maxSize);
     Dao::MessageDao makeMessageDao(
             const Util::DateTime &dateSent,
             const Protocol::MessageSent &msgSent,
@@ -103,6 +115,11 @@ private:
     std::shared_ptr<Codec::PrivateKeyProvider> privKeyProvider_;
     std::unique_ptr<Protocol::MessagesClient> messagesClient_;
     MessageAdder msgAdder_;
+
+    // clang does not yet support std::atomic with int64_t
+    std::atomic<size_t> previouslyUploaded_{0};
+    std::atomic<size_t> estimatedRemaining_{0};
+    SyncOutgoingMessagesProgress progress_;
 
     K_DISABLE_COPY(MessagesUploader);
 };

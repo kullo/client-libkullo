@@ -16,7 +16,7 @@ CJNIEXPORT void JNICALL Java_net_kullo_libkullo_api_InternalDateTimeUtils_00024C
 {
     try {
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
-        delete reinterpret_cast<djinni::CppProxyHandle<::Kullo::Api::InternalDateTimeUtils>*>(nativeRef);
+        delete reinterpret_cast<::djinni::CppProxyHandle<::Kullo::Api::InternalDateTimeUtils>*>(nativeRef);
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, )
 }
 

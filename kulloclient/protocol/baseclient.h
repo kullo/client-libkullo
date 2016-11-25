@@ -2,16 +2,21 @@
 #pragma once
 
 #include <atomic>
+#include <functional>
 #include <memory>
+#include <boost/optional/optional_fwd.hpp>
 #include <jsoncpp/jsoncpp-forwards.h>
 
 #include "kulloclient/kulloclient-forwards.h"
 #include "kulloclient/http/HttpClient.h"
 #include "kulloclient/http/HttpHeader.h"
 #include "kulloclient/http/Response.h"
+#include "kulloclient/http/TransferProgress.h"
 
 namespace Kullo {
 namespace Protocol {
+
+using ProgressHandler = std::function<void(const Http::TransferProgress &)>;
 
 class BaseClient
 {
@@ -32,13 +37,18 @@ protected:
     std::string baseUserUrl(const Util::KulloAddress *address = nullptr);
     std::vector<Http::HttpHeader> makeHeaders(
             Authenticated auth,
-            const std::string &contentType = "application/json");
+            const std::string &contentType = "application/json",
+            boost::optional<std::size_t> contentLength = boost::none);
 
-    Http::Response sendRequest(const Http::Request &request);
+    Http::Response sendRequest(
+            const Http::Request &request,
+            const boost::optional<ProgressHandler> &onProgress = boost::none);
     Http::Response sendRequest(
             const Http::Request &request, const Json::Value &reqJson);
     Http::Response sendRequest(
-            const Http::Request &request, const std::string &reqBody);
+            const Http::Request &request,
+            const std::string &reqBody,
+            const boost::optional<ProgressHandler> &onProgress);
 
     void throwOnError(const Http::Response &response);
     Json::Value parseJsonBody();
@@ -51,7 +61,9 @@ protected:
 
 private:
     Http::Response doSendRequest(
-            const Http::Request &request, const std::string *reqBody);
+            const Http::Request &request,
+            const std::string *reqBody,
+            const boost::optional<ProgressHandler> onProgress = boost::none);
 };
 
 }

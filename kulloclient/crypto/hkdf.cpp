@@ -34,19 +34,16 @@ SymmetricKey HKDF::expand(const SymmetricKey &input,
     Botan::secure_vector<Botan::byte> t;
     Botan::secure_vector<Botan::byte> lastT;
 
-    auto prk = input.priv()->key;
-    Botan::Pipe hmacPipe(new Botan::MAC_Filter(std::string("HMAC(SHA-")
-                                               + std::to_string(HASH_BITSIZE)
-                                               + ")",
-                                               prk));
+    auto hmac = Botan::MessageAuthenticationCode::create(
+                std::string("HMAC(SHA-") + std::to_string(HASH_BITSIZE) + ")");
 
     for (size_t i = 1; i <= n; ++i) {
-        hmacPipe.start_msg();
-        hmacPipe.write(lastT);
-        hmacPipe.write(info);
-        hmacPipe.write(static_cast<Botan::byte>(i));
-        hmacPipe.end_msg();
-        lastT = hmacPipe.read_all(Botan::Pipe::LAST_MESSAGE);
+        hmac->clear();
+        hmac->set_key(input.priv()->key);
+        hmac->update(lastT);
+        hmac->update(info);
+        hmac->update(static_cast<Botan::byte>(i));
+        lastT = hmac->final();
         t += lastT;
     }
 

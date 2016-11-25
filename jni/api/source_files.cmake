@@ -36,6 +36,7 @@ api/DraftAttachmentsContentListener.cpp
 api/DraftAttachmentsContentListener.h
 api/DraftAttachmentsSaveToListener.cpp
 api/DraftAttachmentsSaveToListener.h
+api/DraftPart.h
 api/DraftState.h
 api/Drafts.cpp
 api/Drafts.h

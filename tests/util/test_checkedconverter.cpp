@@ -107,6 +107,77 @@ K_TEST_F(CheckedConverter, toStringJson)
     EXPECT_THAT(Util::CheckedConverter::toString(Json::Value("bar"), "foo"), StrEq("bar"));
 }
 
+K_TEST_F(CheckedConverter, isValidHexString)
+{
+    // ok
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString(""), Eq(true));
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString("a"), Eq(true));
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString("aa"), Eq(true));
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString("A"), Eq(true));
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString("AA"), Eq(true));
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString("0"), Eq(true));
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString("00"), Eq(true));
+
+    // mixed case
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString("aA"), Eq(true));
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString("Aa"), Eq(true));
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString("aA1"), Eq(true));
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString("Aa1"), Eq(true));
+
+    // allowed values
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString("0123456789abcdef"), Eq(true));
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString("0123456789ABCDEF"), Eq(true));
+
+    // invalid whitespace
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString(" "), Eq(false));
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString("a "), Eq(false));
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString(" a"), Eq(false));
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString("a a"), Eq(false));
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString("\t"), Eq(false));
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString("a\t"), Eq(false));
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString("\ta"), Eq(false));
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString("a\ta"), Eq(false));
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString("\n"), Eq(false));
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString("a\n"), Eq(false));
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString("\na"), Eq(false));
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString("a\na"), Eq(false));
+
+    // invalid characters
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString("g"), Eq(false));
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString("G"), Eq(false));
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString("X"), Eq(false));
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString("X"), Eq(false));
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString("."), Eq(false));
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString("-"), Eq(false));
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString("_"), Eq(false));
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString("?"), Eq(false));
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString("("), Eq(false));
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString(")"), Eq(false));
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString("ä"), Eq(false));
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString("0a0a0g"), Eq(false));
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString("0a0a0G"), Eq(false));
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString("0a0a0X"), Eq(false));
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString("0a0a0X"), Eq(false));
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString("0a0a0."), Eq(false));
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString("0a0a0-"), Eq(false));
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString("0a0a0_"), Eq(false));
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString("0a0a0?"), Eq(false));
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString("0a0a0("), Eq(false));
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString("0a0a0)"), Eq(false));
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString("0a0a0ä"), Eq(false));
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString("g0a0a0"), Eq(false));
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString("G0a0a0"), Eq(false));
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString("X0a0a0"), Eq(false));
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString("X0a0a0"), Eq(false));
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString(".0a0a0"), Eq(false));
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString("-0a0a0"), Eq(false));
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString("_0a0a0"), Eq(false));
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString("?0a0a0"), Eq(false));
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString("(0a0a0"), Eq(false));
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString(")0a0a0"), Eq(false));
+    EXPECT_THAT(Util::CheckedConverter::isValidHexString("ä0a0a0"), Eq(false));
+}
+
 K_TEST_F(CheckedConverter, isValidColorString)
 {
     EXPECT_THAT(Util::CheckedConverter::isValidColorString(""), Eq(true));
@@ -121,33 +192,46 @@ K_TEST_F(CheckedConverter, isValidColorString)
     EXPECT_THAT(Util::CheckedConverter::isValidColorString("123abc"), Eq(false));
     EXPECT_THAT(Util::CheckedConverter::isValidColorString(" #123abc"), Eq(false));
     EXPECT_THAT(Util::CheckedConverter::isValidColorString("#123abc "), Eq(false));
+
+    // invalid length
+    EXPECT_THAT(Util::CheckedConverter::isValidColorString("#1"), Eq(false));
+    EXPECT_THAT(Util::CheckedConverter::isValidColorString("#12"), Eq(false));
     EXPECT_THAT(Util::CheckedConverter::isValidColorString("#123"), Eq(false));
+    EXPECT_THAT(Util::CheckedConverter::isValidColorString("#1234"), Eq(false));
+    EXPECT_THAT(Util::CheckedConverter::isValidColorString("#12345"), Eq(false));
+    EXPECT_THAT(Util::CheckedConverter::isValidColorString("#1234567"), Eq(false));
+
+    // invalid chars
     EXPECT_THAT(Util::CheckedConverter::isValidColorString("#012efg"), Eq(false));
     EXPECT_THAT(Util::CheckedConverter::isValidColorString("#012EFG"), Eq(false));
+    EXPECT_THAT(Util::CheckedConverter::isValidColorString("#012ef."), Eq(false));
+    EXPECT_THAT(Util::CheckedConverter::isValidColorString("#012E.F"), Eq(false));
+    EXPECT_THAT(Util::CheckedConverter::isValidColorString("#012ef#"), Eq(false));
+    EXPECT_THAT(Util::CheckedConverter::isValidColorString("#012E#F"), Eq(false));
 }
 
 K_TEST_F(CheckedConverter, toColorStringJson)
 {
     EXPECT_THROW(Util::CheckedConverter::toColorString(Json::Value()), Util::ConversionException);
     EXPECT_THROW(Util::CheckedConverter::toColorString(Json::Value("#abc")), Util::ConversionException);
-    EXPECT_THAT(std::string("#beef01"), Util::CheckedConverter::toColorString(Json::Value("#beef01")));
+    EXPECT_THAT(Util::CheckedConverter::toColorString(Json::Value("#beef01")), StrEq("#beef01"));
 
     // Util::AllowEmpty
     EXPECT_THROW(Util::CheckedConverter::toColorString(Json::Value("")), Util::ConversionException);
-    EXPECT_THAT(std::string(""), Util::CheckedConverter::toColorString(Json::Value(""), Util::AllowEmpty::True));
+    EXPECT_THAT(Util::CheckedConverter::toColorString(Json::Value(""), Util::AllowEmpty::True), StrEq(""));
 
     // default: input null
-    EXPECT_THAT(std::string(""), Util::CheckedConverter::toColorString(Json::Value(), ""));
-    EXPECT_THAT(std::string("#123abc"), Util::CheckedConverter::toColorString(Json::Value(), "#123abc"));
+    EXPECT_THAT(Util::CheckedConverter::toColorString(Json::Value(), ""), StrEq(""));
+    EXPECT_THAT(Util::CheckedConverter::toColorString(Json::Value(), "#123abc"), StrEq("#123abc"));
 
     // default: input empty
-    EXPECT_THAT(std::string(""), Util::CheckedConverter::toColorString(Json::Value(""), ""));
+    EXPECT_THAT(Util::CheckedConverter::toColorString(Json::Value(""), ""), StrEq(""));
     EXPECT_THROW(Util::CheckedConverter::toColorString(Json::Value(""), "#123abc"),
                  Util::ConversionException);
 
     // default: input nonempty
-    EXPECT_THAT(std::string("#6789ab"), Util::CheckedConverter::toColorString(Json::Value("#6789ab"), ""));
-    EXPECT_THAT(std::string("#6789ab"), Util::CheckedConverter::toColorString(Json::Value("#6789ab"), "#123abc"));
+    EXPECT_THAT(Util::CheckedConverter::toColorString(Json::Value("#6789ab"), ""), StrEq("#6789ab"));
+    EXPECT_THAT(Util::CheckedConverter::toColorString(Json::Value("#6789ab"), "#123abc"), StrEq("#6789ab"));
 }
 
 K_TEST_F(CheckedConverter, toDateTimeJson)

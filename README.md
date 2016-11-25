@@ -63,6 +63,17 @@ Tips and Tricks
 Changelog
 ---------
 
+### v57 (2016-11-24)
+
+ * Signal database migrations through the API
+ * Check size of attachments when adding them
+ * Check size of message body and meta before sending
+ * Track sync progress for incoming attachments and outgoing messages
+ * Improve link detection in messages text
+ * Fix implementation detection for AES
+ * Speed-up adding attachments
+ * Signal progress when adding attachments
+
 ### v56 (2016-10-01)
 
  * Add interfaces: Conversations.incomingMessages/outgoingMessages

@@ -55,6 +55,43 @@ std::unique_ptr<DraftResult> DraftDao::all(SharedSessionPtr session)
     return make_unique<DraftResult>(std::move(stmt), session);
 }
 
+std::size_t DraftDao::sizeOfAllSendable(SharedSessionPtr session)
+{
+    kulloAssert(session);
+    // If a bug is found in here, chances are that it is also in
+    // MessageDao::sizeOfAllUndelivered.
+
+    // size of draft = (text size + attachment size) * number of recipients
+    // Number of participants is number of commas in `participants`,
+    // + 1 for the last entry which isn't succeeded by a comma,
+    // + 1 for the sender, who also gets a copy.
+    auto stmt = session->prepare(
+                // calculate map conversation -> size of its draft attachments
+                "WITH attsizes (message_id, total_size) AS ( "
+                "    SELECT message_id, sum(size) "
+                "    FROM attachments "
+                "    GROUP BY message_id "
+                "    HAVING draft = 1 "
+                ") "
+
+                "SELECT "
+                // return a row (with 0) even when there are no sendable drafts
+                "coalesce(sum( "
+                "    (length(d.text) + coalesce(a.total_size, 0)) "
+                "    * ( "
+                // commas = total chars - chars which are not a comma
+                "        length(c.participants) "
+                "        - length(replace(c.participants, ',', '')) "
+                "        + 2 "
+                "    ) "
+                "), 0) "
+                "FROM drafts d, conversations c LEFT JOIN attsizes a "
+                "ON d.conversation_id = c.id "
+                "WHERE d.state = :state AND a.message_id = c.id ");
+    stmt.bind(":state", static_cast<int>(DraftState::Sending));
+    return stmt.execWithSingleResult().get<std::size_t>(0);
+}
+
 bool DraftDao::save()
 {
     if (!dirty_)

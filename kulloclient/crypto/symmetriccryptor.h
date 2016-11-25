@@ -43,14 +43,6 @@ public:
             const std::vector<unsigned char> &iv) const;
 
     virtual ~SymmetricCryptor() = default;
-
-private:
-    enum Direction {ENCRYPT, DECRYPT};
-
-    std::vector<unsigned char> crypt(const std::vector<unsigned char> &input,
-                                     const SymmetricKey &key,
-                                     const std::vector<unsigned char> &iv,
-                                     Direction direction) const;
 };
 
 }

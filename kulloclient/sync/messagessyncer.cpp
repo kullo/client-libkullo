@@ -101,24 +101,8 @@ void MessagesSyncer::downloadAndProcessMessages()
     {
         result = client_->getMessages(SyncDao::timestamp(SyncDao::Message, session_));
 
-
-        /*
-         *              lllllllllllll
-         * ppppppppppppppppppp
-         *              xxxxxx
-         * tttttttttttttttttttttttttt
-         *
-         * L: countLeft
-         * P: countProcessed
-         * X: countProcessedFromLeft
-         * T: L + P - X
-         *
-         * ratio = P / T
-         *
-         */
-        progress_.countLeft = result.countLeft;
-        progress_.countTotal = progress_.countLeft + progress_.countProcessed;
-        EMIT(events.progressed, progress_); // I know how much I have to do
+        progress_.totalMessages = result.countLeft + progress_.processedMessages;
+        EMIT(events.progressed, progress_);
 
         for (const Protocol::Message &httpMsg : result.messages)
         {
@@ -131,7 +115,7 @@ void MessagesSyncer::downloadAndProcessMessages()
             else if ( local && !httpMsg.deleted) handleModifiedMessage(httpMsg, *local); // 4. Merge
             else kulloAssertionFailed("Logic error");
 
-            ++progress_.countProcessed;
+            ++progress_.processedMessages;
             EMIT(events.progressed, progress_);
 
             Dao::SyncDao::setTimestamp(Dao::SyncDao::Message, httpMsg.lastModified, session_);
@@ -181,8 +165,8 @@ void MessagesSyncer::handleNewMessage(const Protocol::Message &httpMsg)
 
     tx.commit();
 
-    ++progress_.countNew;
-    if (!remote.state(MessageState::Read)) ++progress_.countNewUnread;
+    ++progress_.newMessages;
+    if (!remote.state(MessageState::Read)) ++progress_.newUnreadMessages;
 
     msgAdder_.emitSignals();
 }
@@ -212,7 +196,7 @@ void MessagesSyncer::handleDeletedMessage(const Protocol::Message &httpMsg, Mess
 
     tx.commit();
 
-    ++progress_.countDeleted;
+    ++progress_.deletedMessages;
     EMIT(events.messageDeleted, conversationId, messageId);
 }
 
@@ -282,7 +266,7 @@ void MessagesSyncer::handleModifiedMessage(const Protocol::Message &httpMsg, Mes
 
     if (localModified)
     {
-        ++progress_.countModified;
+        ++progress_.modifiedMessages;
         EMIT(events.messageModified, local.conversationId(), local.id());
     }
     if (stateModified)

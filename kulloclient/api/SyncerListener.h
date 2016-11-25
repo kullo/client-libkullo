@@ -7,6 +7,7 @@
 
 namespace Kullo { namespace Api {
 
+enum class DraftPart;
 enum class NetworkError;
 struct SyncProgress;
 
@@ -19,10 +20,10 @@ public:
     virtual void started() = 0;
 
     /**
-     * Called when the attachments of a draft that should be sent are too big.
+     * Called when a part of a draft that should be sent is too big.
      * The syncer will continue syncing the other requested items.
      */
-    virtual void draftAttachmentsTooBig(int64_t convId) = 0;
+    virtual void draftPartTooBig(int64_t convId, DraftPart part, int64_t currentSize, int64_t maxSize) = 0;
 
     /** Called to inform about the progress of the current sync */
     virtual void progressed(const SyncProgress & progress) = 0;

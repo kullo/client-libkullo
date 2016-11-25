@@ -9,24 +9,45 @@ namespace Sync {
 
 enum struct SyncMode { SendOnly, WithoutAttachments, Everything };
 
-struct SyncMessagesProgress
+struct SyncIncomingMessagesProgress
 {
-    int64_t countLeft = -1;
-    int64_t countProcessed = 0;
-    int64_t countTotal = -1;
-    int64_t countNew = 0;
-    int64_t countNewUnread = 0;
-    int64_t countModified = 0;
-    int64_t countDeleted = 0;
+    int64_t processedMessages = 0;
+    int64_t totalMessages = 0;
+    int64_t newMessages = 0;
+    int64_t newUnreadMessages = 0;
+    int64_t modifiedMessages = 0;
+    int64_t deletedMessages = 0;
+};
+
+struct SyncIncomingAttachmentsProgress
+{
+    int64_t downloadedBytes = 0;
+    int64_t totalBytes = 0;
+
+    bool operator==(const SyncIncomingAttachmentsProgress &other) const;
+    bool operator!=(const SyncIncomingAttachmentsProgress &other) const;
+};
+
+struct SyncOutgoingMessagesProgress
+{
+    int64_t uploadedBytes = 0;
+    int64_t totalBytes = 0;
+
+    bool operator==(const SyncOutgoingMessagesProgress &other) const;
+    bool operator!=(const SyncOutgoingMessagesProgress &other) const;
 };
 
 struct SyncProgress
 {
-    SyncMessagesProgress messages;
+    SyncIncomingMessagesProgress incomingMessages;
+    SyncIncomingAttachmentsProgress incomingAttachments;
+    SyncOutgoingMessagesProgress outgoingMessages;
     int64_t runTimeMs = 0;
 };
 
-std::ostream &operator<<(std::ostream &out, const SyncMessagesProgress &rhs);
+std::ostream &operator<<(std::ostream &out, const SyncIncomingMessagesProgress &rhs);
+std::ostream &operator<<(std::ostream &out, const SyncIncomingAttachmentsProgress &rhs);
+std::ostream &operator<<(std::ostream &out, const SyncOutgoingMessagesProgress &rhs);
 std::ostream &operator<<(std::ostream &out, const SyncProgress &rhs);
 
 }

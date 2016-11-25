@@ -39,6 +39,7 @@ public:
     static std::unique_ptr<DraftDao> firstSendable(Db::SharedSessionPtr session);
 
     static std::unique_ptr<DraftResult> all(Db::SharedSessionPtr session);
+    static std::size_t sizeOfAllSendable(Db::SharedSessionPtr session);
 
     /**
      * @brief Saves the current state to DB if the state was changed.

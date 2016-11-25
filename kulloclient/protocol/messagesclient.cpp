@@ -28,20 +28,27 @@ MessagesClient::MessagesClient(
     setMasterKey(masterKey);
 }
 
-void MessagesClient::sendMessage(
+std::size_t MessagesClient::sendMessage(
         const KulloAddress &recipient,
-        const SendableMessage &message)
+        const SendableMessage &message,
+        const ProgressHandler &onProgress)
 {
-    doSendMessage(&recipient, message, std::vector<unsigned char>());
+    auto result = doSendMessage(
+                &recipient,
+                message,
+                std::vector<unsigned char>(),
+                onProgress);
+    return result.requestBodySize;
 }
 
 MessageSent MessagesClient::sendMessageToSelf(
         const SendableMessage &message,
-        const std::vector<unsigned char> &meta)
+        const std::vector<unsigned char> &meta,
+        const Protocol::ProgressHandler &onProgress)
 {
-    auto result = doSendMessage(nullptr, message, meta);
-    kulloAssert(result);
-    return *result;
+    auto result = doSendMessage(nullptr, message, meta, onProgress);
+    kulloAssert(result.messageSent);
+    return *(result.messageSent);
 }
 
 MessagesClient::GetMessagesResult MessagesClient::getMessages(
@@ -93,7 +100,7 @@ MessagesClient::GetMessagesResult MessagesClient::getMessages(
 }
 
 MessageAttachments MessagesClient::getMessageAttachments(
-        id_type id)
+        id_type id, const Protocol::ProgressHandler &onProgress)
 {
     auto url = baseUserUrl()
             + "/messages/"
@@ -103,7 +110,8 @@ MessageAttachments MessagesClient::getMessageAttachments(
     sendRequest(Http::Request(
                     Http::HttpMethod::Get,
                     url,
-                    makeHeaders(Authenticated::True)));
+                    makeHeaders(Authenticated::True)),
+                onProgress);
 
     MessageAttachments attachments;
     attachments.id = id;
@@ -167,10 +175,11 @@ IdLastModified MessagesClient::deleteMessage(
     }
 }
 
-boost::optional<MessageSent> MessagesClient::doSendMessage(
+MessagesClient::SendMessageResult MessagesClient::doSendMessage(
         const KulloAddress *recipient,
         const SendableMessage &message,
-        const std::vector<unsigned char> &meta)
+        const std::vector<unsigned char> &meta,
+        const boost::optional<ProgressHandler> &onProgress)
 {
     bool toSelf = !recipient;
     kulloAssert((!toSelf && meta.empty()) || (toSelf && !meta.empty()));
@@ -186,19 +195,24 @@ boost::optional<MessageSent> MessagesClient::doSendMessage(
     auto contentType = std::string("multipart/form-data; boundary=\"")
             + multipart.boundary()
             + "\"";
+    auto body = multipart.toString();
+
     sendRequest(Http::Request(
                     Http::HttpMethod::Post,
                     baseUserUrl(recipient) + "/messages",
-                    makeHeaders(auth, contentType)),
-                multipart.toString());
+                    makeHeaders(auth, contentType, body.size())),
+                body,
+                onProgress);
 
-    boost::optional<MessageSent> msgSent;
+    SendMessageResult result;
     if (toSelf)
     {
         auto json = parseJsonBody();
         try
         {
-            msgSent = parseJsonMessageSent(json);
+            result.messageSent = parseJsonMessageSent(json);
+            result.messageSent->size = body.size();
+            result.requestBodySize = body.size();
         }
         catch (ConversionException)
         {
@@ -206,7 +220,7 @@ boost::optional<MessageSent> MessagesClient::doSendMessage(
                         ProtocolError("Failed to parse message sent data"));
         }
     }
-    return msgSent;
+    return result;
 }
 
 Message MessagesClient::parseJsonMessage(const Json::Value &json)

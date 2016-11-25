@@ -41,10 +41,15 @@ MessagesSender::~MessagesSender()
 {
 }
 
-void MessagesSender::run(std::shared_ptr<std::atomic<bool>> shouldCancel)
+void MessagesSender::run(
+        std::shared_ptr<std::atomic<bool>> shouldCancel,
+        std::size_t previouslyUploaded)
 {
+    previouslyUploaded_ = previouslyUploaded;
+
     id_type currentConversationId = 0;
     id_type currentMessageId = 0;
+    std::size_t currentMessageEstimatedSize = 0;
     Codec::EncodedMessage encodedMessage;
     Crypto::AsymmetricKeyLoader loader;
     Codec::MessageEncryptor encryptor;
@@ -53,6 +58,11 @@ void MessagesSender::run(std::shared_ptr<std::atomic<bool>> shouldCancel)
     for (const auto &idAndRecipient : idsAndRecipients)
     {
         if (*shouldCancel) throw SyncCanceled();
+
+        estimatedRemaining_ = Dao::MessageDao::sizeOfAllUndelivered(session_);
+        progress_.uploadedBytes = previouslyUploaded_;
+        progress_.totalBytes = previouslyUploaded_ + estimatedRemaining_;
+        EMIT(events.progressed, progress_);
 
         auto oldMessageId = currentMessageId;
         currentMessageId = std::get<0>(idAndRecipient);
@@ -73,6 +83,9 @@ void MessagesSender::run(std::shared_ptr<std::atomic<bool>> shouldCancel)
             // encode message
             encodedMessage = Codec::MessageEncoder::encodeMessage(
                         *messageDao, session_);
+            currentMessageEstimatedSize =
+                    messageDao->text().size() +
+                    encodedMessage.attachments.size();
             Codec::MessageCompressor().compress(encodedMessage);
         }
 
@@ -99,7 +112,8 @@ void MessagesSender::run(std::shared_ptr<std::atomic<bool>> shouldCancel)
             sendMessage(currentConversationId,
                         currentMessageId,
                         currentRecipient,
-                        sendableMsg);
+                        sendableMsg,
+                        currentMessageEstimatedSize);
         }
         catch (Protocol::NotFound)
         {
@@ -116,11 +130,51 @@ void MessagesSender::sendMessage(
         id_type currentConversationId,
         id_type currentMessageId,
         const KulloAddress &currentRecipient,
-        Protocol::SendableMessage sendableMsg)
+        Protocol::SendableMessage sendableMsg,
+        std::size_t estimatedSize)
 {
     try
     {
-        messagesClient_->sendMessage(currentRecipient, sendableMsg);
+        previouslyUploaded_ += messagesClient_->sendMessage(
+                    currentRecipient,
+                    sendableMsg,
+                    [this, estimatedSize]
+                    (const Http::TransferProgress &progress)
+        {
+            // make sure uploadTotal has a sane value
+            auto uploadTotal = std::max(
+                        progress.uploadTotal,
+                        progress.uploadTransferred);
+
+            int64_t improvedEstimate;
+            if (uploadTotal > 0)
+            {
+                // Remove the current upload's impact on the estimate,
+                // replace by value returned by the HTTP client.
+                //
+                // Make all variables signed to ensure no subtration is performed
+                // on unsigned ints causing an overflow.
+                improvedEstimate =
+                        static_cast<int64_t>(estimatedRemaining_) -
+                        static_cast<int64_t>(estimatedSize) +
+                        static_cast<int64_t>(uploadTotal);
+            }
+            else
+            {
+                improvedEstimate = estimatedRemaining_;
+            }
+
+            SyncOutgoingMessagesProgress newProgress;
+            newProgress.uploadedBytes =
+                    previouslyUploaded_ + progress.uploadTransferred;
+            newProgress.totalBytes = previouslyUploaded_ + improvedEstimate;
+
+            if (newProgress != progress_)
+            {
+                progress_ = newProgress;
+                EMIT(events.progressed, progress_);
+            }
+        });
     }
     catch (Protocol::NotFound)
     {

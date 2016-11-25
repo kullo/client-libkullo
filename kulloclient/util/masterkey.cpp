@@ -2,20 +2,20 @@
 #include "kulloclient/util/masterkey.h"
 
 #include <algorithm>
+#include <regex>
 #include <sstream>
-#include <boost/regex.hpp>
 
 #include "kulloclient/crypto/symmetrickeygenerator.h"
-#include "kulloclient/util/formatstring.h"
 #include "kulloclient/util/misc.h"
+#include "kulloclient/util/strings.h"
 
 namespace Kullo {
 namespace Util {
 
 namespace {
-const auto MASTER_KEY_HEADER_REGEX = boost::regex("-*BEGIN KULLO PRIVATE MASTER KEY-*");
-const auto MASTER_KEY_FOOTER_REGEX = boost::regex("-*END KULLO PRIVATE MASTER KEY-*");
-const auto SINGLE_BLOCK_BASIC_REGEX = boost::regex("[0-9]{6}");
+const auto MASTER_KEY_HEADER_REGEX = std::regex("-*BEGIN KULLO PRIVATE MASTER KEY-*");
+const auto MASTER_KEY_FOOTER_REGEX = std::regex("-*END KULLO PRIVATE MASTER KEY-*");
+const auto SINGLE_BLOCK_BASIC_REGEX = std::regex("[0-9]{6}");
 const auto MAX_BLOCK_VALUE = int{65535};
 }
 
@@ -39,15 +39,15 @@ MasterKey::MasterKey(const std::string &pemKey)
     std::string key  = pemKey;
     key.erase(std::remove(key.begin(), key.end(), '\r'), key.end());
     key.erase(std::remove(key.begin(), key.end(), '\t'), key.end());
-    key = boost::regex_replace(key, MASTER_KEY_HEADER_REGEX, "");
-    key = boost::regex_replace(key, MASTER_KEY_FOOTER_REGEX, "");
-    FormatString::trim(key);
+    key = std::regex_replace(key, MASTER_KEY_HEADER_REGEX, "");
+    key = std::regex_replace(key, MASTER_KEY_FOOTER_REGEX, "");
+    Strings::trim(key);
 
     size_t nnPos = key.find("\n\n");
     if (nnPos != std::string::npos) // there is a header
     {
         std::string header(key.begin(), key.begin()+nnPos);
-        FormatString::trim(header);
+        Strings::trim(header);
 
         std::stringstream headerStream(header);
         std::string line;
@@ -56,7 +56,7 @@ MasterKey::MasterKey(const std::string &pemKey)
         {
             while(std::getline(headerStream, line, '\n'))
             {
-                FormatString::trim(line);
+                Strings::trim(line);
 
                 size_t colonPos = line.find(':');
                 if (colonPos == std::string::npos)
@@ -68,9 +68,9 @@ MasterKey::MasterKey(const std::string &pemKey)
 
                 std::string name(line.begin(), line.begin()+colonPos);
                 std::string value(line.begin()+colonPos+1, line.end());
-                FormatString::trim(value);
+                Strings::trim(value);
 
-                if (FormatString::toLower(name) == "version")
+                if (Strings::toLower(name) == "version")
                 {
                     std::istringstream(value) >> version_;
                 }
@@ -96,7 +96,7 @@ MasterKey::MasterKey(const std::string &pemKey)
     std::vector<std::string> blockList;
     while(std::getline(bodyStream, line, '\n'))
     {
-        FormatString::trim(line);
+        Strings::trim(line);
         line.erase(std::remove(line.begin(), line.end(), ' '), line.end());
 
         std::string block1(line.begin(),    line.begin()+ 6);
@@ -164,8 +164,7 @@ MasterKey MasterKey::makeRandom()
 
 bool MasterKey::isPlausibleSingleBlock(const std::string &block)
 {
-    boost::match_results<std::string::const_iterator> results;
-    if (!boost::regex_match(block, results, SINGLE_BLOCK_BASIC_REGEX))
+    if (!std::regex_match(block, SINGLE_BLOCK_BASIC_REGEX))
     {
         return false;
     }
@@ -196,7 +195,7 @@ std::vector<std::string> MasterKey::dataBlocks() const
         unsigned int n = 0;
         n = (data_[2*i] << 8) | data_[2*i+1];
 
-        std::string blockNumber = Util::FormatString::padLeft(std::to_string(n), 5, '0');
+        std::string blockNumber = Util::Strings::padLeft(std::to_string(n), 5, '0');
         std::string blockCheck = luhnMod10GenerateCheckCharacter(blockNumber);
         dataBlocks.push_back(blockNumber + blockCheck);
     }

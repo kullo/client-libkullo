@@ -214,13 +214,14 @@ void SyncerImpl::SyncerSyncerListener::started()
     }
 }
 
-void SyncerImpl::SyncerSyncerListener::draftAttachmentsTooBig(int64_t convId)
+void SyncerImpl::SyncerSyncerListener::draftPartTooBig(
+        int64_t convId, Api::DraftPart part, int64_t currentSize, int64_t maxSize)
 {
     std::lock_guard<std::mutex> lock(parentMutex_); K_RAII(lock);
     if (!parent_) return;
 
     if (auto listener = parent_->listener_) {
-        listener->draftAttachmentsTooBig(convId);
+        listener->draftPartTooBig(convId, part, currentSize, maxSize);
     }
 }
 

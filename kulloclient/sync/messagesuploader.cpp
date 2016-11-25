@@ -4,6 +4,7 @@
 #include <functional>
 #include <smartsqlite/scopedtransaction.h>
 
+#include "kulloclient/api_impl/debug.h"
 #include "kulloclient/codec/exceptions.h"
 #include "kulloclient/codec/messagecompressor.h"
 #include "kulloclient/codec/messageencryptor.h"
@@ -19,10 +20,10 @@
 #include "kulloclient/protocol/messagesclient.h"
 #include "kulloclient/sync/exceptions.h"
 #include "kulloclient/util/events.h"
-#include "kulloclient/util/formatstring.h"
 #include "kulloclient/util/librarylogger.h"
 #include "kulloclient/util/limits.h"
 #include "kulloclient/util/misc.h"
+#include "kulloclient/util/strings.h"
 
 using namespace Kullo::Dao;
 using namespace Kullo::Util;
@@ -54,6 +55,15 @@ MessagesUploader::~MessagesUploader()
 {
 }
 
+SyncOutgoingMessagesProgress MessagesUploader::initialProgress()
+{
+    SyncOutgoingMessagesProgress result;
+    result.totalBytes =
+            Dao::DraftDao::sizeOfAllSendable(session_) +
+            Dao::MessageDao::sizeOfAllUndelivered(session_);
+    return result;
+}
+
 void MessagesUploader::run(std::shared_ptr<std::atomic<bool>> shouldCancel)
 {
     while (true)
@@ -65,6 +75,13 @@ void MessagesUploader::run(std::shared_ptr<std::atomic<bool>> shouldCancel)
         }
         if (*shouldCancel) throw SyncCanceled();
 
+        estimatedRemaining_ =
+                Dao::DraftDao::sizeOfAllSendable(session_)
+                + Dao::MessageDao::sizeOfAllUndelivered(session_);
+        progress_.uploadedBytes = previouslyUploaded_;
+        progress_.totalBytes = previouslyUploaded_ + estimatedRemaining_;
+        EMIT(events.progressed, progress_);
+
         auto conv = loadConversation(draft->conversationId());
 
         // encode message
@@ -74,6 +91,12 @@ void MessagesUploader::run(std::shared_ptr<std::atomic<bool>> shouldCancel)
                     *draft,
                     dateSent,
                     session_);
+
+        // must be calculated the same way as sizeOfAllSendable()
+        auto totalSize =
+                draft->text().size()
+                + encodedMessage.attachments.size();
+
         Codec::MessageCompressor().compress(encodedMessage);
         auto sendableMsg = makeSendableMessage(encodedMessage);
         if (!ensureSizeLimitCompliance(sendableMsg, *draft)) continue;
@@ -91,7 +114,47 @@ void MessagesUploader::run(std::shared_ptr<std::atomic<bool>> shouldCancel)
                         session_));
 
         // send message
-        auto msgSent = messagesClient_->sendMessageToSelf(sendableMsg, meta);
+        auto msgSent = messagesClient_->sendMessageToSelf(
+                    sendableMsg,
+                    meta,
+                    [this, totalSize]
+                    (const Http::TransferProgress &progress)
+        {
+            // make sure uploadTotal has a sane value
+            auto uploadTotal = std::max(
+                        progress.uploadTotal,
+                        progress.uploadTransferred);
+
+            int64_t improvedEstimate;
+            if (uploadTotal > 0)
+            {
+                // Remove the current upload's impact on the estimate,
+                // replace by value returned by the HTTP client.
+                //
+                // Make all variables signed to ensure no subtration is performed
+                // on unsigned ints causing an overflow.
+                improvedEstimate =
+                        static_cast<int64_t>(estimatedRemaining_) -
+                        static_cast<int64_t>(totalSize) +
+                        static_cast<int64_t>(uploadTotal);
+            }
+            else
+            {
+                improvedEstimate = estimatedRemaining_;
+            }
+
+            SyncOutgoingMessagesProgress newProgress;
+            newProgress.uploadedBytes =
+                    previouslyUploaded_ + progress.uploadTransferred;
+            newProgress.totalBytes = previouslyUploaded_ + improvedEstimate;
+
+            if (newProgress != progress_)
+            {
+                progress_ = newProgress;
+                EMIT(events.progressed, progress_);
+            }
+        });
+        previouslyUploaded_ += msgSent.size;
 
         // create DAOs
         auto message = makeMessageDao(dateSent, msgSent, *draft);
@@ -193,26 +256,39 @@ bool MessagesUploader::ensureSizeLimitCompliance(
 {
     kulloAssert(sendableMsg.keySafe.size() <= MESSAGE_KEY_SAFE_MAX_BYTES);
 
-    auto attachmentsSize = sendableMsg.attachments.size();
-    if (attachmentsSize > MESSAGE_ATTACHMENTS_SEND_MAX_BYTES)
+    return checkAndHandleSizeLimit(
+                draft,
+                Api::DraftPart::Content,
+                sendableMsg.content.size(),
+                MESSAGE_CONTENT_MAX_BYTES)
+            && checkAndHandleSizeLimit(
+                draft,
+                Api::DraftPart::Attachments,
+                sendableMsg.attachments.size(),
+                MESSAGE_ATTACHMENTS_MAX_BYTES);
+}
+
+bool MessagesUploader::checkAndHandleSizeLimit(
+        Dao::DraftDao &draft, Api::DraftPart part,
+        std::size_t size, std::size_t maxSize)
+{
+    if (size <= maxSize)
     {
-        Log.w() << "Attachments are too large. Size: "
-                << Util::FormatString::formatIntegerWithCommas(attachmentsSize)
-                << " (allowed: "
-                << Util::FormatString::formatIntegerWithCommas(MESSAGE_ATTACHMENTS_SEND_MAX_BYTES)
-                << ")";
-        draft.setState(DraftState::Editing);
-        draft.save();
-        EMIT(events.draftAttachmentsTooBig,
-             draft.conversationId(),
-             attachmentsSize,
-             MESSAGE_ATTACHMENTS_SEND_MAX_BYTES);
-        EMIT(events.draftModified, draft.conversationId());
-        return false;
+        return true;
     }
     else
     {
-        return true;
+        Log.w() << "Draft part " << part << " is too large. Size: "
+                << Util::Strings::formatReadable(size)
+                << " (allowed: "
+                << Util::Strings::formatReadable(maxSize)
+                << ")";
+        draft.setState(DraftState::Editing);
+        draft.save();
+        auto convId = draft.conversationId();
+        EMIT(events.draftPartTooBig, convId, part, size, maxSize);
+        EMIT(events.draftModified, convId);
+        return false;
     }
 }
 

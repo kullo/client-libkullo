@@ -34,13 +34,15 @@ public:
      * @param recipient Recipient's address
      * @param message Message record to be sent
      */
-    void sendMessage(
+    std::size_t sendMessage(
             const Util::KulloAddress &recipient,
-            const SendableMessage &message);
+            const SendableMessage &message,
+            const ProgressHandler &onProgress);
 
     MessageSent sendMessageToSelf(
             const SendableMessage &message,
-            const std::vector<unsigned char> &meta);
+            const std::vector<unsigned char> &meta,
+            const ProgressHandler &onProgress);
 
     struct GetMessagesResult
     {
@@ -63,7 +65,8 @@ public:
     /**
      * @brief Get the attachments of a single message from the server.
      */
-    MessageAttachments getMessageAttachments(id_type id);
+    MessageAttachments getMessageAttachments(
+            id_type id, const ProgressHandler &onProgress);
 
     /**
      * @brief Update the message meta for the message identified by idlm.
@@ -85,10 +88,17 @@ public:
     IdLastModified deleteMessage(const IdLastModified &idlm);
 
 private:
-    boost::optional<MessageSent> doSendMessage(
+    struct SendMessageResult
+    {
+        boost::optional<MessageSent> messageSent;
+        std::size_t requestBodySize;
+    };
+
+    SendMessageResult doSendMessage(
             const Util::KulloAddress *recipient,
             const SendableMessage &message,
-            const std::vector<unsigned char> &meta);
+            const std::vector<unsigned char> &meta,
+            const boost::optional<ProgressHandler> &onProgress = boost::none);
 
     static Message parseJsonMessage(const Json::Value &json);
     static MessageSent parseJsonMessageSent(const Json::Value &json);

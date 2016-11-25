@@ -11,6 +11,7 @@
 #include "kulloclient/util/assert.h"
 #include "kulloclient/util/checkedconverter.h"
 #include "kulloclient/util/datetime.h"
+#include "kulloclient/util/delivery.h"
 #include "kulloclient/util/misc.h"
 
 using namespace Kullo::Db;
@@ -94,6 +95,34 @@ std::unique_ptr<MessageResult> MessageDao::all(SharedSessionPtr session)
                 "ORDER BY id ASC");
 
     return make_unique<MessageResult>(std::move(stmt), session);
+}
+
+std::size_t MessageDao::sizeOfAllUndelivered(SharedSessionPtr session)
+{
+    kulloAssert(session);
+    // If a bug is found in here, chances are that it is also in
+    // DraftDao::sizeOfAllSendable.
+
+    // size of message = text size + attachment size
+    auto stmt = session->prepare(
+                // calculate map message -> size of its attachments
+                "WITH attsizes (message_id, total_size) AS ( "
+                "    SELECT message_id, sum(size) "
+                "    FROM attachments "
+                "    GROUP BY message_id "
+                "    HAVING draft = 0 "
+                ") "
+
+                "SELECT "
+                // return a row (with 0) even when there are no sendable drafts
+                "coalesce(sum( "
+                "    length(m.text) + coalesce(a.total_size, 0) "
+                "), 0) "
+                "FROM messages m, delivery d LEFT JOIN attsizes a "
+                "ON m.id = d.message_id "
+                "WHERE d.state = :state AND m.id = a.message_id ");
+    stmt.bind(":state", Util::Delivery::toString(Delivery::unsent));
+    return stmt.execWithSingleResult().get<std::size_t>(0);
 }
 
 bool MessageDao::operator==(const MessageDao &other) const

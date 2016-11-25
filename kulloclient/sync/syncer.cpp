@@ -12,8 +12,8 @@
 #include "kulloclient/sync/profilesyncer.h"
 #include "kulloclient/util/assert.h"
 #include "kulloclient/util/events.h"
-#include "kulloclient/util/formatstring.h"
 #include "kulloclient/util/librarylogger.h"
+#include "kulloclient/util/strings.h"
 #include "kulloclient/registry.h"
 
 using namespace Kullo::Util;
@@ -44,16 +44,17 @@ void Syncer::run(
 
     auto httpClient = Registry::httpClientFactory()->createHttpClient();
 
+    // get size estimates for progress
+    messagesUploader_ = make_unique<MessagesUploader>(
+                settings_, privKeyProvider_, session, httpClient);
+    progress_.outgoingMessages = messagesUploader_->initialProgress();
+    EMIT(events.progressed, progress_);
+
     // sync keys
     keysSyncer_.reset(new KeysSyncer(settings_.credentials, session, httpClient));
     keysSyncer_->run(shouldCancel);
 
-    // sync outgoing messages
-    messagesUploader_ = make_unique<MessagesUploader>(
-                settings_, privKeyProvider_, session, httpClient);
-    messagesSender_ = make_unique<MessagesSender>(
-                settings_.credentials, privKeyProvider_, session, httpClient);
-
+    // upload outgoing messages
     messagesUploader_->events.conversationAdded =
             forwardEvent(events.conversationAdded);
     messagesUploader_->events.conversationModified =
@@ -68,13 +69,30 @@ void Syncer::run(
             forwardEvent(events.draftModified);
     messagesUploader_->events.draftAttachmentDeleted =
             forwardEvent(events.draftAttachmentDeleted);
-    messagesUploader_->events.draftAttachmentsTooBig =
-            forwardEvent(events.draftAttachmentsTooBig);
-    messagesSender_->events.messageModified =
-            forwardEvent(events.messageModified);
+    messagesUploader_->events.draftPartTooBig =
+            forwardEvent(events.draftPartTooBig);
+    messagesUploader_->events.progressed =
+            [this](SyncOutgoingMessagesProgress progress)
+    {
+        progress_.outgoingMessages = progress;
+        EMIT(events.progressed, progress_);
+    };
 
     messagesUploader_->run(shouldCancel);
-    messagesSender_->run(shouldCancel);
+
+    // send outgoing messages to their recipients
+    messagesSender_ = make_unique<MessagesSender>(
+                settings_.credentials, privKeyProvider_, session, httpClient);
+    messagesSender_->events.messageModified =
+            forwardEvent(events.messageModified);
+    messagesSender_->events.progressed =
+            [this](SyncOutgoingMessagesProgress progress)
+    {
+        progress_.outgoingMessages = progress;
+        EMIT(events.progressed, progress_);
+    };
+
+    messagesSender_->run(shouldCancel, progress_.outgoingMessages.uploadedBytes);
 
     // sync inbox
     if (mode != SyncMode::SendOnly)
@@ -99,16 +117,15 @@ void Syncer::run(
         messagesSyncer_->events.conversationModified =
             forwardEvent(events.conversationModified);
         messagesSyncer_->events.progressed =
-                [this](SyncMessagesProgress progress)
+                [this](SyncIncomingMessagesProgress progress)
         {
-            progress_.messages = progress;
-            Log.d() << "Sync progress: " << progress_;
+            progress_.incomingMessages = progress;
             EMIT(events.progressed, progress_);
         };
         messagesSyncer_->events.finished =
-                [this](SyncMessagesProgress progress)
+                [this](SyncIncomingMessagesProgress progress)
         {
-            progress_.messages = progress;
+            progress_.incomingMessages = progress;
         };
 
         profileSyncer_->run(shouldCancel);
@@ -118,10 +135,17 @@ void Syncer::run(
         if (mode == SyncMode::Everything)
         {
             attachmentSyncer_.reset(
-                        new AttachmentSyncer(settings_.credentials, session, httpClient));
+                        new AttachmentSyncer(
+                            settings_.credentials, session, httpClient));
 
             attachmentSyncer_->events.messageAttachmentsDownloaded =
                 forwardEvent(events.messageAttachmentsDownloaded);
+            attachmentSyncer_->events.progressed =
+                    [this](SyncIncomingAttachmentsProgress progress)
+            {
+                progress_.incomingAttachments = progress;
+                EMIT(events.progressed, progress_);
+            };
 
             attachmentSyncer_->run(shouldCancel);
         }

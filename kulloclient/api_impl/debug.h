@@ -6,6 +6,7 @@
 #include "kulloclient/api/Address.h"
 #include "kulloclient/api/DeliveryReason.h"
 #include "kulloclient/api/DeliveryState.h"
+#include "kulloclient/api/DraftPart.h"
 #include "kulloclient/api/LocalError.h"
 #include "kulloclient/api/NetworkError.h"
 #include "kulloclient/util/assert.h"
@@ -57,12 +58,29 @@ inline std::ostream &operator<<(std::ostream &os, Api::DeliveryState value)
     return os;
 }
 
+inline std::ostream &operator<<(std::ostream &os, Api::DraftPart value)
+{
+    switch (value)
+    {
+    case Api::DraftPart::Attachments:
+        os << "Attachments";
+        break;
+    case Api::DraftPart::Content:
+        os << "Content";
+        break;
+    }
+    return os;
+}
+
 inline std::ostream &operator<<(std::ostream &os, Api::LocalError value)
 {
     switch (value)
     {
     case Api::LocalError::Filesystem:
         os << "Filesystem";
+        break;
+    case Api::LocalError::FileTooBig:
+        os << "FileTooBig";
         break;
     case Api::LocalError::Unknown:
         os << "Unknown";

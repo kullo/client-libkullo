@@ -5,6 +5,7 @@
 
 #include "kulloclient/dao/attachmentdao.h"
 #include "kulloclient/util/librarylogger.h"
+#include "kulloclient/util/misc.h"
 
 namespace Kullo {
 namespace ApiImpl {
@@ -24,11 +25,9 @@ void AttachmentsContentWorker::work()
 
     std::vector<uint8_t> content;
 
-    // copy attachment from filesystem to DB
     {
         auto session = Db::makeSession(sessionConfig_);
-        SmartSqlite::ScopedTransaction tx(session);
-        (void)tx;  // RAII only
+        SmartSqlite::ScopedTransaction tx(session); K_RAII(tx);
 
         auto isDraft = isDraft_ ? Dao::IsDraft::Yes : Dao::IsDraft::No;
         auto dao = Dao::AttachmentDao::load(

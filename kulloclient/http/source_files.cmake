@@ -11,4 +11,5 @@ http/RequestListener.h
 http/Response.h
 http/ResponseError.h
 http/ResponseListener.h
+http/TransferProgress.h
 )

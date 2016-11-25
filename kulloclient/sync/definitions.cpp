@@ -3,36 +3,82 @@
 
 #include <iomanip>
 
-#include "kulloclient/util/formatstring.h"
+#include "kulloclient/util/strings.h"
 
 namespace Kullo {
 namespace Sync {
 
-std::ostream &operator<<(std::ostream &out, const SyncMessagesProgress &rhs)
+namespace {
+std::string percentStr(int64_t part, int64_t whole)
 {
-    if (rhs.countTotal > 0)
-    {
-        const auto ratio = (float) rhs.countProcessed / rhs.countTotal;
+    if (whole <= 0) return "?%";
 
-        std::stringstream percent;
-        percent << std::fixed << std::setprecision(1)
-                << 100 * ratio << "%";
-        out << "[" << percent.str() << "] ";
-    }
+    auto ratio = (float)part / whole;
+    std::stringstream result;
+    result << std::fixed << std::setprecision(1) << 100 * ratio << "%";
+    return result.str();
+}
+}
 
-    out << "processed: "  << rhs.countProcessed << ", "
-        << "total: "      << rhs.countTotal << ", "
-        << "new unread: " << rhs.countNewUnread << ", "
-        << "modified: "   << rhs.countModified << ", "
-        << "deleted: "    << rhs.countDeleted;
+bool SyncIncomingAttachmentsProgress::operator==(
+        const SyncIncomingAttachmentsProgress &other) const
+{
+    return other.downloadedBytes == downloadedBytes
+            && other.totalBytes == totalBytes;
+}
+
+bool SyncIncomingAttachmentsProgress::operator!=(
+        const SyncIncomingAttachmentsProgress &other) const
+{
+    return !(*this==other);
+}
+
+bool SyncOutgoingMessagesProgress::operator==(
+        const SyncOutgoingMessagesProgress &other) const
+{
+    return other.uploadedBytes == uploadedBytes
+            && other.totalBytes == totalBytes;
+}
+
+bool SyncOutgoingMessagesProgress::operator!=(
+        const SyncOutgoingMessagesProgress &other) const
+{
+    return !(*this==other);
+}
+
+std::ostream &operator<<(std::ostream &out, const SyncIncomingMessagesProgress &rhs)
+{
+    out << "incoming messages: "
+        << rhs.processedMessages << "/" << rhs.totalMessages << " "
+        << "(" << percentStr(rhs.processedMessages, rhs.totalMessages) << "), "
+        << "new unread: " << rhs.newUnreadMessages << ", "
+        << "modified: "   << rhs.modifiedMessages << ", "
+        << "deleted: "    << rhs.deletedMessages;
+    return out;
+}
+
+std::ostream &operator<<(std::ostream &out, const SyncIncomingAttachmentsProgress &rhs)
+{
+    out << "incoming attachments: "
+        << rhs.downloadedBytes << "/" << rhs.totalBytes
+        << "B (" << percentStr(rhs.downloadedBytes, rhs.totalBytes) << ")";
+    return out;
+}
+
+std::ostream &operator<<(std::ostream &out, const SyncOutgoingMessagesProgress &rhs)
+{
+    out << "outgoing messages: "
+        << rhs.uploadedBytes << "/" << rhs.totalBytes
+        << "B (" << percentStr(rhs.uploadedBytes, rhs.totalBytes) << ")";
     return out;
 }
 
 std::ostream &operator<<(std::ostream &out, const SyncProgress &rhs)
 {
-    out << rhs.messages << ", runtime: "
-        << Util::FormatString::formatIntegerWithCommas(rhs.runTimeMs).c_str()
-        << "ms";
+    out << rhs.incomingMessages << ", "
+        << rhs.incomingAttachments << ", "
+        << rhs.outgoingMessages << ", "
+        << "runtime: " << Util::Strings::formatReadable(rhs.runTimeMs) << "ms";
     return out;
 }
 

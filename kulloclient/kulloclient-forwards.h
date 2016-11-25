@@ -58,7 +58,9 @@ namespace Kullo {
         class ProfileSyncer;
 
         enum struct SyncMode;
-        struct SyncMessagesProgress;
+        struct SyncIncomingMessagesProgress;
+        struct SyncIncomingAttachmentsProgress;
+        struct SyncOutgoingMessagesProgress;
         struct SyncProgress;
     }
     namespace Util {

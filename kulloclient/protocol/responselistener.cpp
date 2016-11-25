@@ -9,25 +9,18 @@ namespace Protocol {
 
 ResponseListener::ResponseListener()
     : Http::ResponseListener(),
-      dataReceived_([](const std::vector<uint8_t> &){}),
-      shouldCancel_([](){return false;})
+      progressed_([](const Http::TransferProgress &)
+        {
+            return Http::ProgressResult::Continue;
+        }),
+      dataReceived_([](const std::vector<uint8_t> &){})
 {
 }
 
-Http::ProgressResult ResponseListener::progress(
-        int64_t uploadTransferred, int64_t uploadTotal,
-        int64_t downloadTransferred, int64_t downloadTotal)
+Http::ProgressResult ResponseListener::progressed(
+        const Http::TransferProgress &progress)
 {
-    K_UNUSED(uploadTransferred);
-    K_UNUSED(uploadTotal);
-    K_UNUSED(downloadTransferred);
-    K_UNUSED(downloadTotal);
-
-    if (shouldCancel_())
-    {
-        return Http::ProgressResult::Cancel;
-    }
-    return Http::ProgressResult::Continue;
+    return progressed_(progress);
 }
 
 void ResponseListener::dataReceived(const std::vector<uint8_t> &data)
@@ -41,10 +34,10 @@ void ResponseListener::setDataReceived(
     dataReceived_ = func;
 }
 
-void ResponseListener::setShouldCancel(
-        const ResponseListener::ShouldCancel &func)
+void ResponseListener::setProgressed(
+        const ResponseListener::Progressed &func)
 {
-    shouldCancel_ = func;
+    progressed_ = func;
 }
 
 }

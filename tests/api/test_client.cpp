@@ -40,6 +40,12 @@ namespace {
 class LoginListener : public Api::ClientCreateSessionListener
 {
 public:
+    void migrationStarted(const std::shared_ptr<Api::Address> &address) override
+    {
+        (void)address;
+        didMigrate_ = true;
+    }
+
     void finished(const std::shared_ptr<Api::Session> &session) override
     {
         isFinished_ = true;
@@ -54,6 +60,7 @@ public:
         (void)error;
     }
 
+    bool didMigrate_ = false;
     bool isFinished_ = false;
     std::shared_ptr<Api::Session> session_;
 };
@@ -197,7 +204,15 @@ K_TEST_F(ApiClient, createSessionAsyncWorks)
 
     ASSERT_THAT(TestUtil::waitAndCheck(task, listener->isFinished_),
                 Eq(TestUtil::OK));
-    ASSERT_THAT(listener->session_, Not(IsNull()));
+    EXPECT_THAT(listener->didMigrate_, Eq(true));
+    EXPECT_THAT(listener->session_, Not(IsNull()));
+
+    // re-run create session on existing DB, should not migrate
+    listener = std::make_shared<LoginListener>();
+    task = uut->createSessionAsync(address_, masterKey_, dbPath, sessionListener, listener);
+    ASSERT_THAT(TestUtil::waitAndCheck(task, listener->isFinished_),
+                Eq(TestUtil::OK));
+    EXPECT_THAT(listener->didMigrate_, Eq(false));
 }
 
 K_TEST_F(ApiClient, addressExistsAsyncFailsOnNull)

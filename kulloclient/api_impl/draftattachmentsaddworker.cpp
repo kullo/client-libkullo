@@ -1,6 +1,7 @@
 /* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
 #include "kulloclient/api_impl/draftattachmentsaddworker.h"
 
+#include <boost/optional.hpp>
 #include <smartsqlite/scopedtransaction.h>
 
 #include "kulloclient/api_impl/exception_conversion.h"
@@ -10,7 +11,9 @@
 #include "kulloclient/util/exceptions.h"
 #include "kulloclient/util/filesystem.h"
 #include "kulloclient/util/librarylogger.h"
+#include "kulloclient/util/limits.h"
 #include "kulloclient/util/scopedbenchmark.h"
+#include "kulloclient/util/strings.h"
 
 namespace Kullo {
 namespace ApiImpl {
@@ -42,6 +45,24 @@ void DraftAttachmentsAddWorker::work()
                         std::string("File doesn't exist: ") + path_);
         }
 
+        auto session = Db::makeSession(sessionConfig_);
+        auto sizeOfExisting = Dao::AttachmentDao::sizeOfAllForMessage(
+                    Dao::IsDraft::Yes, convId_, session);
+        auto newAttachmentSize = Util::Filesystem::fileSize(path_);
+        auto totalSize = sizeOfExisting + newAttachmentSize;
+        if (totalSize > Util::MESSAGE_ATTACHMENTS_MAX_BYTES)
+        {
+            throw Util::FileTooBigError(
+                        std::string("Existing attachments: ") +
+                        Util::Strings::formatReadable(sizeOfExisting) + ", " +
+                        "new attachment: " +
+                        Util::Strings::formatReadable(newAttachmentSize) + ", " +
+                        "sum: " +
+                        Util::Strings::formatReadable(totalSize) + ", " +
+                        "allowed: " +
+                        Util::Strings::formatReadable(Util::MESSAGE_ATTACHMENTS_MAX_BYTES));
+        }
+
         uint64_t attachmentId;
 
         // copy attachment from filesystem to DB
@@ -50,9 +71,7 @@ void DraftAttachmentsAddWorker::work()
             K_RAII(benchmark);
 
             auto istream = Util::Filesystem::makeIfstream(path_);
-            auto hash = Crypto::Hasher::sha512Hex(*istream);
 
-            auto session = Db::makeSession(sessionConfig_);
             SmartSqlite::ScopedTransaction tx(session, SmartSqlite::Immediate);
 
             attachmentId = Dao::AttachmentDao::idForNewDraftAttachment(
@@ -64,13 +83,24 @@ void DraftAttachmentsAddWorker::work()
             dao.setIndex(attachmentId);
             dao.setFilename(Util::Filesystem::filename(path_));
             dao.setMimeType(mimeType_);
-            dao.setSize(Util::Filesystem::fileSize(path_));
-            dao.setHash(hash);
+            dao.setSize(newAttachmentSize);
             dao.save();
 
-            istream->clear();
-            istream->seekg(0);
-            dao.setContent(*istream);
+            Crypto::Sha512Hasher hasher;
+            boost::optional<Dao::Progress> lastListenerCall;
+            const auto LISTENER_CALL_INTERVAL = 2*1024*1024; /* 2 MiB */
+            dao.setContent(*istream, [&](const unsigned char *data, std::size_t length, const Dao::Progress &progress) -> void {
+                hasher.update(data, length);
+
+                if (!lastListenerCall ||
+                        lastListenerCall->bytesProcessed+LISTENER_CALL_INTERVAL < progress.bytesProcessed)
+                {
+                    //Log.d() << progress.bytesProcessed;
+                    lastListenerCall = progress;
+                }
+            });
+            dao.setHash(hasher.hexDigest());
+            dao.save();
 
             tx.commit();
         }

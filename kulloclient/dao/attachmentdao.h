@@ -2,6 +2,7 @@
 #pragma once
 
 #include <cstdint>
+#include <functional>
 #include <istream>
 #include <memory>
 #include <string>
@@ -16,6 +17,11 @@ namespace Kullo {
 namespace Dao {
 
 typedef Result<AttachmentDao> AttachmentResult;
+
+struct Progress {
+    std::size_t bytesProcessed;
+    std::size_t bytesTotal;
+};
 
 /**
  * @brief Data Access Object for message/draft attachments
@@ -49,6 +55,9 @@ public:
      * @param messageId Message ID if draft == false, conversation ID otherwise.
      */
     static std::unique_ptr<AttachmentResult> allForMessage(IsDraft draft, id_type messageId, Db::SharedSessionPtr session);
+
+    static std::size_t sizeOfAllForMessage(IsDraft draft, id_type messageId, Db::SharedSessionPtr session);
+    static std::size_t sizeOfAllDownloadable(Db::SharedSessionPtr session);
 
     /**
      * @brief Get a list of all message or draft attachments.
@@ -132,8 +141,11 @@ public:
      * @brief Loads the attachment content from a stream. Size must have been
      * set previously.
      * @param input the input stream
+     * @param callback the callback called after every chunk of data
      */
-    void setContent(std::istream &input);
+    void setContent(std::istream &input,
+                    const std::function<void(const unsigned char *data, std::size_t length, const Progress &progress)> &callback =
+            [](const unsigned char *, std::size_t, const Progress &) -> void {});
 
     /// Get the textual note that is attached to each attachment
     std::string note() const;

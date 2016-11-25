@@ -9,6 +9,7 @@
 #include "kulloclient/crypto/symmetriccryptor.h"
 #include "kulloclient/crypto/symmetrickeygenerator.h"
 #include "kulloclient/util/binary.h"
+#include "kulloclient/util/limits.h"
 
 using namespace Kullo::Util;
 
@@ -39,6 +40,7 @@ std::vector<unsigned char> MessageEncryptor::encryptMeta(
     auto ciphertext = Crypto::SymmetricCryptor().encrypt(
                 plaintext, key, iv, Crypto::PrependIV::True);
     ciphertext.insert(ciphertext.begin(), version.cbegin(), version.cend());
+    kulloAssert(ciphertext.size() <= MESSAGE_META_MAX_BYTES);
     return ciphertext;
 }
 

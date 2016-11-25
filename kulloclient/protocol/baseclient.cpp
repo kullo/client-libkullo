@@ -3,10 +3,12 @@
 
 #include <iterator>
 #include <sstream>
+#include <boost/optional.hpp>
 #include <jsoncpp/jsoncpp.h>
 
 #include "kulloclient/registry.h"
 #include "kulloclient/crypto/symmetrickeygenerator.h"
+#include "kulloclient/http/ProgressResult.h"
 #include "kulloclient/protocol/exceptions.h"
 #include "kulloclient/protocol/debug.h"
 #include "kulloclient/protocol/requestlistener.h"
@@ -81,11 +83,18 @@ std::string BaseClient::baseUserUrl(const Util::KulloAddress *address)
 }
 
 std::vector<Http::HttpHeader> BaseClient::makeHeaders(
-        BaseClient::Authenticated auth, const std::string &contentType)
+        BaseClient::Authenticated auth,
+        const std::string &contentType,
+        boost::optional<std::size_t> contentLength)
 {
     std::vector<Http::HttpHeader> headers;
     headers.emplace_back("User-Agent", Util::Version::userAgent());
     headers.emplace_back("Content-Type", contentType);
+
+    if (contentLength)
+    {
+        headers.emplace_back("Content-Length", std::to_string(*contentLength));
+    }
 
     if (auth == Authenticated::True)
     {
@@ -103,9 +112,11 @@ std::vector<Http::HttpHeader> BaseClient::makeHeaders(
     return headers;
 }
 
-Http::Response BaseClient::sendRequest(const Http::Request &request)
+Http::Response BaseClient::sendRequest(
+        const Http::Request &request,
+        const boost::optional<ProgressHandler> &onProgress)
 {
-    return doSendRequest(request, nullptr);
+    return doSendRequest(request, nullptr, onProgress);
 }
 
 Http::Response BaseClient::sendRequest(
@@ -123,9 +134,11 @@ Http::Response BaseClient::sendRequest(
 }
 
 Http::Response BaseClient::sendRequest(
-        const Http::Request &request, const std::string &reqBody)
+        const Http::Request &request,
+        const std::string &reqBody,
+        const boost::optional<ProgressHandler> &onProgress)
 {
-    return doSendRequest(request, &reqBody);
+    return doSendRequest(request, &reqBody, onProgress);
 }
 
 void BaseClient::throwOnError(const Http::Response &response)
@@ -181,7 +194,8 @@ Json::Value BaseClient::parseJsonBody()
 }
 
 Http::Response BaseClient::doSendRequest(
-        const Http::Request &request, const std::string *reqBody)
+        const Http::Request &request, const std::string *reqBody,
+        const boost::optional<ProgressHandler> onProgress)
 {
     canceled_ = false;
 
@@ -220,9 +234,18 @@ Http::Response BaseClient::doSendRequest(
         std::copy(data.cbegin(), data.cend(),
                   std::back_inserter(responseBody_));
     });
-    respL->setShouldCancel([this]() -> bool
+    respL->setProgressed(
+                [this, onProgress]
+                (const Http::TransferProgress &progress)
+                -> Http::ProgressResult
     {
-        return canceled_;
+        if (onProgress)
+        {
+            (*onProgress)(progress);
+        }
+        return canceled_
+                ? Http::ProgressResult::Cancel
+                : Http::ProgressResult::Continue;
     });
 
     Log.i() << request;

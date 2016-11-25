@@ -8,6 +8,8 @@
 namespace Kullo { namespace Api {
 
 enum class LocalError : int {
+    /** File is too big */
+    FileTooBig,
     /** Couldn't read or write to file */
     Filesystem,
     /** Any other error */

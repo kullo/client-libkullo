@@ -12,8 +12,8 @@
 #include "kulloclient/event/conversationwillberemovedevent.h"
 #include "kulloclient/event/sendapieventsevent.h"
 #include "kulloclient/util/assert.h"
-#include "kulloclient/util/formatstring.h"
 #include "kulloclient/util/misc.h"
+#include "kulloclient/util/strings.h"
 
 namespace Kullo {
 namespace ApiImpl {

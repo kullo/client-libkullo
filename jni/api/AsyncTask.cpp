@@ -15,7 +15,7 @@ CJNIEXPORT void JNICALL Java_net_kullo_libkullo_api_AsyncTask_00024CppProxy_nati
 {
     try {
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
-        delete reinterpret_cast<djinni::CppProxyHandle<::Kullo::Api::AsyncTask>*>(nativeRef);
+        delete reinterpret_cast<::djinni::CppProxyHandle<::Kullo::Api::AsyncTask>*>(nativeRef);
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, )
 }
 
