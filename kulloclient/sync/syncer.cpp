@@ -44,15 +44,18 @@ void Syncer::run(
 
     auto httpClient = Registry::httpClientFactory()->createHttpClient();
 
-    // get size estimates for progress
-    messagesUploader_ = make_unique<MessagesUploader>(
-                settings_, privKeyProvider_, session, httpClient);
-    progress_.outgoingMessages = messagesUploader_->initialProgress();
-    EMIT(events.progressed, progress_);
-
     // sync keys
+    progress_.phase = SyncPhase::Keys;
+    EMIT(events.progressed, progress_);
     keysSyncer_.reset(new KeysSyncer(settings_.credentials, session, httpClient));
     keysSyncer_->run(shouldCancel);
+
+    // get upload size estimates for progress
+    messagesUploader_ = make_unique<MessagesUploader>(
+                settings_, privKeyProvider_, session, httpClient);
+    progress_.phase = SyncPhase::OutgoingMessages;
+    progress_.outgoingMessages = messagesUploader_->initialProgress();
+    EMIT(events.progressed, progress_);
 
     // upload outgoing messages
     messagesUploader_->events.conversationAdded =
@@ -128,7 +131,12 @@ void Syncer::run(
             progress_.incomingMessages = progress;
         };
 
+        progress_.phase = SyncPhase::Profile;
+        EMIT(events.progressed, progress_);
         profileSyncer_->run(shouldCancel);
+
+        progress_.phase = SyncPhase::IncomingMessages;
+        EMIT(events.progressed, progress_);
         messagesSyncer_->run(shouldCancel);
 
         // sync attachments
@@ -147,6 +155,8 @@ void Syncer::run(
                 EMIT(events.progressed, progress_);
             };
 
+            progress_.phase = SyncPhase::IncomingAttachments;
+            EMIT(events.progressed, progress_);
             attachmentSyncer_->run(shouldCancel);
         }
     }

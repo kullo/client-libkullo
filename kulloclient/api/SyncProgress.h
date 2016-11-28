@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "kulloclient/api/SyncPhase.h"
 #include <cstdint>
 #include <utility>
 
@@ -10,6 +11,7 @@ namespace Kullo { namespace Api {
 
 /** Encodes a progress update during syncing. Unknown totals are set to 0. */
 struct SyncProgress final {
+    SyncPhase phase;
     /** inbox (unit: messages) */
     int64_t incomingMessagesProcessed;
     int64_t incomingMessagesTotal;
@@ -26,7 +28,8 @@ struct SyncProgress final {
     /** Run time of the current sync (unit: milliseconds) */
     int64_t runTimeMs;
 
-    SyncProgress(int64_t incomingMessagesProcessed_,
+    SyncProgress(SyncPhase phase_,
+                 int64_t incomingMessagesProcessed_,
                  int64_t incomingMessagesTotal_,
                  int64_t incomingMessagesNew_,
                  int64_t incomingMessagesNewUnread_,
@@ -37,7 +40,8 @@ struct SyncProgress final {
                  int64_t outgoingMessagesUploadedBytes_,
                  int64_t outgoingMessagesTotalBytes_,
                  int64_t runTimeMs_)
-    : incomingMessagesProcessed(std::move(incomingMessagesProcessed_))
+    : phase(std::move(phase_))
+    , incomingMessagesProcessed(std::move(incomingMessagesProcessed_))
     , incomingMessagesTotal(std::move(incomingMessagesTotal_))
     , incomingMessagesNew(std::move(incomingMessagesNew_))
     , incomingMessagesNewUnread(std::move(incomingMessagesNewUnread_))

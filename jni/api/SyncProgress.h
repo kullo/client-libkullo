@@ -25,7 +25,8 @@ private:
     friend ::djinni::JniClass<SyncProgress>;
 
     const ::djinni::GlobalRef<jclass> clazz { ::djinni::jniFindClass("net/kullo/libkullo/api/SyncProgress") };
-    const jmethodID jconstructor { ::djinni::jniGetMethodID(clazz.get(), "<init>", "(JJJJJJJJJJJ)V") };
+    const jmethodID jconstructor { ::djinni::jniGetMethodID(clazz.get(), "<init>", "(Lnet/kullo/libkullo/api/SyncPhase;JJJJJJJJJJJ)V") };
+    const jfieldID field_phase { ::djinni::jniGetFieldID(clazz.get(), "phase", "Lnet/kullo/libkullo/api/SyncPhase;") };
     const jfieldID field_incomingMessagesProcessed { ::djinni::jniGetFieldID(clazz.get(), "incomingMessagesProcessed", "J") };
     const jfieldID field_incomingMessagesTotal { ::djinni::jniGetFieldID(clazz.get(), "incomingMessagesTotal", "J") };
     const jfieldID field_incomingMessagesNew { ::djinni::jniGetFieldID(clazz.get(), "incomingMessagesNew", "J") };

@@ -81,6 +81,7 @@ api/SessionAccountInfoListener.h
 api/SessionListener.cpp
 api/SessionListener.h
 api/SyncMode.h
+api/SyncPhase.h
 api/SyncProgress.cpp
 api/SyncProgress.h
 api/Syncer.cpp

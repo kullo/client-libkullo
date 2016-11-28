@@ -88,14 +88,23 @@ void DraftAttachmentsAddWorker::work()
 
             Crypto::Sha512Hasher hasher;
             boost::optional<Dao::Progress> lastListenerCall;
-            const auto LISTENER_CALL_INTERVAL = 2*1024*1024; /* 2 MiB */
+            const auto LISTENER_CALL_INTERVAL = 1*1024*1024; /* 1 MiB */
             dao.setContent(*istream, [&](const unsigned char *data, std::size_t length, const Dao::Progress &progress) -> void {
                 hasher.update(data, length);
 
                 if (!lastListenerCall ||
                         lastListenerCall->bytesProcessed+LISTENER_CALL_INTERVAL < progress.bytesProcessed)
                 {
-                    //Log.d() << progress.bytesProcessed;
+                    {
+                        std::lock_guard<std::mutex> lock(mutex_); K_RAII(lock);
+                        if (listener_)
+                        {
+                            listener_->progressed(convId_,
+                                                  attachmentId,
+                                                  progress.bytesProcessed,
+                                                  progress.bytesTotal);
+                        }
+                    }
                     lastListenerCall = progress;
                 }
             });

@@ -63,6 +63,11 @@ Tips and Tricks
 Changelog
 ---------
 
+### v58 (2016-11-26)
+
+ * Improve syncer signals
+ * Bugfix: send missing progressed signal when adding attachment
+
 ### v57 (2016-11-24)
 
  * Signal database migrations through the API

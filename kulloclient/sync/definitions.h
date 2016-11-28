@@ -8,6 +8,13 @@ namespace Kullo {
 namespace Sync {
 
 enum struct SyncMode { SendOnly, WithoutAttachments, Everything };
+enum struct SyncPhase {
+    Keys,
+    Profile,
+    IncomingMessages,
+    IncomingAttachments,
+    OutgoingMessages,
+};
 
 struct SyncIncomingMessagesProgress
 {
@@ -39,6 +46,7 @@ struct SyncOutgoingMessagesProgress
 
 struct SyncProgress
 {
+    SyncPhase phase;
     SyncIncomingMessagesProgress incomingMessages;
     SyncIncomingAttachmentsProgress incomingAttachments;
     SyncOutgoingMessagesProgress outgoingMessages;

@@ -36,7 +36,14 @@ bool Filesystem::isRegularFile(const std::string &path)
 
 size_t Filesystem::fileSize(const std::string &path)
 {
-    return boost::filesystem::file_size(K_WIDEN_IF_NEEDED(path));
+    try
+    {
+        return boost::filesystem::file_size(K_WIDEN_IF_NEEDED(path));
+    }
+    catch (boost::filesystem::filesystem_error &)
+    {
+        std::throw_with_nested(FilesystemError("Couldn't get size of " + path));
+    }
 }
 
 std::vector<unsigned char> Filesystem::getContent(const std::string &path)

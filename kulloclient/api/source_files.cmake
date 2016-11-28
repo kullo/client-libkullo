@@ -50,6 +50,7 @@ api/Session.h
 api/SessionAccountInfoListener.h
 api/SessionListener.h
 api/SyncMode.h
+api/SyncPhase.h
 api/SyncProgress.h
 api/Syncer.h
 api/SyncerListener.h

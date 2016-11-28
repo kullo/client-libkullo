@@ -182,6 +182,7 @@ void SyncerWorker::setupEvents()
         {
             Log.d() << "Sync progress: " << progress;
             listener_->progressed(Api::SyncProgress(
+                                      implToApi(progress.phase),
                                       progress.incomingMessages.processedMessages,
                                       progress.incomingMessages.totalMessages,
                                       progress.incomingMessages.newMessages,
