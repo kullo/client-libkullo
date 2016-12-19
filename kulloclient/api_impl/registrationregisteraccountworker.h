@@ -22,6 +22,7 @@ public:
             Crypto::SymmetricKey privateDataKey,
             Crypto::PrivateKey keypairEncryption,
             Crypto::PrivateKey keypairSignature,
+            const std::string &acceptedTerms,
             boost::optional<Protocol::Challenge> challenge,
             const std::string &challengeAnswer,
             std::shared_ptr<Api::RegistrationRegisterAccountListener> listener);
@@ -40,6 +41,7 @@ private:
     Crypto::SymmetricKey privateDataKey_;
     Crypto::PrivateKey keypairEncryption_;
     Crypto::PrivateKey keypairSignature_;
+    std::string acceptedTerms_;
 
     boost::optional<Protocol::Challenge> challenge_;
     std::string challengeAnswer_;

@@ -156,3 +156,15 @@ target_link_libraries(${target_name}
         smartsqlite
         z
 )
+
+if (APPLE)
+    find_library(CORE_FOUNDATION CoreFoundation)
+    if (NOT CORE_FOUNDATION)
+        message(FATAL ERROR "CoreFoundation not found")
+    endif()
+
+    target_link_libraries(${target_name}
+        PUBLIC
+            ${CORE_FOUNDATION}
+    )
+endif()

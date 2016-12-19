@@ -16,6 +16,7 @@
 #include "kulloclient/util/events.h"
 #include "kulloclient/util/librarylogger.h"
 #include "kulloclient/util/misc.h"
+#include "kulloclient/util/numeric_cast.h"
 
 using namespace Kullo::Util;
 
@@ -152,12 +153,12 @@ void MessagesSender::sendMessage(
                 // Remove the current upload's impact on the estimate,
                 // replace by value returned by the HTTP client.
                 //
-                // Make all variables signed to ensure no subtration is performed
-                // on unsigned ints causing an overflow.
+                // Make all variables signed to ensure no subtraction is
+                // performed on unsigned ints causing an overflow.
                 improvedEstimate =
-                        static_cast<int64_t>(estimatedRemaining_) -
-                        static_cast<int64_t>(estimatedSize) +
-                        static_cast<int64_t>(uploadTotal);
+                        Util::numeric_cast<int64_t>(estimatedRemaining_.load()) -
+                        Util::numeric_cast<int64_t>(estimatedSize) +
+                        Util::numeric_cast<int64_t>(uploadTotal);
             }
             else
             {

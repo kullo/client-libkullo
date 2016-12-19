@@ -23,6 +23,7 @@
 #include "kulloclient/util/librarylogger.h"
 #include "kulloclient/util/limits.h"
 #include "kulloclient/util/misc.h"
+#include "kulloclient/util/numeric_cast.h"
 #include "kulloclient/util/strings.h"
 
 using namespace Kullo::Dao;
@@ -131,12 +132,12 @@ void MessagesUploader::run(std::shared_ptr<std::atomic<bool>> shouldCancel)
                 // Remove the current upload's impact on the estimate,
                 // replace by value returned by the HTTP client.
                 //
-                // Make all variables signed to ensure no subtration is performed
-                // on unsigned ints causing an overflow.
+                // Make all variables signed to ensure no subtraction is
+                // performed on unsigned ints causing an overflow.
                 improvedEstimate =
-                        static_cast<int64_t>(estimatedRemaining_) -
-                        static_cast<int64_t>(totalSize) +
-                        static_cast<int64_t>(uploadTotal);
+                        Util::numeric_cast<int64_t>(estimatedRemaining_.load()) -
+                        Util::numeric_cast<int64_t>(totalSize) +
+                        Util::numeric_cast<int64_t>(uploadTotal);
             }
             else
             {

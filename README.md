@@ -63,6 +63,13 @@ Tips and Tricks
 Changelog
 ---------
 
+### v59 (2016-12-19)
+
+ * Add terms of service handling in registration
+ * Add OSX version to user agent
+ * Use Botan's HKDF expand operation (requires Botan 1.11.34)
+ * Bugfix: Draft without text was not sent in some situations
+
 ### v58 (2016-11-26)
 
  * Improve syncer signals

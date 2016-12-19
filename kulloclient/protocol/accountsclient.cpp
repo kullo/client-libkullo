@@ -25,11 +25,12 @@ boost::optional<Challenge> AccountsClient::registerAccount(
         const SymmetricKeys &symmKeys,
         const KeyPair &encKeys,
         const KeyPair &sigKeys,
+        const std::string &acceptedTerms,
         const boost::optional<Challenge> &challenge,
         const boost::optional<std::string> &challengeAnswer)
 {
     auto reqJson = makeRegistrationDocument(
-                address, symmKeys, encKeys, sigKeys,
+                address, symmKeys, encKeys, sigKeys, acceptedTerms,
                 challenge, challengeAnswer);
 
     try
@@ -58,6 +59,7 @@ Json::Value AccountsClient::makeRegistrationDocument(
         const SymmetricKeys &symmKeys,
         const KeyPair &encKeys,
         const KeyPair &sigKeys,
+        const std::string &acceptedTerms,
         const boost::optional<Challenge> &challenge,
         const boost::optional<std::string> &challengeAnswer)
 {
@@ -75,6 +77,7 @@ Json::Value AccountsClient::makeRegistrationDocument(
     reg["address"]           = address.toString();
     reg["loginKey"]          = symmKeys.loginKey;
     reg["privateDataKey"]    = Util::Base64::encode(symmKeys.privateDataKey);
+    reg["acceptedTerms"]     = acceptedTerms;
 
     if (challenge && challengeAnswer)
     {

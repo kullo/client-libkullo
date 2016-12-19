@@ -29,7 +29,7 @@ public:
      *
      * If no challenge is needed, set challengeAnswer to ""
      */
-    virtual std::shared_ptr<AsyncTask> registerAccountAsync(const std::shared_ptr<Address> & address, const std::shared_ptr<Challenge> & challenge, const std::string & challengeAnswer, const std::shared_ptr<RegistrationRegisterAccountListener> & listener) = 0;
+    virtual std::shared_ptr<AsyncTask> registerAccountAsync(const std::shared_ptr<Address> & address, const std::string & acceptedTerms, const std::shared_ptr<Challenge> & challenge, const std::string & challengeAnswer, const std::shared_ptr<RegistrationRegisterAccountListener> & listener) = 0;
 };
 
 } }  // namespace Kullo::Api

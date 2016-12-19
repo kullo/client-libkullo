@@ -18,6 +18,10 @@ public:
 
     virtual void finished(const std::shared_ptr<Address> & address, const std::shared_ptr<MasterKey> & masterKey, bool valid) = 0;
 
+    /**
+     * Network errors except NetworkError.Unauthorized, which is handled
+     * by finished()
+     */
     virtual void error(const std::shared_ptr<Address> & address, NetworkError error) = 0;
 };
 

@@ -6,33 +6,57 @@
 #include <jsoncpp/jsoncpp.h>
 #include <smartsqlite/version.h>
 
+namespace Kullo {
+namespace Util {
+
+namespace {
+
 #if defined __ANDROID__
-    #define KULLO_OS "Android"
+    const std::string KULLO_OS = "Android";
+    const std::string KULLO_OS_USERVERSION = "unknown";
 #elif defined __linux__
     #if defined __LP64__
-        #define KULLO_OS "Linux_x86_64"
+        const std::string KULLO_OS = "Linux_x86_64";
+        const std::string KULLO_OS_USERVERSION = "unknown";
     #else
-        #define KULLO_OS "Linux_x86_32"
+        const std::string KULLO_OS = "Linux_x86_32";
+        const std::string KULLO_OS_USERVERSION = "unknown";
     #endif
 #elif defined _WIN32 // is also defined on 64 bit
-    #define KULLO_OS "Windows"
+    const std::string KULLO_OS = "Windows";
+    const std::string KULLO_OS_USERVERSION = "unknown";
 #elif defined __APPLE__ && __MACH__
     #include "TargetConditionals.h"
     #if TARGET_OS_IPHONE
-        #define KULLO_OS "iOS"
+        const std::string KULLO_OS = "iOS";
+        const std::string KULLO_OS_USERVERSION = "unknown";
     #else
-        #define KULLO_OS "OSX"
+        const std::string KULLO_OS = "OSX";
+
+        #include <CoreFoundation/CoreFoundation.h>
+        std::string getOsxVersion() {
+            std::string out;
+            if (kCFCoreFoundationVersionNumber >= kCFCoreFoundationVersionNumber10_11) {
+                out = "10.11+";
+            } else if (kCFCoreFoundationVersionNumber >= kCFCoreFoundationVersionNumber10_10) {
+                out = "10.10";
+            } else if (kCFCoreFoundationVersionNumber >= kCFCoreFoundationVersionNumber10_9) {
+                out = "10.9";
+            } else {
+                out = "unknown";
+            }
+            return out;
+        }
+
+        const std::string KULLO_OS_USERVERSION = getOsxVersion();
     #endif
 #else
     #error unknown platform
 #endif
 
-namespace Kullo {
-namespace Util {
-
-namespace {
-const std::string LIBKULLO_VERSION = "v58";
-const std::string LIBKULLO_USER_AGENT = "libkulloclient/" + LIBKULLO_VERSION + " (" KULLO_OS ")";
+const std::string LIBKULLO_VERSION = "v59";
+const std::string LIBKULLO_USER_AGENT =
+        "libkulloclient/" + LIBKULLO_VERSION + " (" + KULLO_OS + "/" + KULLO_OS_USERVERSION + ")";
 }
 
 std::string Version::userAgent()

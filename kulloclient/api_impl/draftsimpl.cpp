@@ -11,6 +11,7 @@
 #include "kulloclient/event/draftremovedevent.h"
 #include "kulloclient/event/sendapieventsevent.h"
 #include "kulloclient/util/assert.h"
+#include "kulloclient/util/librarylogger.h"
 
 namespace Kullo {
 namespace ApiImpl {
@@ -87,29 +88,33 @@ void DraftsImpl::prepareToSend(int64_t convId)
     kulloAssert(convId >= Kullo::ID_MIN && convId <= Kullo::ID_MAX);
 
     auto draftIter = drafts_.find(convId);
-    if (draftIter != drafts_.end())
+    if (draftIter == drafts_.end())
     {
-        Dao::DraftDao &dao = draftIter->second;
-        auto &userSettings = sessionData_->userSettings_;
-
-        auto senderName = userSettings->name();
-        if (senderName.empty())
-        {
-            throw std::logic_error("UserSettings::name() must be non-empty");
-        }
-
-        dao.setState(Dao::DraftState::Sending);
-        dao.setFooter(userSettings->footer());
-        dao.setSenderName(senderName);
-        dao.setSenderOrganization(userSettings->organization());
-        dao.setSenderAvatar(userSettings->avatar());
-        dao.setSenderAvatarMimeType(userSettings->avatarMimeType());
-        dao.save();
-
-        Api::Event event(Api::EventType::DraftStateChanged, convId, -1, -1);
-        sessionListener_->internalEvent(
-                    std::make_shared<Event::SendApiEventsEvent>(event));
+        Dao::DraftDao dao(sessionData_->dbSession_);
+        dao.setConversationId(convId);
+        draftIter = drafts_.emplace(convId, std::move(dao)).first;
     }
+
+    Dao::DraftDao &dao = draftIter->second;
+    auto &userSettings = sessionData_->userSettings_;
+
+    auto senderName = userSettings->name();
+    if (senderName.empty())
+    {
+        throw std::logic_error("UserSettings::name() must be non-empty");
+    }
+
+    dao.setState(Dao::DraftState::Sending);
+    dao.setFooter(userSettings->footer());
+    dao.setSenderName(senderName);
+    dao.setSenderOrganization(userSettings->organization());
+    dao.setSenderAvatar(userSettings->avatar());
+    dao.setSenderAvatarMimeType(userSettings->avatarMimeType());
+    dao.save();
+
+    Api::Event event(Api::EventType::DraftStateChanged, convId, -1, -1);
+    sessionListener_->internalEvent(
+                std::make_shared<Event::SendApiEventsEvent>(event));
 }
 
 void DraftsImpl::clear(int64_t convId)

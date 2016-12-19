@@ -22,6 +22,7 @@ RegistrationImpl::RegistrationImpl(
 
 std::shared_ptr<Api::AsyncTask> RegistrationImpl::registerAccountAsync(
         const std::shared_ptr<Api::Address> &address,
+        const std::string &acceptedTerms,
         const std::shared_ptr<Api::Challenge> &challenge,
         const std::string &challengeAnswer,
         const std::shared_ptr<Api::RegistrationRegisterAccountListener> &listener)
@@ -36,6 +37,7 @@ std::shared_ptr<Api::AsyncTask> RegistrationImpl::registerAccountAsync(
                     *privateDataKey_,
                     *keypairEncryption_,
                     *keypairSignature_,
+                    acceptedTerms,
                     toHttpChallenge(challenge),
                     challengeAnswer,
                     listener));

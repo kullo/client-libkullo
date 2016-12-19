@@ -26,6 +26,7 @@ RegistrationRegisterAccountWorker::RegistrationRegisterAccountWorker(
         Crypto::SymmetricKey privateDataKey,
         Crypto::PrivateKey keypairEncryption,
         Crypto::PrivateKey keypairSignature,
+        const std::string &acceptedTerms,
         boost::optional<Protocol::Challenge> challenge,
         const std::string &challengeAnswer,
         std::shared_ptr<Api::RegistrationRegisterAccountListener> listener)
@@ -34,6 +35,7 @@ RegistrationRegisterAccountWorker::RegistrationRegisterAccountWorker(
     , privateDataKey_(privateDataKey)
     , keypairEncryption_(keypairEncryption)
     , keypairSignature_(keypairSignature)
+    , acceptedTerms_(acceptedTerms)
     , challenge_(challenge)
     , challengeAnswer_(challengeAnswer)
     , accountsClient_(Registry::httpClientFactory()->createHttpClient())
@@ -57,6 +59,7 @@ void RegistrationRegisterAccountWorker::work()
                     encodeSymmKeys(),
                     encodeKeyPair(keypairEncryption_),
                     encodeKeyPair(keypairSignature_),
+                    acceptedTerms_,
                     challenge_,
                     optionalChallengeAnswer);
         auto masterKey = std::make_shared<MasterKeyImpl>(masterKey_.toVector());

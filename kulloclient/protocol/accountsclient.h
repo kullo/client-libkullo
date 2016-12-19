@@ -21,6 +21,7 @@ public:
             const SymmetricKeys &symmKeys,
             const KeyPair &encKeys,
             const KeyPair &sigKeys,
+            const std::string &acceptedTerms,
             const boost::optional<Challenge> &challenge,
             const boost::optional<std::string> &challengeAnswer);
 
@@ -30,6 +31,7 @@ private:
             const SymmetricKeys &symmKeys,
             const KeyPair &encKeys,
             const KeyPair &sigKeys,
+            const std::string &acceptedTerms,
             const boost::optional<Challenge> &challenge,
             const boost::optional<std::string> &challengeAnswer);
 

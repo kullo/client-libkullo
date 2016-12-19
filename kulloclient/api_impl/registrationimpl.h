@@ -22,6 +22,7 @@ public:
 
     std::shared_ptr<Api::AsyncTask> registerAccountAsync(
             const std::shared_ptr<Api::Address> &address,
+            const std::string &acceptedTerms,
             const std::shared_ptr<Api::Challenge> &challenge,
             const std::string &challengeAnswer,
             const std::shared_ptr<Api::RegistrationRegisterAccountListener> &listener
