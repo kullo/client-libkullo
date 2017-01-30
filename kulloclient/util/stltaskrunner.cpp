@@ -1,4 +1,4 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #include "kulloclient/util/stltaskrunner.h"
 
 #include "kulloclient/api/Task.h"
@@ -17,15 +17,34 @@ namespace {
 const auto PRUNING_THRESHOLD = 25;
 }
 
+std::ostream & operator<<(std::ostream &os, const StlTaskRunnerState& state)
+{
+    std::string out;
+
+    switch (state) {
+    case StlTaskRunnerState::Active:
+        out = K_AS_STRING(StlTaskRunnerState::Active);
+        break;
+    case StlTaskRunnerState::Inactive:
+        out = K_AS_STRING(StlTaskRunnerState::Inactive);
+        break;
+    }
+
+    return os << out;
+}
+
 StlTaskRunner::~StlTaskRunner()
 {
-    kulloAssert(state_ == StlTaskRunnerSate::Inactive);
-    kulloAssert(futures_.empty());
+    if ((state_ != StlTaskRunnerState::Inactive) || !futures_.empty())
+    {
+        Log.e() << "StlTaskRunner misuse: state=" << state_
+                << " , futures.empty=" << futures_.empty();
+    }
 }
 
 void StlTaskRunner::runTaskAsync(const std::shared_ptr<Api::Task> &task)
 {
-    if (state_ == StlTaskRunnerSate::Inactive) return;
+    if (state_ == StlTaskRunnerState::Inactive) return;
 
     auto future = std::async(
                 std::launch::async,
@@ -60,7 +79,7 @@ void StlTaskRunner::runTaskAsync(const std::shared_ptr<Api::Task> &task)
 
 void StlTaskRunner::wait()
 {
-    kulloAssert(state_ == StlTaskRunnerSate::Active);
+    kulloAssert(state_ == StlTaskRunnerState::Active);
 
     ScopedBenchmark benchmark("Waiting for tasks to complete"); K_RAII(benchmark);
 
@@ -70,12 +89,12 @@ void StlTaskRunner::wait()
     }
     futures_.clear();
 
-    state_ = StlTaskRunnerSate::Inactive;
+    state_ = StlTaskRunnerState::Inactive;
 }
 
 void StlTaskRunner::reset()
 {
-    state_ = StlTaskRunnerSate::Active;
+    state_ = StlTaskRunnerState::Active;
 }
 
 void StlTaskRunner::pruneFinishedTasks()

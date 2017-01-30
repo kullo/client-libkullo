@@ -1,15 +1,15 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #pragma once
 
 #include <atomic>
 #include <deque>
 
 #include "kulloclient/api/AsyncTask.h"
-#include "kulloclient/api/DateTime.h"
 #include "kulloclient/api/SessionListener.h"
 #include "kulloclient/api/Syncer.h"
 #include "kulloclient/api/SyncerListener.h"
 #include "kulloclient/api/SyncMode.h"
+#include "kulloclient/api_impl/DateTime.h"
 #include "kulloclient/api_impl/sessiondata.h"
 
 namespace Kullo {

@@ -141,12 +141,13 @@ CJNIEXPORT jstring JNICALL Java_net_kullo_libkullo_api_Messages_00024CppProxy_na
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, 0 /* value doesn't matter */)
 }
 
-CJNIEXPORT jstring JNICALL Java_net_kullo_libkullo_api_Messages_00024CppProxy_native_1textAsHtml(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef, jlong j_msgId)
+CJNIEXPORT jstring JNICALL Java_net_kullo_libkullo_api_Messages_00024CppProxy_native_1textAsHtml(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef, jlong j_msgId, jboolean j_includeKulloAddresses)
 {
     try {
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
         const auto& ref = ::djinni::objectFromHandleAddress<::Kullo::Api::Messages>(nativeRef);
-        auto r = ref->textAsHtml(::djinni::I64::toCpp(jniEnv, j_msgId));
+        auto r = ref->textAsHtml(::djinni::I64::toCpp(jniEnv, j_msgId),
+                                 ::djinni::Bool::toCpp(jniEnv, j_includeKulloAddresses));
         return ::djinni::release(::djinni::String::fromCpp(jniEnv, r));
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, 0 /* value doesn't matter */)
 }

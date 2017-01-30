@@ -22,6 +22,9 @@ public:
     /**
      * Register a new account.
      *
+     * acceptedTerms is the url of the accepted terms of service.
+     * Set null if no terms are accepted.
+     *
      * Set challenge to the value passed to
      * RegistrationRegisterAccountListener::challengeNeeded if you recently sent
      * a registration request for the same address that failed because of a
@@ -29,7 +32,7 @@ public:
      *
      * If no challenge is needed, set challengeAnswer to ""
      */
-    virtual std::shared_ptr<AsyncTask> registerAccountAsync(const std::shared_ptr<Address> & address, const std::string & acceptedTerms, const std::shared_ptr<Challenge> & challenge, const std::string & challengeAnswer, const std::shared_ptr<RegistrationRegisterAccountListener> & listener) = 0;
+    virtual std::shared_ptr<AsyncTask> registerAccountAsync(const std::shared_ptr<Address> & address, const boost::optional<std::string> & acceptedTerms, const std::shared_ptr<Challenge> & challenge, const std::string & challengeAnswer, const std::shared_ptr<RegistrationRegisterAccountListener> & listener) = 0;
 };
 
 } }  // namespace Kullo::Api

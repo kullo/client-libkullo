@@ -1,4 +1,4 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #include "kulloclient/api_impl/syncerworker.h"
 
 #include <exception>
@@ -19,6 +19,7 @@
 #include "kulloclient/sync/exceptions.h"
 #include "kulloclient/util/assert.h"
 #include "kulloclient/util/librarylogger.h"
+#include "kulloclient/util/multithreading.h"
 
 namespace Kullo {
 namespace ApiImpl {
@@ -43,10 +44,8 @@ void SyncerWorker::work()
 
     try
     {
-        std::unique_lock<std::mutex> lock(mutex_);
-        if (auto listener = listener_)
+        if (auto listener = safeListener())
         {
-            lock.unlock();
             listener->started();
         }
         doWork();
@@ -60,20 +59,16 @@ void SyncerWorker::work()
     {
         Log.e() << "SyncerWorker failed: " << Util::formatException(ex);
 
-        std::unique_lock<std::mutex> lock(mutex_);
-        if (auto listener = listener_)
+        if (auto listener = safeListener())
         {
-            lock.unlock();
             listener->error(toNetworkError(std::current_exception()));
         }
         return;
     }
 
     {
-        std::unique_lock<std::mutex> lock(mutex_);
-        if (auto listener = listener_)
+        if (auto listener = safeListener())
         {
-            lock.unlock();
             listener->finished();
         }
     }
@@ -159,12 +154,12 @@ void SyncerWorker::setupEvents()
             std::size_t size,
             std::size_t maxSize)
     {
-        std::lock_guard<std::mutex> lock(mutex_); K_RAII(lock);
-        if (listener_)
+        K_UNUSED(size);
+        K_UNUSED(maxSize);
+
+        if (auto listener = safeListener())
         {
-            K_UNUSED(size);
-            K_UNUSED(maxSize);
-            listener_->draftPartTooBig(conversationId, part, size, maxSize);
+            listener->draftPartTooBig(conversationId, part, size, maxSize);
         }
     };
 
@@ -177,11 +172,10 @@ void SyncerWorker::setupEvents()
     syncer_.events.progressed =
             [this](Sync::SyncProgress progress)
     {
-        std::lock_guard<std::mutex> lock(mutex_); K_RAII(lock);
-        if (listener_)
+        if (auto listener = safeListener())
         {
             Log.d() << "Sync progress: " << progress;
-            listener_->progressed(Api::SyncProgress(
+            listener->progressed(Api::SyncProgress(
                                       implToApi(progress.phase),
                                       progress.incomingMessages.processedMessages,
                                       progress.incomingMessages.totalMessages,
@@ -202,11 +196,15 @@ void SyncerWorker::setupEvents()
 void SyncerWorker::sendEvent(
         const std::shared_ptr<Api::InternalEvent> &event)
 {
-    std::lock_guard<std::mutex> lock(mutex_); K_RAII(lock);
-    if (sessionListener_)
+    if (auto sessionListener = Util::copyGuardedByMutex(sessionListener_, mutex_))
     {
-        sessionListener_->internalEvent(event);
+        sessionListener->internalEvent(event);
     }
+}
+
+std::shared_ptr<Api::SyncerListener> SyncerWorker::safeListener()
+{
+    return Util::copyGuardedByMutex(listener_, mutex_);
 }
 
 }

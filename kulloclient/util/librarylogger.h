@@ -1,4 +1,4 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #pragma once
 
 #include <functional>
@@ -49,6 +49,8 @@ public:
     )>;
 
     LibraryLogger(const char *file, int line, const char *function);
+    LibraryLogger(LibraryLogger &&other) = default;
+    LibraryLogger& operator=(LibraryLogger &&other) = default;
     ~LibraryLogger();
 
     LibraryLogger &f();

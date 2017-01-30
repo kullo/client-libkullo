@@ -1,4 +1,4 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #include "kulloclient/protocol/accountsclient.h"
 
 #include <jsoncpp/jsoncpp.h>
@@ -25,7 +25,7 @@ boost::optional<Challenge> AccountsClient::registerAccount(
         const SymmetricKeys &symmKeys,
         const KeyPair &encKeys,
         const KeyPair &sigKeys,
-        const std::string &acceptedTerms,
+        const boost::optional<std::string> &acceptedTerms,
         const boost::optional<Challenge> &challenge,
         const boost::optional<std::string> &challengeAnswer)
 {
@@ -59,7 +59,7 @@ Json::Value AccountsClient::makeRegistrationDocument(
         const SymmetricKeys &symmKeys,
         const KeyPair &encKeys,
         const KeyPair &sigKeys,
-        const std::string &acceptedTerms,
+        const boost::optional<std::string> &acceptedTerms,
         const boost::optional<Challenge> &challenge,
         const boost::optional<std::string> &challengeAnswer)
 {
@@ -77,7 +77,10 @@ Json::Value AccountsClient::makeRegistrationDocument(
     reg["address"]           = address.toString();
     reg["loginKey"]          = symmKeys.loginKey;
     reg["privateDataKey"]    = Util::Base64::encode(symmKeys.privateDataKey);
-    reg["acceptedTerms"]     = acceptedTerms;
+    if (acceptedTerms)
+    {
+        reg["acceptedTerms"] = *acceptedTerms;
+    }
 
     if (challenge && challengeAnswer)
     {

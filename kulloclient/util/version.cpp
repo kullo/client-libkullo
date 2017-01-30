@@ -1,10 +1,15 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #include "kulloclient/util/version.h"
 
 #include <boost/version.hpp>
 #include <botan/botan_all.h>
 #include <jsoncpp/jsoncpp.h>
 #include <smartsqlite/version.h>
+
+#include "kulloclient/util/assert.h"
+
+// defined in .mm file
+extern std::string osVersionAppleImpl();
 
 namespace Kullo {
 namespace Util {
@@ -13,7 +18,53 @@ namespace {
 
 #if defined __ANDROID__
     const std::string KULLO_OS = "Android";
-    const std::string KULLO_OS_USERVERSION = "unknown";
+
+    #ifndef __ANDROID_API__
+        #error No value for __ANDROID_API__ defined. This should come from the toolchain.
+    #endif
+
+    #if __ANDROID_API__ < 21
+    #include <sys/system_properties.h>
+    #endif
+
+    int getSdkVersion() {
+        std::string sdkVersionString;
+
+        #if __ANDROID_API__ < 21
+
+        char sdkVersionStringC[PROP_VALUE_MAX];
+        __system_property_get("ro.build.version.sdk", sdkVersionStringC);
+        sdkVersionString = std::string(sdkVersionStringC);
+
+        #else
+
+        FILE* file = popen("getprop ro.build.version.sdk", "r");
+        if (!file) return -1;
+
+        int c;
+        while ((c = getc(file)) != EOF)
+        {
+            sdkVersionString += static_cast<char>(c);
+        }
+        pclose(file);
+
+        #endif
+
+        try
+        {
+            return std::stoi(sdkVersionString);
+        }
+        catch (std::exception)
+        {
+            return -1;
+        }
+    }
+
+    const int ANDROID_SDK_VERSION = getSdkVersion();
+    const std::string KULLO_OS_USERVERSION = ANDROID_SDK_VERSION == -1
+            ? "unknown"
+            : std::to_string(ANDROID_SDK_VERSION);
+
 #elif defined __linux__
     #if defined __LP64__
         const std::string KULLO_OS = "Linux_x86_64";
@@ -29,32 +80,16 @@ namespace {
     #include "TargetConditionals.h"
     #if TARGET_OS_IPHONE
         const std::string KULLO_OS = "iOS";
-        const std::string KULLO_OS_USERVERSION = "unknown";
+        const std::string KULLO_OS_USERVERSION = Util::Version::osVersionApple();
     #else
         const std::string KULLO_OS = "OSX";
-
-        #include <CoreFoundation/CoreFoundation.h>
-        std::string getOsxVersion() {
-            std::string out;
-            if (kCFCoreFoundationVersionNumber >= kCFCoreFoundationVersionNumber10_11) {
-                out = "10.11+";
-            } else if (kCFCoreFoundationVersionNumber >= kCFCoreFoundationVersionNumber10_10) {
-                out = "10.10";
-            } else if (kCFCoreFoundationVersionNumber >= kCFCoreFoundationVersionNumber10_9) {
-                out = "10.9";
-            } else {
-                out = "unknown";
-            }
-            return out;
-        }
-
-        const std::string KULLO_OS_USERVERSION = getOsxVersion();
+        const std::string KULLO_OS_USERVERSION = Util::Version::osVersionApple();
     #endif
 #else
     #error unknown platform
 #endif
 
-const std::string LIBKULLO_VERSION = "v59";
+const std::string LIBKULLO_VERSION = "v60";
 const std::string LIBKULLO_USER_AGENT =
         "libkulloclient/" + LIBKULLO_VERSION + " (" + KULLO_OS + "/" + KULLO_OS_USERVERSION + ")";
 }
@@ -104,6 +139,15 @@ std::string Version::smartSqliteVersion()
 std::string Version::sqliteVersion()
 {
     return SmartSqlite::sqliteVersion();
+}
+
+std::string Version::osVersionApple()
+{
+#ifdef __APPLE__
+    return osVersionAppleImpl();
+#else
+    kulloAssertionFailed("Method must not be called on non-apple systems");
+#endif
 }
 
 }

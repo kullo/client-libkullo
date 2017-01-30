@@ -1,4 +1,4 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #pragma once
 
 #include <atomic>
@@ -8,7 +8,6 @@
 
 #include "kulloclient/kulloclient-forwards.h"
 #include "kulloclient/db/dbsession.h"
-#include "kulloclient/http/HttpClient.h"
 #include "kulloclient/protocol/httpstructs.h"
 #include "kulloclient/sync/definitions.h"
 #include "kulloclient/util/misc.h"
@@ -59,7 +58,7 @@ public:
 
 private:
     Db::SharedSessionPtr session_;
-    std::unique_ptr<Protocol::MessagesClient> client_;
+    std::unique_ptr<Protocol::MessagesClient> messagesClient_;
     std::atomic<size_t> previouslyDownloaded_ {0};
     std::atomic<size_t> estimatedRemaining_ {0};
 

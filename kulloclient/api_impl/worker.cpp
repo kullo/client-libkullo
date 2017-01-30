@@ -1,4 +1,4 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #include "kulloclient/api_impl/worker.h"
 
 #include "kulloclient/util/misc.h"
@@ -11,8 +11,7 @@ void Worker::run()
     work();
 
     {
-        std::lock_guard<std::mutex> lock(isFinishedMutex_);
-        K_RAII(lock);
+        std::lock_guard<std::mutex> lock(isFinishedMutex_); K_RAII(lock);
         isFinished_ = true;
     }
     isFinishedCv_.notify_one();
@@ -39,7 +38,7 @@ bool Worker::waitFor(std::chrono::milliseconds timeout)
 
 bool Worker::isFinished()
 {
-    std::unique_lock<std::mutex> lock(isFinishedMutex_);
+    std::lock_guard<std::mutex> lock(isFinishedMutex_); K_RAII(lock);
     return isFinished_;
 }
 

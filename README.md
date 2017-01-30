@@ -63,6 +63,17 @@ Tips and Tricks
 Changelog
 ---------
 
+### v60 (2017-01-30)
+
+ * Process plan and storage information from Kullo server
+ * User agent: add Android/iOS version; improve OSX version detection
+ * Work around MSVC std::regex implementation
+ * Reduce noisy SQLite autoindex logging
+ * Make it possible to cancel long running sync operations
+ * Fix size estimations for message upload/download progress
+ * Improve link highlighting speed
+ * Support Kullo address highlighting
+
 ### v59 (2016-12-19)
 
  * Add terms of service handling in registration

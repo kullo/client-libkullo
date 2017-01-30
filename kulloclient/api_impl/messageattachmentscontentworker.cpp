@@ -1,5 +1,7 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #include "kulloclient/api_impl/messageattachmentscontentworker.h"
+
+#include "kulloclient/util/multithreading.h"
 
 namespace Kullo {
 namespace ApiImpl {
@@ -15,7 +17,7 @@ MessageAttachmentsContentWorker::MessageAttachmentsContentWorker(
 
 void MessageAttachmentsContentWorker::cancel()
 {
-    std::lock_guard<std::mutex> lock(mutex_); (void)lock;
+    std::lock_guard<std::mutex> lock(mutex_); K_RAII(lock);
     listener_.reset();
 }
 
@@ -23,10 +25,9 @@ void MessageAttachmentsContentWorker::notifyListener(
         uint64_t convOrMsgId, uint64_t attId,
         const std::vector<uint8_t> &content)
 {
-    std::lock_guard<std::mutex> lock(mutex_); (void)lock;
-    if (listener_)
+    if (auto listener = Util::copyGuardedByMutex(listener_, mutex_))
     {
-        listener_->finished(convOrMsgId, attId, content);
+        listener->finished(convOrMsgId, attId, content);
     }
 }
 

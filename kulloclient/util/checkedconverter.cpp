@@ -1,20 +1,20 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #include "kulloclient/util/checkedconverter.h"
 
 #include <limits>
-#include <regex>
 #include <boost/optional.hpp>
 #include <jsoncpp/jsoncpp.h>
 
 #include "kulloclient/util/assert.h"
 #include "kulloclient/util/base64.h"
+#include "kulloclient/util/regex.h"
 
 namespace Kullo {
 namespace Util {
 
 namespace {
-const auto COLOR_REGEX = std::regex("#[0-9a-fA-F]{6}");
-const auto HEX_REGEX   = std::regex("[0-9a-fA-F]*");
+const Regex COLOR_REGEX("#[0-9a-fA-F]{6}");
+const Regex HEX_REGEX("[0-9a-fA-F]*");
 const double LARGEST_UINT64_IN_DOUBLE = 1ULL<<53; //2^53, 52bits of mantissa + the implicit leading 1
 }
 
@@ -108,7 +108,7 @@ std::string CheckedConverter::toString(const Json::Value &value, const std::stri
 
 bool CheckedConverter::isValidHexString(const std::string &value)
 {
-    return std::regex_match(value, HEX_REGEX);
+    return Regex::match(value, HEX_REGEX);
 }
 
 std::string CheckedConverter::toHexString(const Json::Value &value, AllowEmpty allowEmpty)
@@ -132,7 +132,7 @@ std::string CheckedConverter::toHexString(const Json::Value &value, const std::s
 bool CheckedConverter::isValidColorString(const std::string &value)
 {
     if (value.empty()) return true;
-    return std::regex_match(value, COLOR_REGEX);
+    return Regex::match(value, COLOR_REGEX);
 }
 
 std::string CheckedConverter::toColorString(const Json::Value &value, AllowEmpty allowEmpty)

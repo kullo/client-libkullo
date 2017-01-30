@@ -1,7 +1,5 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #include "tests/http/fake_httpclientfactory.h"
-
-#include <regex>
 
 #include <jsoncpp/jsoncpp.h>
 
@@ -15,6 +13,7 @@
 #include <kulloclient/util/base64.h>
 #include <kulloclient/util/binary.h>
 #include <kulloclient/util/hex.h>
+#include <kulloclient/util/regex.h>
 
 #include "tests/testdata.h"
 
@@ -153,8 +152,13 @@ Http::Response FakeHttpClient::sendRequest(const Kullo::Http::Request &request,
         if (statusCode == 200)
         {
             responseBody = Util::to_vector(
-                        R"({"settingsLocation": )"
-                        R"("https://accounts.example.com/foo/bar"})");
+                        R"(  {                                                             )"
+                        R"(    "planName": "Hobbyist",                                     )"
+                        R"(    "storageQuota": 1000000000,                                 )"
+                        R"(    "storageUsed":   999999999,                                 )"
+                        R"(    "settingsLocation": "https://accounts.example.com/foo/bar"  )"
+                        R"(  }                                                             )"
+                        );
         }
     }
 
@@ -176,15 +180,15 @@ Http::Response FakeHttpClient::sendRequest(const Kullo::Http::Request &request,
         statusCode = validateAuth(request.headers);
         if (statusCode == 200)
         {
-            static const std::regex keyRegex(R"(/profile/([a-z_]+)\?)");
-            std::smatch match;
-            if (!std::regex_search(request.url, match, keyRegex))
+            static const Util::Regex keyRegex(R"(/profile/([a-z_]+)/?)");
+            std::vector<std::string> matches;
+            if (!Util::Regex::search(request.url, matches, keyRegex))
             {
                 kulloAssertionFailed("Regex didn't match.");
             }
             responseBody = Util::to_vector(
                         std::string(R"({"key": ")")
-                        + match[1].str()
+                        + matches[1]
                         + R"(", "lastModified": 1337})");
         }
     }

@@ -1,4 +1,4 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #include "tests/api/apitest.h"
 
 #include <kulloclient/api/Registry.h>
@@ -20,5 +20,12 @@ ApiTest::ApiTest()
 
 ApiTest::~ApiTest()
 {
-    taskRunner_->wait();
+    try
+    {
+        taskRunner_->wait();
+    }
+    catch (const std::exception &ex)
+    {
+        Log.e() << "TaskRunner.wait() failed in ~ApiTest: " << ex.what();
+    }
 }

@@ -1,4 +1,4 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #pragma once
 
 namespace Kullo {
@@ -42,6 +42,18 @@ namespace Kullo {
         class PublicKeyDao;
         class SymmetricKeyDao;
         class UnprocessedMessageDao;
+    }
+    namespace Http {
+        // Interfaces
+        class HttpClient;
+
+        // Records
+        struct Request;
+        struct Response;
+        struct TransferProgress;
+
+        // Enums
+        enum class ProgressResult;
     }
     namespace Protocol {
         class AccountClient;

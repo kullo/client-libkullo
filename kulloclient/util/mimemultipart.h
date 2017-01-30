@@ -1,4 +1,4 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #pragma once
 
 #include <cstdint>
@@ -12,7 +12,8 @@ namespace Util {
 class MimeMultipart
 {
 public:
-    MimeMultipart(const std::string &boundary = "boundary_.oOo._MTA1NTM3NjEwMg==Mjc5OTIzODY0MTI0MTc2NjY=");
+    MimeMultipart();
+    MimeMultipart(const std::string &boundary);
     std::string boundary() const;
 
     std::string makePart(const std::string &name, const std::string &data);

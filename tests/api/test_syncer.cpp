@@ -1,13 +1,13 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #include "tests/api/apimodeltest.h"
 
 #include <kulloclient/registry.h>
 #include <kulloclient/api/AsyncTask.h>
-#include <kulloclient/api/DateTime.h>
 #include <kulloclient/api/Syncer.h>
 #include <kulloclient/api/SyncerListener.h>
 #include <kulloclient/api/SyncMode.h>
 #include <kulloclient/api/SyncProgress.h>
+#include <kulloclient/api_impl/DateTime.h>
 #include <kulloclient/api_impl/debug.h>
 #include <kulloclient/util/assert.h>
 

@@ -1,12 +1,12 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #include "tests/api/apimodeltest.h"
 
 #include <boost/optional/optional_io.hpp>
 
 #include <kulloclient/api/Address.h>
-#include <kulloclient/api/DateTime.h>
 #include <kulloclient/api/Delivery.h>
 #include <kulloclient/api/Messages.h>
+#include <kulloclient/api_impl/DateTime.h>
 #include <kulloclient/api_impl/debug.h>
 #include <kulloclient/api_impl/deliveryimpl.h>
 #include <kulloclient/api_impl/messagesimpl.h>
@@ -388,7 +388,7 @@ K_TEST_F(ApiMessages, idRangeWorks)
         EXPECT_NO_THROW(uut->dateSent(id));
         EXPECT_NO_THROW(uut->dateReceived(id));
         EXPECT_NO_THROW(uut->text(id));
-        EXPECT_NO_THROW(uut->textAsHtml(id));
+        EXPECT_NO_THROW(uut->textAsHtml(id, true));
         EXPECT_NO_THROW(uut->footer(id));
         EXPECT_NO_THROW(uut->remove(id));
     }
@@ -406,7 +406,7 @@ K_TEST_F(ApiMessages, idRangeWorks)
         EXPECT_ANY_THROW(uut->dateSent(id));
         EXPECT_ANY_THROW(uut->dateReceived(id));
         EXPECT_ANY_THROW(uut->text(id));
-        EXPECT_ANY_THROW(uut->textAsHtml(id));
+        EXPECT_ANY_THROW(uut->textAsHtml(id, true));
         EXPECT_ANY_THROW(uut->footer(id));
         EXPECT_ANY_THROW(uut->remove(id));
     }

@@ -1,4 +1,4 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #include "kulloclient/api_impl/clientcreatesessionworker.h"
 
 #if defined __ANDROID__
@@ -18,6 +18,7 @@
 #include "kulloclient/util/librarylogger.h"
 #include "kulloclient/util/masterkey.h"
 #include "kulloclient/util/misc.h"
+#include "kulloclient/util/multithreading.h"
 #include "kulloclient/util/scopedbenchmark.h"
 
 namespace fs = boost::filesystem;
@@ -58,20 +59,18 @@ void ClientCreateSessionWorker::work()
     {
         auto session = makeSession();
 
-        std::lock_guard<std::mutex> lock(mutex_); K_RAII(lock);
-        if (listener_)
+        if (auto listener = Util::copyGuardedByMutex(listener_, mutex_))
         {
-            listener_->finished(session);
+            listener->finished(session);
         }
     }
     catch (std::exception &ex)
     {
         Log.e() << "ClientCreateSessionWorker failed: " << Util::formatException(ex);
 
-        std::lock_guard<std::mutex> lock(mutex_); K_RAII(lock);
-        if (listener_)
+        if (auto listener = Util::copyGuardedByMutex(listener_, mutex_))
         {
-            listener_->error(address_, Api::LocalError::Unknown);
+            listener->error(address_, Api::LocalError::Unknown);
         }
     }
 }
@@ -94,10 +93,9 @@ std::shared_ptr<Api::Session> ClientCreateSessionWorker::makeSession()
     auto dbSession = Db::makeSession(sessionConfig);
     if (!Db::hasCurrentSchema(dbSession))
     {
-        std::lock_guard<std::mutex> lock(mutex_); K_RAII(lock);
-        if (listener_)
+        if (auto listener = Util::copyGuardedByMutex(listener_, mutex_))
         {
-            listener_->migrationStarted(address_);
+            listener->migrationStarted(address_);
         }
         Db::migrate(dbSession);
     }

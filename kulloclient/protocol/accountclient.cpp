@@ -1,4 +1,4 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #include "kulloclient/protocol/accountclient.h"
 
 #include <jsoncpp/jsoncpp.h>
@@ -22,7 +22,7 @@ AccountClient::AccountClient(
     setMasterKey(masterKey);
 }
 
-std::string AccountClient::getSettingsLocation()
+AccountInfo AccountClient::getInfo()
 {
     sendRequest(Http::Request(
                     Http::HttpMethod::Get,
@@ -36,17 +36,35 @@ std::string AccountClient::getSettingsLocation()
         throw ProtocolError("Malformed JSON document (object expected)");
     }
 
+    auto jsonPlanName = json["planName"];
+    auto jsonStorageQuota = json["storageQuota"];
+    auto jsonStorageUsed = json["storageUsed"];
     auto jsonSettingsLocation = json["settingsLocation"];
-    if (jsonSettingsLocation.isNull())
+
+    AccountInfo out;
+
+    if (!jsonPlanName.isNull())
     {
-        // Field `settingsLocation` not set. This is valid.
-        // Not used at the moment.
-        return "";
+        out.planName = Util::CheckedConverter::toString(jsonPlanName);
     }
-    else
+
+    if (!jsonStorageQuota.isNull())
     {
-        return Util::CheckedConverter::toString(json["settingsLocation"]);
+        out.storageQuota = Util::CheckedConverter::toUint64(jsonStorageQuota);
     }
+
+    if (!jsonStorageUsed.isNull())
+    {
+        out.storageUsed = Util::CheckedConverter::toUint64(jsonStorageUsed);
+    }
+
+    // Field `settingsLocation` may be not set. This is valid. Not used at the moment.
+    if (!jsonSettingsLocation.isNull())
+    {
+        out.settingsLocation = Util::CheckedConverter::toString(jsonSettingsLocation);
+    }
+
+    return out;
 }
 
 }

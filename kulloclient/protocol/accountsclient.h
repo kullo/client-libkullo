@@ -1,4 +1,4 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #pragma once
 
 #include <boost/optional.hpp>
@@ -21,7 +21,7 @@ public:
             const SymmetricKeys &symmKeys,
             const KeyPair &encKeys,
             const KeyPair &sigKeys,
-            const std::string &acceptedTerms,
+            const boost::optional<std::string> &acceptedTerms,
             const boost::optional<Challenge> &challenge,
             const boost::optional<std::string> &challengeAnswer);
 
@@ -31,7 +31,7 @@ private:
             const SymmetricKeys &symmKeys,
             const KeyPair &encKeys,
             const KeyPair &sigKeys,
-            const std::string &acceptedTerms,
+            const boost::optional<std::string> &acceptedTerms,
             const boost::optional<Challenge> &challenge,
             const boost::optional<std::string> &challengeAnswer);
 

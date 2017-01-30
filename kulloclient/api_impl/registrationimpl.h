@@ -1,4 +1,4 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #pragma once
 
 #include <boost/optional.hpp>
@@ -22,7 +22,7 @@ public:
 
     std::shared_ptr<Api::AsyncTask> registerAccountAsync(
             const std::shared_ptr<Api::Address> &address,
-            const std::string &acceptedTerms,
+            const boost::optional<std::string> &acceptedTerms,
             const std::shared_ptr<Api::Challenge> &challenge,
             const std::string &challengeAnswer,
             const std::shared_ptr<Api::RegistrationRegisterAccountListener> &listener

@@ -1,4 +1,4 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #pragma once
 
 #include <atomic>
@@ -14,10 +14,6 @@
 #include "kulloclient/protocol/profileclient.h"
 #include "kulloclient/util/misc.h"
 #include "kulloclient/util/usersettings.h"
-
-namespace SmartSqlite {
-class ScopedTransaction;
-}
 
 namespace Kullo {
 namespace Sync {

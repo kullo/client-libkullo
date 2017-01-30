@@ -13,8 +13,6 @@ api/ClientCheckCredentialsListener.h
 api/ClientCreateSessionListener.h
 api/ClientGenerateKeysListener.h
 api/Conversations.h
-api/DateTime.cpp
-api/DateTime.h
 api/DateTime_base.h
 api/Delivery.h
 api/DeliveryReason.h

@@ -1,11 +1,12 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #include "kulloclient/util/kulloaddress.h"
 
 #include <algorithm>
-#include <regex>
+#include <iterator>
 #include <ostream>
 
 #include "kulloclient/util/misc.h"
+#include "kulloclient/util/regex.h"
 
 namespace Kullo {
 namespace Util {
@@ -16,7 +17,7 @@ namespace {
 //
 // check domain name
 // alphanum with embedded minus: [a-z0-9]+(?:-[a-z0-9]+)*
-const auto DOMAIN_REGEX = std::regex(
+const Regex DOMAIN_REGEX(
                     "(?:"
                         "[a-z0-9]+(?:-[a-z0-9]+)*"
                     "\\.)+"
@@ -27,7 +28,7 @@ const int DOMAIN_MAX_LENGTH = 255;
 // check username
 // X with embedded separators: X([.-_]X)*
 // X is alphanumeric and lowercase.
-const auto USERNAME_REGEX = std::regex(
+const Regex USERNAME_REGEX(
                     "[a-z0-9]+"                      // username part
                     "(?:"
                         "[-\\._]"                    // separator: -._
@@ -49,12 +50,12 @@ KulloAddress::KulloAddress(const std::string &address)
     std::transform(address.cbegin(), hashPos, std::back_inserter(username_), ::tolower);
     std::transform(hashPos + 1, address.cend(), std::back_inserter(domain_), ::tolower);
 
-    if (username_.length() > USERNAME_MAX_LENGTH || !std::regex_match(username_, USERNAME_REGEX))
+    if (username_.length() > USERNAME_MAX_LENGTH || !Regex::match(username_, USERNAME_REGEX))
     {
         throw std::invalid_argument("KulloAddress(): invalid username");
     }
 
-    if (domain_.length() > DOMAIN_MAX_LENGTH || !std::regex_match(domain_, DOMAIN_REGEX))
+    if (domain_.length() > DOMAIN_MAX_LENGTH || !Regex::match(domain_, DOMAIN_REGEX))
     {
         throw std::invalid_argument("KulloAddress(): invalid domain name");
     }

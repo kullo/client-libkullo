@@ -48,8 +48,24 @@ public:
 
     virtual std::string text(int64_t msgId) = 0;
 
-    /** Escapes special characters and converts text links to 'a' tags */
-    virtual std::string textAsHtml(int64_t msgId) = 0;
+    /**
+     * Escapes special characters and converts text links to 'a' tags
+     *
+     * An application using this must preserve the white space in the HTML code,
+     * i.e. treat \n and \r\n as line breaks and not strip leading or trailing
+     * spaces in lines.
+     * This can be archived for example by wrapping this in a html block with
+     * style "white-space: pre-wrap;".
+     *
+     * When includeKulloAddresses is true, Kullo addresses are linked using the
+     * Kullo internal scheme "kulloInternal:" followed by the unescaped address.
+     * Those links must be handled by the Kullo client and must not be passed to
+     * other applications since the URI scheme is not standardized and the hash
+     * symbol not compatible with a lot of applications.
+     *
+     * Weblinks are prioritized over Kullo adress links and links do not overlap.
+     */
+    virtual std::string textAsHtml(int64_t msgId, bool includeKulloAddresses) = 0;
 
     virtual std::string footer(int64_t msgId) = 0;
 };

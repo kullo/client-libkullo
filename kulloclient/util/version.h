@@ -1,4 +1,4 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #pragma once
 
 #include <string>
@@ -30,6 +30,9 @@ public:
 
     /// Returns the SQLite version.
     static std::string sqliteVersion();
+
+    /// Returns the version of iOS and macOS and crashes when used on other systems
+    static std::string osVersionApple();
 };
 
 }

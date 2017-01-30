@@ -1,4 +1,4 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #include <kulloclient/crypto/exceptions.h>
 #include <kulloclient/crypto/hashverifyingfilter.h>
 #include <kulloclient/util/binary.h>

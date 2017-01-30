@@ -1,4 +1,4 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #pragma once
 
 #include <atomic>
@@ -10,7 +10,6 @@
 #include "kulloclient/api/DraftPart.h"
 #include "kulloclient/codec/codecstructs.h"
 #include "kulloclient/db/dbsession.h"
-#include "kulloclient/http/HttpClient.h"
 #include "kulloclient/protocol/httpstructs.h"
 #include "kulloclient/sync/definitions.h"
 #include "kulloclient/sync/messageadder.h"

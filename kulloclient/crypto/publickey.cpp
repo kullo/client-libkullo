@@ -1,4 +1,4 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #include "kulloclient/crypto/publickey.h"
 
 #include "kulloclient/crypto/publickeyimpl.h"
@@ -29,7 +29,7 @@ std::vector<unsigned char> PublicKey::toVector() const
 {
     kulloAssert(p);
 
-    auto pubkey = p->pubkey->x509_subject_public_key();
+    auto pubkey = p->pubkey->public_key_bits();
     return std::vector<unsigned char>(pubkey.begin(), pubkey.end());
 }
 

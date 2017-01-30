@@ -1,10 +1,10 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #include "kulloclient/api_impl/conversationsimpl.h"
 
 #include <algorithm>
 #include <boost/optional.hpp>
 
-#include "kulloclient/api/DateTime.h"
+#include "kulloclient/api_impl/DateTime.h"
 #include "kulloclient/api_impl/addressimpl.h"
 #include "kulloclient/api_impl/debug.h"
 #include "kulloclient/db/exceptions.h"

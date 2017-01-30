@@ -1,4 +1,4 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #include "kulloclient/protocol/baseclient.h"
 
 #include <iterator>
@@ -8,6 +8,7 @@
 
 #include "kulloclient/registry.h"
 #include "kulloclient/crypto/symmetrickeygenerator.h"
+#include "kulloclient/http/HttpClient.h"
 #include "kulloclient/http/ProgressResult.h"
 #include "kulloclient/protocol/exceptions.h"
 #include "kulloclient/protocol/debug.h"

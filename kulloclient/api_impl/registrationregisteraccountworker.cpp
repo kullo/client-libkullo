@@ -1,4 +1,4 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #include "kulloclient/api_impl/registrationregisteraccountworker.h"
 
 #include "kulloclient/api/Address.h"
@@ -15,6 +15,7 @@
 #include "kulloclient/util/kulloaddress.h"
 #include "kulloclient/util/librarylogger.h"
 #include "kulloclient/util/misc.h"
+#include "kulloclient/util/multithreading.h"
 #include "kulloclient/registry.h"
 
 namespace Kullo {
@@ -26,7 +27,7 @@ RegistrationRegisterAccountWorker::RegistrationRegisterAccountWorker(
         Crypto::SymmetricKey privateDataKey,
         Crypto::PrivateKey keypairEncryption,
         Crypto::PrivateKey keypairSignature,
-        const std::string &acceptedTerms,
+        const boost::optional<std::string> &acceptedTerms,
         boost::optional<Protocol::Challenge> challenge,
         const std::string &challengeAnswer,
         std::shared_ptr<Api::RegistrationRegisterAccountListener> listener)
@@ -64,36 +65,33 @@ void RegistrationRegisterAccountWorker::work()
                     optionalChallengeAnswer);
         auto masterKey = std::make_shared<MasterKeyImpl>(masterKey_.toVector());
 
-        std::lock_guard<std::mutex> lock(mutex_); K_RAII(lock);
-        if (listener_)
+        if (auto listener = Util::copyGuardedByMutex(listener_, mutex_))
         {
             if (challenge)
             {
                 auto apiChallenge =  std::make_shared<ChallengeImpl>(*challenge);
-                listener_->challengeNeeded(address_, apiChallenge);
+                listener->challengeNeeded(address_, apiChallenge);
             }
             else
             {
-                listener_->finished(address_, masterKey);
+                listener->finished(address_, masterKey);
             }
         }
     }
     catch (Protocol::AddressBlocked)
     {
-        std::lock_guard<std::mutex> lock(mutex_); K_RAII(lock);
-        if (listener_)
+        if (auto listener = Util::copyGuardedByMutex(listener_, mutex_))
         {
-            listener_->addressNotAvailable(
+            listener->addressNotAvailable(
                         address_,
                         Api::AddressNotAvailableReason::Blocked);
         }
     }
     catch (Protocol::AddressExists)
     {
-        std::lock_guard<std::mutex> lock(mutex_); K_RAII(lock);
-        if (listener_)
+        if (auto listener = Util::copyGuardedByMutex(listener_, mutex_))
         {
-            listener_->addressNotAvailable(
+            listener->addressNotAvailable(
                         address_,
                         Api::AddressNotAvailableReason::Exists);
         }
@@ -103,10 +101,9 @@ void RegistrationRegisterAccountWorker::work()
         Log.e() << "RegistrationRegisterAccountWorker failed: "
                 << Util::formatException(ex);
 
-        std::lock_guard<std::mutex> lock(mutex_); K_RAII(lock);
-        if (listener_)
+        if (auto listener = Util::copyGuardedByMutex(listener_, mutex_))
         {
-            listener_->error(
+            listener->error(
                         address_,
                         toNetworkError(std::current_exception()));
         }

@@ -1,9 +1,9 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #pragma once
 
 #include "kulloclient/api/Conversations.h"
-#include "kulloclient/api/DateTime.h"
 #include "kulloclient/api/SessionListener.h"
+#include "kulloclient/api_impl/DateTime.h"
 #include "kulloclient/api_impl/sessiondata.h"
 #include "kulloclient/dao/conversationdao.h"
 #include "kulloclient/event/conversationseventlistener.h"

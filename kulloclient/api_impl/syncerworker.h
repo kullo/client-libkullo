@@ -1,4 +1,4 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #pragma once
 
 #include <atomic>
@@ -35,6 +35,7 @@ protected:
 private:
     void setupEvents();
     void sendEvent(const std::shared_ptr<Api::InternalEvent> &event);
+    std::shared_ptr<Api::SyncerListener> safeListener();
 
     // all uses must be synchronized
     std::shared_ptr<Api::SessionListener> sessionListener_;

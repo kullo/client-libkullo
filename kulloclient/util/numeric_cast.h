@@ -1,4 +1,4 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #pragma once
 
 #include <boost/numeric/conversion/cast.hpp>
@@ -8,7 +8,11 @@
 namespace Kullo {
 namespace Util {
 
-template<typename Target, typename Source> inline
+template<
+        typename Target,
+        typename Source,
+        typename std::enable_if<!std::is_same<Target, Source>::value, int>::type = 0
+        > inline
 typename boost::numeric::converter<Target,Source>::result_type
 numeric_cast(Source arg)
 {
@@ -20,6 +24,12 @@ numeric_cast(Source arg)
     {
         kulloAssertionFailed(ex.what());
     }
+}
+
+template<typename T> inline
+T numeric_cast(T arg)
+{
+    return arg;
 }
 
 }

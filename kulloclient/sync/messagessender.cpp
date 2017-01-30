@@ -1,4 +1,4 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #include "kulloclient/sync/messagessender.h"
 
 #include "kulloclient/codec/exceptions.h"
@@ -8,8 +8,10 @@
 #include "kulloclient/crypto/asymmetrickeyloader.h"
 #include "kulloclient/dao/asymmetrickeypairdao.h"
 #include "kulloclient/dao/conversationdao.h"
+#include "kulloclient/dao/daoutil.h"
 #include "kulloclient/dao/deliverydao.h"
 #include "kulloclient/db/exceptions.h"
+#include "kulloclient/http/TransferProgress.h"
 #include "kulloclient/protocol/exceptions.h"
 #include "kulloclient/protocol/messagesclient.h"
 #include "kulloclient/sync/exceptions.h"
@@ -81,14 +83,20 @@ void MessagesSender::run(
             }
             currentConversationId = messageDao->conversationId();
 
+            if (*shouldCancel) throw SyncCanceled();
+
             // encode message
             encodedMessage = Codec::MessageEncoder::encodeMessage(
                         *messageDao, session_);
+            // must be calculated the same way as in sizeOfAllUndelivered()
             currentMessageEstimatedSize =
+                    Dao::PER_MESSAGE_OVERHEAD +
                     messageDao->text().size() +
                     encodedMessage.attachments.size();
             Codec::MessageCompressor().compress(encodedMessage);
         }
+
+        if (*shouldCancel) throw SyncCanceled();
 
         try
         {
@@ -96,12 +104,18 @@ void MessagesSender::run(
                         currentRecipient,
                         Protocol::PublicKeysClient::LATEST_ENCRYPTION_PUBKEY);
 
+            if (*shouldCancel) throw SyncCanceled();
+
             auto sigKeyAndId = privKeyProvider_->getLatestKeyAndId(
                         Crypto::AsymmetricKeyType::Signature);
+
+            if (*shouldCancel) throw SyncCanceled();
 
             auto encKey = loader.loadPublicKey(
                         Crypto::AsymmetricKeyType::Encryption,
                         encKeyPair.pubkey);
+
+            if (*shouldCancel) throw SyncCanceled();
 
             auto sendableMsg = encryptor.makeSendableMessage(
                         encodedMessage,
@@ -110,11 +124,18 @@ void MessagesSender::run(
                         sigKeyAndId.second,
                         sigKeyAndId.first);
 
-            sendMessage(currentConversationId,
+            if (*shouldCancel) throw SyncCanceled();
+
+            sendMessage(shouldCancel,
+                        currentConversationId,
                         currentMessageId,
                         currentRecipient,
                         sendableMsg,
                         currentMessageEstimatedSize);
+        }
+        catch (Protocol::Canceled&)
+        {
+            throw SyncCanceled();
         }
         catch (Protocol::NotFound)
         {
@@ -128,6 +149,7 @@ void MessagesSender::run(
 }
 
 void MessagesSender::sendMessage(
+        std::shared_ptr<std::atomic<bool>> shouldCancel,
         id_type currentConversationId,
         id_type currentMessageId,
         const KulloAddress &currentRecipient,
@@ -139,7 +161,7 @@ void MessagesSender::sendMessage(
         previouslyUploaded_ += messagesClient_->sendMessage(
                     currentRecipient,
                     sendableMsg,
-                    [this, estimatedSize]
+                    [this, estimatedSize, shouldCancel]
                     (const Http::TransferProgress &progress)
         {
             // make sure uploadTotal has a sane value
@@ -175,9 +197,11 @@ void MessagesSender::sendMessage(
                 progress_ = newProgress;
                 EMIT(events.progressed, progress_);
             }
+
+            if (*shouldCancel) messagesClient_->cancel();
         });
     }
-    catch (Protocol::NotFound)
+    catch (Protocol::NotFound&)
     {
         handleNotFound(
                     currentConversationId,

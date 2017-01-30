@@ -1,4 +1,4 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #include "kulloclient/sync/messagesuploader.h"
 
 #include <functional>
@@ -14,9 +14,12 @@
 #include "kulloclient/dao/asymmetrickeypairdao.h"
 #include "kulloclient/dao/attachmentdao.h"
 #include "kulloclient/dao/conversationdao.h"
+#include "kulloclient/dao/daoutil.h"
 #include "kulloclient/dao/deliverydao.h"
 #include "kulloclient/dao/symmetrickeydao.h"
 #include "kulloclient/db/exceptions.h"
+#include "kulloclient/http/TransferProgress.h"
+#include "kulloclient/protocol/exceptions.h"
 #include "kulloclient/protocol/messagesclient.h"
 #include "kulloclient/sync/exceptions.h"
 #include "kulloclient/util/events.h"
@@ -85,6 +88,8 @@ void MessagesUploader::run(std::shared_ptr<std::atomic<bool>> shouldCancel)
 
         auto conv = loadConversation(draft->conversationId());
 
+        if (*shouldCancel) throw SyncCanceled();
+
         // encode message
         auto dateSent = DateTime::nowUtc();
         auto encodedMessage = Codec::MessageEncoder::encodeMessage(
@@ -93,14 +98,22 @@ void MessagesUploader::run(std::shared_ptr<std::atomic<bool>> shouldCancel)
                     dateSent,
                     session_);
 
+        if (*shouldCancel) throw SyncCanceled();
+
         // must be calculated the same way as sizeOfAllSendable()
         auto totalSize =
-                draft->text().size()
+                Dao::PER_MESSAGE_OVERHEAD
+                + draft->text().size()
                 + encodedMessage.attachments.size();
 
         Codec::MessageCompressor().compress(encodedMessage);
+
+        if (*shouldCancel) throw SyncCanceled();
+
         auto sendableMsg = makeSendableMessage(encodedMessage);
         if (!ensureSizeLimitCompliance(sendableMsg, *draft)) continue;
+
+        if (*shouldCancel) throw SyncCanceled();
 
         // create and encode meta
         auto delivery = makeDelivery(*conv);
@@ -114,52 +127,67 @@ void MessagesUploader::run(std::shared_ptr<std::atomic<bool>> shouldCancel)
                         Dao::SymmetricKeyDao::PRIVATE_DATA_KEY,
                         session_));
 
-        // send message
-        auto msgSent = messagesClient_->sendMessageToSelf(
-                    sendableMsg,
-                    meta,
-                    [this, totalSize]
-                    (const Http::TransferProgress &progress)
+        if (*shouldCancel) throw SyncCanceled();
+
+        boost::optional<Protocol::MessageSent> msgSent;
+        try
         {
-            // make sure uploadTotal has a sane value
-            auto uploadTotal = std::max(
-                        progress.uploadTotal,
-                        progress.uploadTransferred);
-
-            int64_t improvedEstimate;
-            if (uploadTotal > 0)
+            // send message
+            msgSent = messagesClient_->sendMessageToSelf(
+                        sendableMsg,
+                        meta,
+                        [this, totalSize, shouldCancel]
+                        (const Http::TransferProgress &progress)
             {
-                // Remove the current upload's impact on the estimate,
-                // replace by value returned by the HTTP client.
-                //
-                // Make all variables signed to ensure no subtraction is
-                // performed on unsigned ints causing an overflow.
-                improvedEstimate =
-                        Util::numeric_cast<int64_t>(estimatedRemaining_.load()) -
-                        Util::numeric_cast<int64_t>(totalSize) +
-                        Util::numeric_cast<int64_t>(uploadTotal);
-            }
-            else
-            {
-                improvedEstimate = estimatedRemaining_;
-            }
+                // make sure uploadTotal has a sane value
+                auto uploadTotal = std::max(
+                            progress.uploadTotal,
+                            progress.uploadTransferred);
 
-            SyncOutgoingMessagesProgress newProgress;
-            newProgress.uploadedBytes =
-                    previouslyUploaded_ + progress.uploadTransferred;
-            newProgress.totalBytes = previouslyUploaded_ + improvedEstimate;
+                int64_t improvedEstimate;
+                if (uploadTotal > 0)
+                {
+                    // Remove the current upload's impact on the estimate,
+                    // replace by value returned by the HTTP client.
+                    //
+                    // Make all variables signed to ensure no subtraction is
+                    // performed on unsigned ints causing an overflow.
+                    improvedEstimate =
+                            Util::numeric_cast<int64_t>(estimatedRemaining_.load()) -
+                            Util::numeric_cast<int64_t>(totalSize) +
+                            Util::numeric_cast<int64_t>(uploadTotal);
+                }
+                else
+                {
+                    improvedEstimate = estimatedRemaining_;
+                }
 
-            if (newProgress != progress_)
-            {
-                progress_ = newProgress;
-                EMIT(events.progressed, progress_);
-            }
-        });
-        previouslyUploaded_ += msgSent.size;
+                SyncOutgoingMessagesProgress newProgress;
+                newProgress.uploadedBytes =
+                        previouslyUploaded_ + progress.uploadTransferred;
+                newProgress.totalBytes = previouslyUploaded_ + improvedEstimate;
+
+                if (newProgress != progress_)
+                {
+                    progress_ = newProgress;
+                    EMIT(events.progressed, progress_);
+                }
+
+                if (*shouldCancel) messagesClient_->cancel();
+            });
+        }
+        catch (Protocol::Canceled&)
+        {
+            throw SyncCanceled();
+        }
+
+        previouslyUploaded_ += msgSent->size;
 
         // create DAOs
-        auto message = makeMessageDao(dateSent, msgSent, *draft);
+        auto message = makeMessageDao(dateSent, *msgSent, *draft);
         auto sender = makeSender(message, *draft);
+
+        if (*shouldCancel) throw SyncCanceled();
 
         SmartSqlite::ScopedTransaction tx(session_, SmartSqlite::Immediate);
 
@@ -180,14 +208,14 @@ void MessagesUploader::run(std::shared_ptr<std::atomic<bool>> shouldCancel)
                     message, *conv,
                     sender, draft->senderAvatar(),
                     messageAttachments, session_);
-        Dao::DeliveryDao(session_).insertDelivery(msgSent.id, delivery);
+        Dao::DeliveryDao(session_).insertDelivery(msgSent->id, delivery);
 
         tx.commit();
 
         msgAdder_.emitSignals();
         EMIT(events.messageAttachmentsDownloaded,
              draft->conversationId(),
-             msgSent.id);
+             msgSent->id);
 
         clearDraft(*draft, messageAttachments);
     }

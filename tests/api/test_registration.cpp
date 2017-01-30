@@ -1,4 +1,4 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #include "tests/api/apitest.h"
 
 #include <kulloclient/api/Address.h>
@@ -116,18 +116,18 @@ K_TEST_F(ApiRegistration, DISABLED_registerAccountAsyncWorks)
     // FailsOnNull
     {
         // null in third arg (challenge) is allowed
-        EXPECT_THROW(uut->registerAccountAsync(nullptr, "", nullptr, "", nullptr),
+        EXPECT_THROW(uut->registerAccountAsync(nullptr, boost::none, nullptr, "", nullptr),
                      Util::AssertionFailed);
-        EXPECT_THROW(uut->registerAccountAsync(address, "", nullptr, "", nullptr),
+        EXPECT_THROW(uut->registerAccountAsync(address, boost::none, nullptr, "", nullptr),
                      Util::AssertionFailed);
-        EXPECT_THROW(uut->registerAccountAsync(nullptr, "", nullptr, "", registerAccountListener),
+        EXPECT_THROW(uut->registerAccountAsync(nullptr, boost::none, nullptr, "", registerAccountListener),
                      Util::AssertionFailed);
     }
     reset();
 
     // CanBeCanceled
     {
-        auto task = uut->registerAccountAsync(address, "", nullptr, "", registerAccountListener);
+        auto task = uut->registerAccountAsync(address, boost::none, nullptr, "", registerAccountListener);
         ASSERT_THAT(task, Not(IsNull()));
         EXPECT_NO_THROW(task->cancel());
     }
@@ -136,7 +136,7 @@ K_TEST_F(ApiRegistration, DISABLED_registerAccountAsyncWorks)
     // AddressBlocked
     {
         address = Api::Address::create("blocked#example.com");
-        auto task = uut->registerAccountAsync(address, "", nullptr, "", registerAccountListener);
+        auto task = uut->registerAccountAsync(address, boost::none, nullptr, "", registerAccountListener);
         ASSERT_THAT(task->waitForMs(TestUtil::asyncTimeoutMs()), Eq(true));
         EXPECT_THAT(registerAccountListener->callback_, Eq(CallbackType::addressNotAvailable));
         EXPECT_THAT(registerAccountListener->address_, Eq(address));
@@ -146,7 +146,7 @@ K_TEST_F(ApiRegistration, DISABLED_registerAccountAsyncWorks)
 
     // AddressExists
     {
-        auto task = uut->registerAccountAsync(address, "", nullptr, "", registerAccountListener);
+        auto task = uut->registerAccountAsync(address, boost::none, nullptr, "", registerAccountListener);
         ASSERT_THAT(task->waitForMs(TestUtil::asyncTimeoutMs()), Eq(true));
         EXPECT_THAT(registerAccountListener->callback_, Eq(CallbackType::addressNotAvailable));
         EXPECT_THAT(registerAccountListener->address_, Eq(address));
@@ -157,7 +157,7 @@ K_TEST_F(ApiRegistration, DISABLED_registerAccountAsyncWorks)
     // WorksWithoutChallenge
     {
         auto address = Api::Address::create("nochallenge#example.com");
-        auto task = uut->registerAccountAsync(address, "", nullptr, "", registerAccountListener);
+        auto task = uut->registerAccountAsync(address, boost::none, nullptr, "", registerAccountListener);
         ASSERT_THAT(task->waitForMs(TestUtil::asyncTimeoutMs()), Eq(true));
         EXPECT_THAT(registerAccountListener->callback_, Eq(CallbackType::finished));
         EXPECT_THAT(registerAccountListener->address_, Eq(address));
@@ -170,7 +170,7 @@ K_TEST_F(ApiRegistration, DISABLED_registerAccountAsyncWorks)
         auto address = Api::Address::create("withchallenge#example.com");
 
         // get challenge
-        auto task = uut->registerAccountAsync(address, "", nullptr, "", registerAccountListener);
+        auto task = uut->registerAccountAsync(address, boost::none, nullptr, "", registerAccountListener);
         ASSERT_THAT(task->waitForMs(TestUtil::asyncTimeoutMs()), Eq(true));
         EXPECT_THAT(registerAccountListener->callback_, Eq(CallbackType::challengeNeeded));
         EXPECT_THAT(registerAccountListener->address_, Eq(address));
@@ -180,7 +180,7 @@ K_TEST_F(ApiRegistration, DISABLED_registerAccountAsyncWorks)
         reset();
 
         // register account
-        task = uut->registerAccountAsync(address, "", challenge, "42", registerAccountListener);
+        task = uut->registerAccountAsync(address, boost::none, challenge, "42", registerAccountListener);
         ASSERT_THAT(task->waitForMs(TestUtil::asyncTimeoutMs()), Eq(true));
         EXPECT_THAT(registerAccountListener->callback_, Eq(CallbackType::finished));
         EXPECT_THAT(registerAccountListener->address_, Eq(address));

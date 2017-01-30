@@ -1,4 +1,4 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #include "tests/api/apimodeltest.h"
 
 #include <boost/optional.hpp>
@@ -137,8 +137,18 @@ K_TEST_F(ApiSession, accountInfoAsyncWorks)
 
     ASSERT_THAT(TestUtil::waitAndCheck(task, listener->isFinished_),
                 Eq(TestUtil::OK));
-    EXPECT_THAT(listener->accountInfo_->settingsUrl,
-                StrEq("https://accounts.example.com/foo/bar"));
+    ASSERT_THAT(listener->accountInfo_, Ne(boost::none));
+
+    auto info = listener->accountInfo_;
+    ASSERT_THAT(info->planName, Ne(boost::none));
+    ASSERT_THAT(info->storageQuota, Ne(boost::none));
+    ASSERT_THAT(info->storageUsed, Ne(boost::none));
+    ASSERT_THAT(info->settingsUrl, Ne(boost::none));
+
+    EXPECT_THAT(*info->planName, StrEq("Hobbyist"));
+    EXPECT_THAT(*info->storageQuota, Eq(1000000000));
+    EXPECT_THAT(*info->storageUsed, Eq(999999999));
+    EXPECT_THAT(*info->settingsUrl, StrEq("https://accounts.example.com/foo/bar"));
 }
 
 K_TEST_F(ApiSession, registerPushTokenFailsOnEmpty)

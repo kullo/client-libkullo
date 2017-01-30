@@ -1,8 +1,7 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #include "kulloclient/util/datetime.h"
 
 #include <cstdlib>
-#include <regex>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 #include <boost/format.hpp>
 
@@ -10,16 +9,17 @@
 #include "kulloclient/util/exceptions.h"
 #include "kulloclient/util/misc.h"
 #include "kulloclient/util/numeric_cast.h"
+#include "kulloclient/util/regex.h"
 
 namespace Kullo {
 namespace Util {
 
 namespace {
-const std::regex RFC3339_REGEX(
-        /* yyyy-mm-ddT     */ R"#((\d{4})-(\d{2})-(\d{2})T)#"
+// regex::icase not yet supported in wrapper, thus match [Tt] and [Zz]
+const Regex RFC3339_REGEX(
+        /* yyyy-mm-ddT     */ R"#((\d{4})-(\d{2})-(\d{2})[Tt])#"
         /* hh:mm:ss[.ffff] */ R"#((\d{2}):(\d{2}):(\d{2})(?:\.\d+)?)#"
-        /* Z|(+|-)hh:mm    */ R"#((?:Z|(\+|-)(\d{2}):(\d{2})))#",
-        std::regex::icase);
+        /* Z|(+|-)hh:mm    */ R"#((?:[Zz]|(\+|-)(\d{2}):(\d{2})))#");
 }
 
 struct DateTime::Impl
@@ -111,24 +111,24 @@ DateTime::DateTime(const std::string &str)
 {
     if (str.empty()) throw EmptyDateTime();
 
-    std::cmatch matches;
-    if (std::regex_match(str.c_str(), matches, RFC3339_REGEX))
+    std::vector<std::string> matches;
+    if (Regex::match(str, matches, RFC3339_REGEX))
     {
         size_t pos = 1;  // skip full match
-        int year = std::atoi(matches[pos++].first);
-        int month = std::atoi(matches[pos++].first);
-        int day = std::atoi(matches[pos++].first);
-        int hour = std::atoi(matches[pos++].first);
-        int minute = std::atoi(matches[pos++].first);
-        int second = std::atoi(matches[pos++].first);
+        int year = std::stoi(matches[pos++]);
+        int month = std::stoi(matches[pos++]);
+        int day = std::stoi(matches[pos++]);
+        int hour = std::stoi(matches[pos++]);
+        int minute = std::stoi(matches[pos++]);
+        int second = std::stoi(matches[pos++]);
 
         int tzOffsetMinutes = 0;
         const auto &matchSign = matches[pos++];
-        if (matchSign.matched)
+        if (!matchSign.empty())
         {
-            int sign = (*(matchSign.first) == '+') ? +1 : -1;
-            int tzHour = std::atoi(matches[pos++].first);
-            int tzMinute = std::atoi(matches[pos++].first);
+            int sign = (matchSign == "+") ? +1 : -1;
+            int tzHour = std::stoi(matches[pos++]);
+            int tzMinute = std::stoi(matches[pos++]);
             tzOffsetMinutes = sign * (tzHour * 60 + tzMinute);
         }
 

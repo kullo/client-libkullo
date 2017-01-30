@@ -4,7 +4,7 @@
 #pragma once
 
 #include "jni/support-lib/jni/djinni_support.hpp"
-#include "kulloclient/api/DateTime.h"
+#include "kulloclient/api_impl/DateTime.h"
 
 namespace JNI { namespace Kullo { namespace Api {
 

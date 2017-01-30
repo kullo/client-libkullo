@@ -1,4 +1,4 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #include "kulloclient/crypto/signer.h"
 
 #include <botan/botan_all.h>
@@ -23,7 +23,7 @@ std::vector<unsigned char> Signer::sign(
     kulloAssert(key.type() == AsymmetricKeyType::Signature);
 
     Botan::AutoSeeded_RNG rng;
-    Botan::PK_Signer sig(*key.p->privkey, EMSA);
+    Botan::PK_Signer sig(*key.p->privkey, rng, EMSA);
     return sig.sign_message(data, rng);
 }
 

@@ -1,4 +1,4 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 // must be included before anything that includes LibraryLogger due to "Log" name clash
 #include "tests/kullotest.h"
 

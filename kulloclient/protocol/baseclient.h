@@ -1,4 +1,4 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #pragma once
 
 #include <atomic>
@@ -8,10 +8,8 @@
 #include <jsoncpp/jsoncpp-forwards.h>
 
 #include "kulloclient/kulloclient-forwards.h"
-#include "kulloclient/http/HttpClient.h"
 #include "kulloclient/http/HttpHeader.h"
 #include "kulloclient/http/Response.h"
-#include "kulloclient/http/TransferProgress.h"
 
 namespace Kullo {
 namespace Protocol {

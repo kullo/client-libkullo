@@ -25,7 +25,10 @@ private:
     friend ::djinni::JniClass<AccountInfo>;
 
     const ::djinni::GlobalRef<jclass> clazz { ::djinni::jniFindClass("net/kullo/libkullo/api/AccountInfo") };
-    const jmethodID jconstructor { ::djinni::jniGetMethodID(clazz.get(), "<init>", "(Ljava/lang/String;)V") };
+    const jmethodID jconstructor { ::djinni::jniGetMethodID(clazz.get(), "<init>", "(Ljava/lang/String;Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/String;)V") };
+    const jfieldID field_planName { ::djinni::jniGetFieldID(clazz.get(), "planName", "Ljava/lang/String;") };
+    const jfieldID field_storageQuota { ::djinni::jniGetFieldID(clazz.get(), "storageQuota", "Ljava/lang/Long;") };
+    const jfieldID field_storageUsed { ::djinni::jniGetFieldID(clazz.get(), "storageUsed", "Ljava/lang/Long;") };
     const jfieldID field_settingsUrl { ::djinni::jniGetFieldID(clazz.get(), "settingsUrl", "Ljava/lang/String;") };
 };
 

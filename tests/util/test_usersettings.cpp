@@ -1,4 +1,4 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #include <kulloclient/util/binary.h>
 #include <kulloclient/util/datetime.h>
 #include <kulloclient/util/kulloaddress.h>

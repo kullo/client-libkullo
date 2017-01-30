@@ -1,4 +1,4 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #include "kulloclient/dao/messagedao.h"
 
 #include <ostream>
@@ -116,11 +116,12 @@ std::size_t MessageDao::sizeOfAllUndelivered(SharedSessionPtr session)
                 "SELECT "
                 // return a row (with 0) even when there are no sendable drafts
                 "coalesce(sum( "
-                "    length(m.text) + coalesce(a.total_size, 0) "
+                "    :msg_overhead + length(m.text) + coalesce(a.total_size, 0) "
                 "), 0) "
                 "FROM messages m, delivery d LEFT JOIN attsizes a "
-                "ON m.id = d.message_id "
-                "WHERE d.state = :state AND m.id = a.message_id ");
+                "ON m.id = a.message_id "
+                "WHERE m.id = d.message_id AND d.state = :state ");
+    stmt.bind(":msg_overhead", PER_MESSAGE_OVERHEAD);
     stmt.bind(":state", Util::Delivery::toString(Delivery::unsent));
     return stmt.execWithSingleResult().get<std::size_t>(0);
 }
@@ -171,7 +172,7 @@ std::ostream &operator<<(std::ostream &out, const MessageDao &dao)
     return out;
 }
 
-bool MessageDao::save(CreateOld createOldIfDoesntExist)
+bool MessageDao::save(const CreateOld createOldIfDoesntExist)
 {
     if (!dirty_)
     {

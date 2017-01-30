@@ -1,4 +1,4 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #include "kulloclient/sync/syncer.h"
 
 #include <chrono>
@@ -185,6 +185,15 @@ void Syncer::downloadAttachmentsForMessage(
                 new AttachmentSyncer(settings_.credentials, session, httpClient));
     attachmentSyncer_->events.messageAttachmentsDownloaded =
         forwardEvent(events.messageAttachmentsDownloaded);
+    attachmentSyncer_->events.progressed =
+            [this](SyncIncomingAttachmentsProgress progress)
+    {
+        progress_.incomingAttachments = progress;
+        EMIT(events.progressed, progress_);
+    };
+
+    progress_.phase = SyncPhase::IncomingAttachments;
+    EMIT(events.progressed, progress_);
     attachmentSyncer_->downloadForMessage(msgId, shouldCancel);
 
     auto runTime = std::chrono::steady_clock::now() - startTime_;

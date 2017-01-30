@@ -60,10 +60,12 @@ set(source_files
     util/test_kulloaddress.cpp
     util/test_masterkey.cpp
     util/test_mimemultipart.cpp
+    util/test_regex.cpp
     util/test_stacktrace.cpp
     util/test_strings.cpp
     util/test_urlencoding.cpp
     util/test_usersettings.cpp
+    util/test_version.cpp
     dbtest.cpp
     kullotest.cpp
 )

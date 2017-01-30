@@ -1,4 +1,4 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #include "kulloclient/crypto/asymmetriccryptor.h"
 
 #include <botan/botan_all.h>
@@ -23,7 +23,7 @@ std::vector<unsigned char> AsymmetricCryptor::encrypt(
     kulloAssert(key.type() == AsymmetricKeyType::Encryption);
 
     Botan::AutoSeeded_RNG rng;
-    Botan::PK_Encryptor_EME enc(*key.p->pubkey, EME);
+    Botan::PK_Encryptor_EME enc(*key.p->pubkey, rng, EME);
     return enc.encrypt(plaintext, rng);
 }
 
@@ -33,7 +33,8 @@ std::vector<unsigned char> AsymmetricCryptor::decrypt(
 {
     kulloAssert(key.type() == AsymmetricKeyType::Encryption);
 
-    Botan::PK_Decryptor_EME dec(*key.p->privkey, EME);
+    Botan::AutoSeeded_RNG rng;
+    Botan::PK_Decryptor_EME dec(*key.p->privkey, rng, EME);
     auto plaintext = dec.decrypt(ciphertext);
     return std::vector<unsigned char>(plaintext.cbegin(), plaintext.cend());
 }

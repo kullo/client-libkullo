@@ -1,4 +1,4 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #include "kulloclient/codec/privatekeyprovider.h"
 
 #include "kulloclient/dao/asymmetrickeypairdao.h"
@@ -25,8 +25,7 @@ Crypto::PrivateKey PrivateKeyProvider::getKey(
     // A reader-writer lock would allow concurrent reads, but we shouldn't
     // currently encounter any concurrency at all, so this is fine as it
     // guarantees thread safety.
-    std::lock_guard<std::mutex> cacheLock(cacheMutex_);
-    K_RAII(cacheLock);
+    std::lock_guard<std::mutex> cacheLock(cacheMutex_); K_RAII(cacheLock);
 
     auto key = std::make_tuple(type, keyId);
     auto cacheIter = cache_.find(key);

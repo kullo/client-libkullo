@@ -1,11 +1,10 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #include "kulloclient/api_impl/attachmentscontentworker.h"
 
 #include <smartsqlite/scopedtransaction.h>
 
 #include "kulloclient/dao/attachmentdao.h"
 #include "kulloclient/util/librarylogger.h"
-#include "kulloclient/util/misc.h"
 
 namespace Kullo {
 namespace ApiImpl {
@@ -27,12 +26,14 @@ void AttachmentsContentWorker::work()
 
     {
         auto session = Db::makeSession(sessionConfig_);
-        SmartSqlite::ScopedTransaction tx(session); K_RAII(tx);
+        SmartSqlite::ScopedTransaction tx(session);
 
         auto isDraft = isDraft_ ? Dao::IsDraft::Yes : Dao::IsDraft::No;
         auto dao = Dao::AttachmentDao::load(
                     isDraft, convOrMsgId_, attId_, session);
         if (dao) content = dao->content();
+
+        tx.commit();
     }
 
     notifyListener(convOrMsgId_, attId_, content);

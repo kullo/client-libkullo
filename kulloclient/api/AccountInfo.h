@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <boost/optional.hpp>
+#include <cstdint>
 #include <string>
 #include <utility>
 
@@ -10,14 +12,24 @@ namespace Kullo { namespace Api {
 
 /** Information about a Kullo account */
 struct AccountInfo final {
+    boost::optional<std::string> planName;
+    /** in bytes */
+    boost::optional<int64_t> storageQuota;
+    boost::optional<int64_t> storageUsed;
     /**
      * URL to web interface where account settings (notifications, ...) can be
      * configured
      */
-    std::string settingsUrl;
+    boost::optional<std::string> settingsUrl;
 
-    AccountInfo(std::string settingsUrl_)
-    : settingsUrl(std::move(settingsUrl_))
+    AccountInfo(boost::optional<std::string> planName_,
+                boost::optional<int64_t> storageQuota_,
+                boost::optional<int64_t> storageUsed_,
+                boost::optional<std::string> settingsUrl_)
+    : planName(std::move(planName_))
+    , storageQuota(std::move(storageQuota_))
+    , storageUsed(std::move(storageUsed_))
+    , settingsUrl(std::move(settingsUrl_))
     {}
 };
 

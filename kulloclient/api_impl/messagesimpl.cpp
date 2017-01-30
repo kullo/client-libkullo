@@ -1,10 +1,10 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #include "kulloclient/api_impl/messagesimpl.h"
 
 #include <algorithm>
 
 #include "kulloclient/api/Address.h"
-#include "kulloclient/api/DateTime.h"
+#include "kulloclient/api_impl/DateTime.h"
 #include "kulloclient/api_impl/deliveryimpl.h"
 #include "kulloclient/dao/deliverydao.h"
 #include "kulloclient/db/exceptions.h"
@@ -206,11 +206,9 @@ std::string MessagesImpl::text(int64_t msgId)
     return iter != messages_.end() ? iter->second.text() : "";
 }
 
-std::string MessagesImpl::textAsHtml(int64_t msgId)
+std::string MessagesImpl::textAsHtml(int64_t msgId, bool includeKulloAddresses)
 {
-    auto result = text(msgId);
-    Util::Strings::messageTextToHtml(result);
-    return result;
+    return Util::Strings::messageTextToHtml(text(msgId), includeKulloAddresses);
 }
 
 std::string MessagesImpl::footer(int64_t msgId)

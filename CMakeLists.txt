@@ -27,11 +27,11 @@ endif()
 
 project(libkullo)
 
-set(_bin_botan "${CMAKE_CURRENT_BINARY_DIR}/../bin-botan${install_prefix_suffix}")
-set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${_bin_botan}/cmake")
+set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_CURRENT_LIST_DIR}/../compilescripts/cmake-modules")
 include(CompilerSettings)
 include(KulloCommon)
 
+set(_bin_botan "${CMAKE_CURRENT_BINARY_DIR}/../bin-botan${install_prefix_suffix}")
 find_package(botan REQUIRED
     NO_MODULE
     PATHS "${_bin_botan}"

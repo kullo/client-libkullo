@@ -1,4 +1,4 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #include <vector>
 #include <kulloclient/util/gzipdecompressingfilter.h>
 #include <kulloclient/util/misc.h>

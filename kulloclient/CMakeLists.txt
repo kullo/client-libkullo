@@ -1,9 +1,16 @@
 include(api/source_files.cmake)
 include(http/source_files.cmake)
 
+if (APPLE)
+    set(apple_files
+        util/version_apple.mm
+    )
+endif()
+
 kullo_add_simple_library(
     ${api_cpp_source_files}
     ${http_cpp_source_files}
+    ${apple_files}
     registry.cpp
     api_impl/addressimpl.cpp
     api_impl/api_Address.cpp
@@ -23,6 +30,7 @@ kullo_add_simple_library(
     api_impl/clientgeneratekeysworker.cpp
     api_impl/clientimpl.cpp
     api_impl/conversationsimpl.cpp
+    api_impl/DateTime.cpp
     api_impl/deliveryimpl.cpp
     api_impl/draftattachmentsaddworker.cpp
     api_impl/draftattachmentscontentworker.cpp
@@ -135,6 +143,7 @@ kullo_add_simple_library(
     util/masterkey.cpp
     util/mimemultipart.cpp
     util/scopedbenchmark.cpp
+    util/regex.cpp
     util/stacktrace.cpp
     util/stltaskrunner.cpp
     util/strings.cpp
@@ -156,6 +165,10 @@ target_link_libraries(${target_name}
         smartsqlite
         z
 )
+if(WIN32)
+    # use boost::regex on Windows because MSVC's implementation gave us problems
+    target_link_libraries(${target_name} PUBLIC boost_regex)
+endif()
 
 if (APPLE)
     find_library(CORE_FOUNDATION CoreFoundation)
@@ -163,8 +176,14 @@ if (APPLE)
         message(FATAL ERROR "CoreFoundation not found")
     endif()
 
+    find_library(FOUNDATION Foundation)
+    if (NOT FOUNDATION)
+        message(FATAL ERROR "Foundation not found")
+    endif()
+
     target_link_libraries(${target_name}
         PUBLIC
             ${CORE_FOUNDATION}
+            ${FOUNDATION}
     )
 endif()

@@ -1,4 +1,4 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #include "kulloclient/api_impl/clientgeneratekeysworker.h"
 
 #include <atomic>
@@ -13,6 +13,7 @@
 #include "kulloclient/util/assert.h"
 #include "kulloclient/util/librarylogger.h"
 #include "kulloclient/util/misc.h"
+#include "kulloclient/util/multithreading.h"
 #include "kulloclient/util/scopedbenchmark.h"
 
 namespace Kullo {
@@ -76,10 +77,9 @@ void ClientGenerateKeysWorker::work()
     }
 
     // notify listener of completion
-    std::lock_guard<std::mutex> lock(mutex_); K_RAII(lock);
-    if (listener_)
+    if (auto listener = Util::copyGuardedByMutex(listener_, mutex_))
     {
-        listener_->finished(registration);
+        listener->finished(registration);
     }
 }
 
@@ -93,8 +93,11 @@ void ClientGenerateKeysWorker::addToProgress(
 {
     progress_ += progressGrowth;
 
-    std::lock_guard<std::mutex> lock(mutex_); K_RAII(lock);
-    if (listener_) listener_->progress(progress_);
+    // notify listener of completion
+    if (auto listener = Util::copyGuardedByMutex(listener_, mutex_))
+    {
+        listener->progress(progress_);
+    }
 }
 
 }

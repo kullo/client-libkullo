@@ -1,6 +1,6 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #include <kulloclient/api/UserSettings.h>
-#include <kulloclient/api/DateTime.h>
+#include <kulloclient/api_impl/DateTime.h>
 #include <kulloclient/util/assert.h>
 
 #include "tests/api/apimodeltest.h"

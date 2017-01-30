@@ -1,4 +1,4 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #pragma once
 
 #include <future>
@@ -9,7 +9,7 @@
 namespace Kullo {
 namespace Util {
 
-enum class StlTaskRunnerSate {
+enum class StlTaskRunnerState {
     Active,
     Inactive
 };
@@ -54,7 +54,7 @@ private:
     void pruneFinishedTasks();
 
     std::list<std::future<void>> futures_;
-    StlTaskRunnerSate state_ = StlTaskRunnerSate::Active;
+    StlTaskRunnerState state_ = StlTaskRunnerState::Active;
 };
 
 }

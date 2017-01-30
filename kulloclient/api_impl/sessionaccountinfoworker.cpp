@@ -1,4 +1,4 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #include "kulloclient/api_impl/sessionaccountinfoworker.h"
 
 #include "kulloclient/api/AccountInfo.h"
@@ -6,6 +6,8 @@
 #include "kulloclient/util/exceptions.h"
 #include "kulloclient/util/librarylogger.h"
 #include "kulloclient/util/misc.h"
+#include "kulloclient/util/multithreading.h"
+#include "kulloclient/util/numeric_cast.h"
 #include "kulloclient/registry.h"
 
 namespace Kullo {
@@ -28,19 +30,32 @@ void SessionAccountInfoWorker::work()
 
     try
     {
-        auto settingsLocation = accountClient_.getSettingsLocation();
+        const auto accountInfo = accountClient_.getInfo();
 
-        std::lock_guard<std::mutex> lock(mutex_); K_RAII(lock);
-        if (listener_) listener_->finished(Api::AccountInfo(settingsLocation));
+        // Convert optional<uint64> to optional<int64>
+        boost::optional<int64_t> storageQuota;
+        boost::optional<int64_t> storageUsed;
+        if (accountInfo.storageQuota) storageQuota = Util::numeric_cast<int64_t>(*accountInfo.storageQuota);
+        if (accountInfo.storageUsed) storageUsed = Util::numeric_cast<int64_t>(*accountInfo.storageUsed);
+
+        const auto out = Api::AccountInfo(
+                    accountInfo.planName,
+                    storageQuota,
+                    storageUsed,
+                    accountInfo.settingsLocation);
+
+        if (auto listener = Util::copyGuardedByMutex(listener_, mutex_))
+        {
+            listener->finished(out);
+        }
     }
     catch(std::exception &ex)
     {
         Log.e() << "SessionAccountInfoWorker failed: " << Util::formatException(ex);
 
-        std::lock_guard<std::mutex> lock(mutex_); K_RAII(lock);
-        if (listener_)
+        if (auto listener = Util::copyGuardedByMutex(listener_, mutex_))
         {
-            listener_->error(toNetworkError(std::current_exception()));
+            listener->error(toNetworkError(std::current_exception()));
         }
     }
 }

@@ -1,5 +1,5 @@
-/* Copyright 2013–2015 Kullo GmbH. All rights reserved. */
-#include "kulloclient/api/DateTime.h"
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
+#include "kulloclient/api_impl/DateTime.h"
 
 #include <iostream>
 #include <stdexcept>

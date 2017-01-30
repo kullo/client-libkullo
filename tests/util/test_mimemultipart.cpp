@@ -1,8 +1,9 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #include "tests/kullotest.h"
 #include "tests/testutil.h"
 
 #include <sstream>
+#include <kulloclient/util/exceptions.h>
 #include <kulloclient/util/mimemultipart.h>
 
 using namespace testing;
@@ -11,19 +12,44 @@ class Multipart : public KulloTest
 {
 public:
     const std::string TEST_FILES_DIR = TestUtil::assetPath() + "/multipart";
-    const std::string BOUNDARY = "boundary_.aBa._MTA1NTM3NjEwMg==Mjc5OTIzODY0MTI0MTc2NjY=";
+    const std::string BOUNDARY =
+            "boundary_.aBa._MTA1NTM3NjEwMg==Mjc5OTIzODY0MTI0MTc2NjY=";
 };
 
-TEST_F(Multipart, boundary)
+TEST_F(Multipart, validBoundaries)
 {
-    Kullo::Util::MimeMultipart mp;
-    EXPECT_THAT(mp.boundary(), Ne(""));
+    Kullo::Util::MimeMultipart mp1("x");
+    EXPECT_THAT(mp1.boundary(), Eq("x"));
 
     Kullo::Util::MimeMultipart mp2("3456789");
     EXPECT_THAT(mp2.boundary(), Eq("3456789"));
 
     Kullo::Util::MimeMultipart mp3(BOUNDARY);
     EXPECT_THAT(mp3.boundary(), Eq(BOUNDARY));
+}
+
+TEST_F(Multipart, invalidBoundaries)
+{
+    EXPECT_THROW(Kullo::Util::MimeMultipart(""),
+                 Kullo::Util::InvalidArgument);
+
+    EXPECT_THROW(Kullo::Util::MimeMultipart(" "),
+                 Kullo::Util::InvalidArgument);
+
+    EXPECT_THROW(Kullo::Util::MimeMultipart("x "),
+                 Kullo::Util::InvalidArgument);
+}
+
+TEST_F(Multipart, randomBoundary)
+{
+    auto boundary1 = Kullo::Util::MimeMultipart().boundary();
+    auto boundary2 = Kullo::Util::MimeMultipart().boundary();
+
+    EXPECT_THAT(boundary1, Not(Eq(boundary2)));
+
+    // check validity of generated boundaries
+    EXPECT_NO_THROW(Kullo::Util::MimeMultipart(boundary1));
+    EXPECT_NO_THROW(Kullo::Util::MimeMultipart(boundary2));
 }
 
 TEST_F(Multipart, makeEmptyPart)

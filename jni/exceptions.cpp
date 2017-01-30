@@ -1,4 +1,4 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #include "jni/support-lib/jni/djinni_support.hpp"
 #include "kulloclient/util/exceptions.h"
 

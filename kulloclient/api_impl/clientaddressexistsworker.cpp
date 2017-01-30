@@ -1,4 +1,4 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #include "kulloclient/api_impl/clientaddressexistsworker.h"
 
 #include "kulloclient/api_impl/exception_conversion.h"
@@ -6,6 +6,7 @@
 #include "kulloclient/util/kulloaddress.h"
 #include "kulloclient/util/librarylogger.h"
 #include "kulloclient/util/misc.h"
+#include "kulloclient/util/multithreading.h"
 #include "kulloclient/registry.h"
 
 namespace Kullo {
@@ -31,22 +32,25 @@ void ClientAddressExistsWorker::work()
                     Util::KulloAddress(address_->toString()),
                     Protocol::PublicKeysClient::LATEST_ENCRYPTION_PUBKEY);
 
-        std::lock_guard<std::mutex> lock(mutex_); K_RAII(lock);
-        if (listener_) listener_->finished(address_, true);
+        if (auto listener = Util::copyGuardedByMutex(listener_, mutex_))
+        {
+            listener->finished(address_, true);
+        }
     }
     catch (Protocol::NotFound)
     {
-        std::lock_guard<std::mutex> lock(mutex_); K_RAII(lock);
-        if (listener_) listener_->finished(address_, false);
+        if (auto listener = Util::copyGuardedByMutex(listener_, mutex_))
+        {
+            listener->finished(address_, false);
+        }
     }
     catch (std::exception &ex)
     {
         Log.e() << "ClientAddressExistsWorker failed: " << Util::formatException(ex);
 
-        std::lock_guard<std::mutex> lock(mutex_); K_RAII(lock);
-        if (listener_)
+        if (auto listener = Util::copyGuardedByMutex(listener_, mutex_))
         {
-            listener_->error(
+            listener->error(
                         address_,
                         toNetworkError(std::current_exception()));
         }

@@ -1,4 +1,4 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #include "kulloclient/sync/attachmentsyncer.h"
 
 #include <smartsqlite/exceptions.h>
@@ -13,6 +13,8 @@
 #include "kulloclient/dao/attachmentdao.h"
 #include "kulloclient/dao/messageattachmentsink.h"
 #include "kulloclient/dao/messagedao.h"
+#include "kulloclient/http/TransferProgress.h"
+#include "kulloclient/protocol/exceptions.h"
 #include "kulloclient/protocol/messagesclient.h"
 #include "kulloclient/sync/definitions.h"
 #include "kulloclient/sync/exceptions.h"
@@ -34,7 +36,7 @@ AttachmentSyncer::AttachmentSyncer(
         const std::shared_ptr<Http::HttpClient> &httpClient)
     : session_(session)
 {
-    client_.reset(new Protocol::MessagesClient(
+    messagesClient_.reset(new Protocol::MessagesClient(
                      *credentials.address,
                      *credentials.masterKey,
                       httpClient));
@@ -67,6 +69,8 @@ void AttachmentSyncer::run(std::shared_ptr<std::atomic<bool>> shouldCancel)
         auto msgId = Dao::AttachmentDao::msgIdForFirstDownloadable(session_);
         if (msgId <= 0) return;
 
+        if (*shouldCancel) throw SyncCanceled();
+
         previouslyDownloaded_ += downloadForMessage(msgId, shouldCancel);
     }
 }
@@ -89,6 +93,8 @@ size_t AttachmentSyncer::downloadForMessage(
         return 0;
     }
 
+    if (*shouldCancel) throw SyncCanceled();
+
     // get all attachments from DB
     auto attachmentDaoResult = Dao::AttachmentDao::allForMessage(
                 Dao::IsDraft::No,
@@ -100,6 +106,11 @@ size_t AttachmentSyncer::downloadForMessage(
     {
         totalSize += dao->size();
         attachmentDaos.push_back(std::move(dao));
+    }
+
+    // for downloading attachments of a single message: initialize estimate
+    if (estimatedRemaining_ == 0) {
+        estimatedRemaining_ = totalSize;
     }
 
     if (*shouldCancel) throw SyncCanceled();
@@ -121,10 +132,12 @@ size_t AttachmentSyncer::downloadForMessage(
         // only download attachments if they are non-empty
         if (totalSize > 0)
         {
+            if (*shouldCancel) throw SyncCanceled();
+
             // download attachments for the given message
-            auto attachments = client_->getMessageAttachments(
+            auto attachments = messagesClient_->getMessageAttachments(
                         msgId,
-                        [this, totalSize]
+                        [this, totalSize, shouldCancel]
                         (const Http::TransferProgress &progress)
             {
                 // make sure downloadTotal has a sane value
@@ -155,6 +168,8 @@ size_t AttachmentSyncer::downloadForMessage(
                     progress_ = newProgress;
                     EMIT(events.progressed, progress_);
                 }
+
+                if (*shouldCancel) messagesClient_->cancel();
             });
 
             // decrypt/decompress and store attachments
@@ -162,6 +177,10 @@ size_t AttachmentSyncer::downloadForMessage(
             stream.write(attachments.attachments);
         }
         stream.close();
+    }
+    catch (Protocol::Canceled&)
+    {
+        throw SyncCanceled();
     }
     catch (Crypto::IntegrityFailure&)
     {

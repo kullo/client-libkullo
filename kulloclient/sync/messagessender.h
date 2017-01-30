@@ -1,4 +1,4 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #pragma once
 
 #include <functional>
@@ -10,7 +10,6 @@
 #include "kulloclient/kulloclient-forwards.h"
 #include "kulloclient/codec/codecstructs.h"
 #include "kulloclient/db/dbsession.h"
-#include "kulloclient/http/HttpClient.h"
 #include "kulloclient/protocol/httpstructs.h"
 #include "kulloclient/protocol/publickeysclient.h"
 #include "kulloclient/sync/definitions.h"
@@ -53,6 +52,7 @@ public:
 
 private:
     void sendMessage(
+            std::shared_ptr<std::atomic<bool>> shouldCancel,
             id_type currentConversationId,
             id_type currentMessageId,
             const Util::KulloAddress &currentRecipient,

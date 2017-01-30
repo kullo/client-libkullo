@@ -1,4 +1,4 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #pragma once
 
 #include <list>
@@ -54,7 +54,7 @@ public:
      * @brief Saves the current state to DB if the state was changed.
      * @return true if state was dirty
      */
-    bool save(CreateOld createOldIfDoesntExist);
+    bool save(const CreateOld createOldIfDoesntExist);
 
     /// Clears all fields but id, old, lastModified and deleted.
     void clearData();

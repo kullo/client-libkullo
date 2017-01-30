@@ -1,4 +1,4 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #include "kulloclient/dao/draftdao.h"
 
 #include <smartsqlite/scopedsavepoint.h>
@@ -77,7 +77,7 @@ std::size_t DraftDao::sizeOfAllSendable(SharedSessionPtr session)
                 "SELECT "
                 // return a row (with 0) even when there are no sendable drafts
                 "coalesce(sum( "
-                "    (length(d.text) + coalesce(a.total_size, 0)) "
+                "    (:msg_overhead + length(d.text) + coalesce(a.total_size, 0)) "
                 "    * ( "
                 // commas = total chars - chars which are not a comma
                 "        length(c.participants) "
@@ -86,8 +86,9 @@ std::size_t DraftDao::sizeOfAllSendable(SharedSessionPtr session)
                 "    ) "
                 "), 0) "
                 "FROM drafts d, conversations c LEFT JOIN attsizes a "
-                "ON d.conversation_id = c.id "
-                "WHERE d.state = :state AND a.message_id = c.id ");
+                "ON c.id = a.message_id "
+                "WHERE d.conversation_id = c.id AND d.state = :state ");
+    stmt.bind(":msg_overhead", PER_MESSAGE_OVERHEAD);
     stmt.bind(":state", static_cast<int>(DraftState::Sending));
     return stmt.execWithSingleResult().get<std::size_t>(0);
 }

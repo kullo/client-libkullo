@@ -1,8 +1,9 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #include "kulloclient/api_impl/clientimpl.h"
 
 #include <atomic>
 #include <smartsqlite/logging.h>
+#include <smartsqlite/sqlite3.h>
 
 #include "kulloclient/api/Address.h"
 #include "kulloclient/api_impl/asynctaskimpl.h"
@@ -27,7 +28,9 @@ std::atomic<bool> staticallyInitialized_ { false };
 static void sqliteLogCallback(void *extraArg, int errcode, char *message)
 {
     K_UNUSED(extraArg);
-    Log.w() << "[SQLite] " << SmartSqlite::errcodeToString(errcode)
+
+    (errcode == SQLITE_WARNING_AUTOINDEX ? Log.d() : Log.w())
+            << "[SQLite] " << SmartSqlite::errcodeToString(errcode)
             << ": " << message;
 }
 

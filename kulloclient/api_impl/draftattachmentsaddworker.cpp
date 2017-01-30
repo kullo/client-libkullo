@@ -1,4 +1,4 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #include "kulloclient/api_impl/draftattachmentsaddworker.h"
 
 #include <boost/optional.hpp>
@@ -12,6 +12,7 @@
 #include "kulloclient/util/filesystem.h"
 #include "kulloclient/util/librarylogger.h"
 #include "kulloclient/util/limits.h"
+#include "kulloclient/util/multithreading.h"
 #include "kulloclient/util/scopedbenchmark.h"
 #include "kulloclient/util/strings.h"
 
@@ -95,15 +96,12 @@ void DraftAttachmentsAddWorker::work()
                 if (!lastListenerCall ||
                         lastListenerCall->bytesProcessed+LISTENER_CALL_INTERVAL < progress.bytesProcessed)
                 {
+                    if (auto listener = Util::copyGuardedByMutex(listener_, mutex_))
                     {
-                        std::lock_guard<std::mutex> lock(mutex_); K_RAII(lock);
-                        if (listener_)
-                        {
-                            listener_->progressed(convId_,
-                                                  attachmentId,
-                                                  progress.bytesProcessed,
-                                                  progress.bytesTotal);
-                        }
+                        listener->progressed(convId_,
+                                             attachmentId,
+                                             progress.bytesProcessed,
+                                             progress.bytesTotal);
                     }
                     lastListenerCall = progress;
                 }
@@ -116,14 +114,13 @@ void DraftAttachmentsAddWorker::work()
 
         // send updated state to model
         {
-            std::lock_guard<std::mutex> lock(mutex_); K_RAII(lock);
-            if (listener_)
+            if (auto listener = Util::copyGuardedByMutex(listener_, mutex_))
             {
-                listener_->finished(convId_, attachmentId, path_);
+                listener->finished(convId_, attachmentId, path_);
             }
-            if (sessionListener_)
+            if (auto sessionListener = Util::copyGuardedByMutex(sessionListener_, mutex_))
             {
-                sessionListener_->internalEvent(
+                sessionListener->internalEvent(
                             std::make_shared<Event::DraftAttachmentAddedEvent>(
                                 Data::DraftAttachment(convId_, attachmentId)));
             }
@@ -134,10 +131,9 @@ void DraftAttachmentsAddWorker::work()
         Log.e() << "DraftAttachmentsAddWorker failed: "
                 << Util::formatException(ex);
 
-        std::lock_guard<std::mutex> lock(mutex_); K_RAII(lock);
-        if (listener_)
+        if (auto listener = Util::copyGuardedByMutex(listener_, mutex_))
         {
-            listener_->error(
+            listener->error(
                         convId_, path_,
                         toLocalError(std::current_exception()));
         }

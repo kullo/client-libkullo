@@ -1,4 +1,4 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #include "kulloclient/util/strings.h"
 
 #include <algorithm>
@@ -6,7 +6,10 @@
 #include <cctype>
 #include <functional>
 #include <iomanip>
-#include <regex>
+#include <iterator>
+#include <vector>
+
+#include "kulloclient/util/regex.h"
 
 namespace Kullo {
 namespace Util {
@@ -24,13 +27,16 @@ namespace {
 // [unreserved, sub-delims, :, @] | pct-encoded
 // Addition, not standardized: "[" and "]", which are illegal but commonly used
 // & is replaced by &amp; because these regexes describe HTML-escaped URIs
-const std::string URI_PCHAR = R"((?:[-0-9a-zA-Z\._~!\$'\(\)\*\+,;=:@\[\]]|&amp;|(?:%[0-9a-fA-F]{2})))";
+const std::string URI_PCHAR      = R"((?:&amp;|(?:%[0-9a-fA-F]{2})|[-0-9a-zA-Z\._~!\$'\(\)\*\+,;=:@\[\]]))";
+// pchar | [/, ?]
+const std::string URI_PCHAR_PLUS = R"((?:&amp;|(?:%[0-9a-fA-F]{2})|[-0-9a-zA-Z\._~!\$'\(\)\*\+,;=:@\[\]/\?]))";
+
 
 // (/pchar*)*
 const std::string URI_PATH_ABEMPTY = "(?:/" + URI_PCHAR + "*)*";
 
 // (pchar | [/, ?])*
-const std::string URI_QUERY = "(?:" + URI_PCHAR + R"(|[/\?])*)";
+const std::string URI_QUERY = URI_PCHAR_PLUS + "*";
 const std::string URI_FRAGMENT = URI_QUERY;
 
 const std::string DOMAIN_CHARS =
@@ -48,17 +54,74 @@ const std::string HTTP_URI = std::string(
             "(?:#" + URI_FRAGMENT + ")?"                    // fragment (optional)
             );
 
-const std::regex LINKS_IN_MESSAGE_REGEX(
+const Regex LINKS_IN_MESSAGE_REGEX(
         "(^|[\\t\\n\\r \\(])(" + HTTP_URI + ")"
         );
 
-const std::regex LINKS_IN_BRACKETS_REGEX(
+const Regex LINKS_IN_BRACKETS_REGEX(
         "\\((" + HTTP_URI + ")\\)"
         );
 
-const std::regex LINKS_BEFORE_PUNCTUATION_REGEX(
+const Regex LINKS_BEFORE_PUNCTUATION_REGEX(
         "(" + HTTP_URI + ")([,;\\.:](?:$|[\\t\\n\\r ]))"
         );
+
+const std::string KULLO_ADRESS =
+    "[a-z0-9]+"                      // username part
+    "(?:"
+        "[-\\._]"                    // separator: -._
+        "[a-z0-9]+"                  // username part
+    ")*"
+    "#"
+    "(?:"
+        "[a-z0-9]+(?:-[a-z0-9]+)*"
+    "\\.)+"
+    "[a-z][a-z0-9]*(?:-[a-z0-9]+)*"
+;
+
+const Regex KULLO_ADRESS_IN_MESSAGE_REGEX(
+        "(^|[\\t\\n\\r \\(;])(" + KULLO_ADRESS + ")"
+        );
+
+const std::string KULLO_ADDRESS_SCHEME = "kulloInternal";
+
+// Splits htmlIn in parts from <a ...> to </a> and non-link parts (rest).
+// replaceCallback is called with all non-link parts as an argument.
+// The result is the concatination of all link parts and replaceCallback of
+// all non-link parts.
+std::string replaceInNonLinkParts(
+        const std::string &htmlIn,
+        const std::function<std::string (const std::string)> &replaceCallback)
+{
+    std::string out;
+
+    int htmlInPos = 0;
+    bool foundLink;
+    do {
+        auto linkBegin = htmlIn.find("<a ", htmlInPos);
+
+        if (linkBegin != std::string::npos)
+        {
+            const auto linkEnd = htmlIn.find("</a>", linkBegin)+4;
+            const auto beforeLinkTextPart = std::string(htmlIn.begin()+htmlInPos, htmlIn.begin()+linkBegin);
+            const auto linkTextPart = std::string(htmlIn.begin()+linkBegin, htmlIn.begin()+linkEnd);
+            out += replaceCallback(beforeLinkTextPart);
+            out += linkTextPart;
+            htmlInPos = linkEnd;
+            foundLink = true;
+        }
+        else
+        {
+            const auto rest = std::string(htmlIn.begin()+htmlInPos, htmlIn.end());
+            out += replaceCallback(rest);
+            foundLink = false;
+        }
+
+    } while (foundLink);
+
+    return out;
+}
+
 }
 
 std::string Strings::padLeft(const std::string &input, const size_t targetLength, const char paddingChar)
@@ -86,53 +149,67 @@ std::string Strings::toLower(const std::string &s)
     return out;
 }
 
-void Strings::trim(std::string &s)
+std::string Strings::trim(const std::string &input)
 {
+    std::string s = input;
+
     // trim left
     s.erase(s.begin(), std::find_if(s.begin(), s.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
     // trim right
     s.erase(std::find_if(s.rbegin(), s.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
+
+    return s;
 }
 
-void Strings::highlightLinks(std::string &target)
+std::string Strings::highlightWebLinks(const std::string &htmlIn)
 {
-    std::string buffer = target;
+    std::string out = htmlIn;
 
-    buffer = std::regex_replace(buffer,
-                                LINKS_BEFORE_PUNCTUATION_REGEX,
-                                "<a href=\"$1\">$1</a>$2");
-    buffer = std::regex_replace(buffer,
-                                LINKS_IN_BRACKETS_REGEX,
-                                "(<a href=\"$1\">$1</a>)");
-    buffer = std::regex_replace(buffer,
-                                LINKS_IN_MESSAGE_REGEX,
-                                "$1<a href=\"$2\">$2</a>");
+    out = Regex::replace(out, LINKS_BEFORE_PUNCTUATION_REGEX, "<a href=\"$1\">$1</a>$2");
+    out = Regex::replace(out, LINKS_IN_BRACKETS_REGEX, "(<a href=\"$1\">$1</a>)");
+    out = Regex::replace(out, LINKS_IN_MESSAGE_REGEX, "$1<a href=\"$2\">$2</a>");
 
-    target.swap(buffer);
+    return out;
 }
 
-void Strings::escapeMessageText(std::string &target)
+std::string Strings::highlightKulloAdresses(const std::string &htmlIn)
 {
-    std::string buffer;
-    buffer.reserve(std::string::size_type(std::round(target.size() * 1.10))); // prepare for 10 % overhead
-    for(char &c : target)
+    std::string out = replaceInNonLinkParts(htmlIn, [](const std::string &part) {
+        return Regex::replace(
+                    part,
+                    KULLO_ADRESS_IN_MESSAGE_REGEX,
+                    "$1<a href=\"" + KULLO_ADDRESS_SCHEME + ":$2\">$2</a>");
+    });
+    return out;
+}
+
+std::string Strings::htmlEscape(const std::string &plaintext)
+{
+    std::string out;
+    out.reserve(std::string::size_type(std::round(plaintext.size() * 1.10))); // prepare for 10 % overhead
+    for(const char &c : plaintext)
     {
         switch(c)
         {
-        case '&':  buffer.append("&amp;");  break;
-        case '\"': buffer.append("&quot;"); break;
-        case '<':  buffer.append("&lt;");   break;
-        case '>':  buffer.append("&gt;");   break;
-        default:   buffer.append(1, c);     break;
+        case '&':  out.append("&amp;");  break;
+        case '\"': out.append("&quot;"); break;
+        case '<':  out.append("&lt;");   break;
+        case '>':  out.append("&gt;");   break;
+        default:   out.append(1, c);     break;
         }
     }
-    target.swap(buffer);
+    return out;
 }
 
-void Strings::messageTextToHtml(std::string &target)
+std::string Strings::messageTextToHtml(const std::string &in, bool includeKulloAddresses)
 {
-    escapeMessageText(target);
-    highlightLinks(target);
+    std::string out = htmlEscape(in);
+    out = highlightWebLinks(out);
+    if (includeKulloAddresses)
+    {
+        out = highlightKulloAdresses(out);
+    }
+    return out;
 }
 
 std::string Strings::formatReadable(std::int64_t value)

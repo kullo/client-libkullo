@@ -1,4 +1,4 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #include "kulloclient/api_impl/syncerimpl.h"
 
 #include <chrono>
@@ -102,6 +102,9 @@ void SyncerImpl::cancel()
 
     messageAttachmentDownloadQueue_.clear();
     enqueuedSync_.reset();
+
+    task_->cancel();
+
     task_ = nullptr;
     running_ = false;
 }

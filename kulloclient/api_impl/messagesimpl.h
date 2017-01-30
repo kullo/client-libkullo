@@ -1,4 +1,4 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #pragma once
 
 #include <map>
@@ -50,7 +50,7 @@ public:
 
     std::string text(int64_t msgId) override;
 
-    std::string textAsHtml(int64_t msgId) override;
+    std::string textAsHtml(int64_t msgId, bool includeKulloAddresses) override;
 
     std::string footer(int64_t msgId) override;
 

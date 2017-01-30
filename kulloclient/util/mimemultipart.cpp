@@ -1,16 +1,71 @@
-/* Copyright 2013–2016 Kullo GmbH. All rights reserved. */
+/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #include "kulloclient/util/mimemultipart.h"
+
+#include <cstdlib>
 
 #include "kulloclient/util/assert.h"
 #include "kulloclient/util/binary.h"
+#include "kulloclient/util/exceptions.h"
 #include "kulloclient/util/filesystem.h"
 
 namespace Kullo {
 namespace Util {
 
+namespace {
+
+// https://tools.ietf.org/html/rfc2046#section-5.1.1
+std::string BCHARSNOSPACE =
+        "0123456789"
+        "abcdefghijklmnopqrstuvwxyz"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "'()+_,-./:=?";
+std::string BCHARS = BCHARSNOSPACE + " ";
+std::string::size_type MIN_BOUNDARY_LENGTH = 1;
+std::string::size_type MAX_BOUNDARY_LENGTH = 70;
+
+std::string randomBoundary()
+{
+    std::string result(MAX_BOUNDARY_LENGTH, 'x');
+    for (auto iter = result.begin(); iter != result.end(); ++iter)
+    {
+        // Yes, this is using rand instead of a cryptographically secure RNG.
+        // Additionally, modular division doesn't lead to a perfectly uniform
+        // distribution. However, this is good enough for our use case.
+        *iter = BCHARSNOSPACE.at(std::rand() % BCHARSNOSPACE.size());
+    }
+    return result;
+}
+
+}
+
+MimeMultipart::MimeMultipart()
+    : boundary_(randomBoundary())
+{}
+
 MimeMultipart::MimeMultipart(const std::string &boundary)
     : boundary_(boundary)
 {
+    if ((boundary_.length() < MIN_BOUNDARY_LENGTH)
+            || (boundary_.length() > MAX_BOUNDARY_LENGTH))
+    {
+        throw InvalidArgument(
+                    std::string("Bad boundary length: ") +
+                    std::to_string(boundary_.size()));
+    }
+
+    if (boundary_.back() == ' ')
+    {
+        throw InvalidArgument("Boundary must not end with a space");
+    }
+    for (auto bchar : boundary_)
+    {
+        if (BCHARS.find(bchar) == std::string::npos)
+        {
+            throw InvalidArgument(
+                        std::string("Invalid char in boundary: ") +
+                        std::to_string(bchar));
+        }
+    }
 }
 
 std::string MimeMultipart::boundary() const
