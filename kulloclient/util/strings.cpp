@@ -25,15 +25,35 @@ namespace {
 // ECMAScript does not support named backreferences.
 
 // [unreserved, sub-delims, :, @] | pct-encoded
-// Addition, not standardized: "[" and "]", which are illegal but commonly used
 // & is replaced by &amp; because these regexes describe HTML-escaped URIs
-const std::string URI_PCHAR      = R"((?:&amp;|(?:%[0-9a-fA-F]{2})|[-0-9a-zA-Z\._~!\$'\(\)\*\+,;=:@\[\]]))";
-// pchar | [/, ?]
-const std::string URI_PCHAR_PLUS = R"((?:&amp;|(?:%[0-9a-fA-F]{2})|[-0-9a-zA-Z\._~!\$'\(\)\*\+,;=:@\[\]/\?]))";
+std::string makeUriPcharPattern(const std::string &specialChars)
+{
+    return
+            "(?:"
+                "&amp;"
+                "|"
+                "(?:"
+                    "%[0-9a-fA-F]{2}"
+                ")"
+                "|"
+                R"([-0-9a-zA-Z\._~!\$'\(\)\*\+,;=:@)" + specialChars + "]"
+            ")";
+}
 
+// Addition, not standardized: "[" and "]", which are illegal but commonly used
+// pchar | [/, ?]
+const std::string URI_PCHAR_PLUS = makeUriPcharPattern("\\[\\]/\\?");
+
+const std::string URI_PCHAR_PATH = makeUriPcharPattern(
+            "\\[\\]"
+            // Allowed for the .de TLD (https://de.wikipedia.org/wiki/Internationalisierter_Domainname#Zeichens.C3.A4tze)
+            "àáâãäåæāăąçćĉċčďđèéêëēĕėęěĝğġģĥħìíîïĩīĭįıðĵķĸĺļľłñńņňŋòóôõöøōŏőœŕŗřśŝşšţťŧùúûüũūŭůűųÿŷŵýźżžþß"
+            // Upper case: python3 -c "print('àáâãäåæ...'.upper())"
+            "ÀÁÂÃÄÅÆĀĂĄÇĆĈĊČĎĐÈÉÊËĒĔĖĘĚĜĞĠĢĤĦÌÍÎÏĨĪĬĮIÐĴĶĸĹĻĽŁÑŃŅŇŊÒÓÔÕÖØŌŎŐŒŔŖŘŚŜŞŠŢŤŦÙÚÛÜŨŪŬŮŰŲŸŶŴÝŹŻŽÞ"
+            );
 
 // (/pchar*)*
-const std::string URI_PATH_ABEMPTY = "(?:/" + URI_PCHAR + "*)*";
+const std::string URI_PATH_ABEMPTY = "(?:/" + URI_PCHAR_PATH + "*)*";
 
 // (pchar | [/, ?])*
 const std::string URI_QUERY = URI_PCHAR_PLUS + "*";
@@ -165,9 +185,17 @@ std::string Strings::highlightWebLinks(const std::string &htmlIn)
 {
     std::string out = htmlIn;
 
-    out = Regex::replace(out, LINKS_BEFORE_PUNCTUATION_REGEX, "<a href=\"$1\">$1</a>$2");
-    out = Regex::replace(out, LINKS_IN_BRACKETS_REGEX, "(<a href=\"$1\">$1</a>)");
-    out = Regex::replace(out, LINKS_IN_MESSAGE_REGEX, "$1<a href=\"$2\">$2</a>");
+    out = replaceInNonLinkParts(out, [](const std::string &part) {
+        return Regex::replace(part, LINKS_IN_BRACKETS_REGEX, "(<a href=\"$1\">$1</a>)");
+    });
+
+    out = replaceInNonLinkParts(out, [](const std::string &part) {
+        return Regex::replace(part, LINKS_BEFORE_PUNCTUATION_REGEX, "<a href=\"$1\">$1</a>$2");
+    });
+
+    out = replaceInNonLinkParts(out, [](const std::string &part) {
+        return Regex::replace(part, LINKS_IN_MESSAGE_REGEX, "$1<a href=\"$2\">$2</a>");
+    });
 
     return out;
 }

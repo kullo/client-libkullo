@@ -29,10 +29,6 @@ public:
         std::function<void(SyncProgress progress)>
         progressed;
 
-        ///  Emitted when the syncer has finished successfully.
-        std::function<void(SyncProgress progress)>
-        finished;
-
         std::function<void(id_type conversationId)>
         conversationAdded;
 

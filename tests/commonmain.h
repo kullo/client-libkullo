@@ -76,7 +76,7 @@ inline int commonMain(
         desc.add_options()
                 ("assets",
                  po::value<std::string>()->default_value(
-                     getExeDir(argv[0]) + "/../../" + reponame + "/tests/assets"),
+                     getExeDir(argv[0]) + "/../../../" + reponame + "/tests/assets"),
                  "set path for test assets");
     }
     po::variables_map varMap;

@@ -2,6 +2,7 @@
 #include "kulloclient/api_impl/draftattachmentsimpl.h"
 
 #include <algorithm>
+#include <smartsqlite/scopedtransaction.h>
 
 #include "kulloclient/api_impl/asynctaskimpl.h"
 #include "kulloclient/api_impl/draftattachmentsaddworker.h"
@@ -90,7 +91,12 @@ void DraftAttachmentsImpl::setFilename(
     auto daoIter = attachments_.find(std::make_pair(convId, attId));
     if (daoIter != attachments_.end())
     {
-        daoIter->second.setFilename(filename);
+        auto &dao = daoIter->second;
+
+        SmartSqlite::ScopedTransaction tx(sessionData_->dbSession_, SmartSqlite::Immediate);
+        dao.setFilename(filename);
+        dao.save();
+        tx.commit();
     }
 }
 
@@ -206,7 +212,9 @@ Event::ApiEvents DraftAttachmentsImpl::doRemove(
     {
         if (removeFromDb == AlsoRemoveFromDb::Yes)
         {
+            SmartSqlite::ScopedTransaction tx(sessionData_->dbSession_, SmartSqlite::Immediate);
             daoIter->second.deletePermanently();
+            tx.commit();
         }
         attachments_.erase(daoIter);
 

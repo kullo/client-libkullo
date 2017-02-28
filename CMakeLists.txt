@@ -7,14 +7,9 @@ endif()
 
 # These must come before the project directive, won't work otherwise
 
-if(((NOT CMAKE_BUILD_TYPE) OR (CMAKE_BUILD_TYPE STREQUAL "Debug")) AND (NOT CMAKE_GENERATOR STREQUAL "Xcode"))
-    set(install_prefix_suffix "-debug")
-else()
-    set(install_prefix_suffix "")
-endif()
 set(
     CMAKE_INSTALL_PREFIX
-        "${CMAKE_CURRENT_BINARY_DIR}/../bin-libkullo${install_prefix_suffix}"
+        "${CMAKE_CURRENT_BINARY_DIR}/../bin-libkullo"
     CACHE PATH "destination for make install"
 )
 
@@ -31,10 +26,9 @@ set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_CURRENT_LIST_DIR}/../compi
 include(CompilerSettings)
 include(KulloCommon)
 
-set(_bin_botan "${CMAKE_CURRENT_BINARY_DIR}/../bin-botan${install_prefix_suffix}")
 find_package(botan REQUIRED
     NO_MODULE
-    PATHS "${_bin_botan}"
+    PATHS "${CMAKE_CURRENT_BINARY_DIR}/../bin-botan"
     NO_DEFAULT_PATH
 )
 

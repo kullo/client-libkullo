@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <boost/optional.hpp>
+#include <smartsqlite/scopedtransaction.h>
 
 #include "kulloclient/api_impl/DateTime.h"
 #include "kulloclient/api_impl/addressimpl.h"
@@ -66,9 +67,11 @@ int64_t ConversationsImpl::add(
     auto convId = get(partString);
     if (convId == -1)
     {
+        SmartSqlite::ScopedTransaction tx(sessionData_->dbSession_, SmartSqlite::Immediate);
         auto dao = Dao::ConversationDao(sessionData_->dbSession_);
         dao.setParticipants(partString);
         dao.save();
+        tx.commit();
 
         convId = dao.id();
 
@@ -281,7 +284,9 @@ Event::ApiEvents ConversationsImpl::conversationWillBeRemoved(int64_t convId)
         // does not necessarily exist
         latestMessageTimestampsCache_.erase(convId);
 
+        SmartSqlite::ScopedTransaction tx(sessionData_->dbSession_, SmartSqlite::Immediate);
         dao.deletePermanently();
+        tx.commit();
         conversations_.erase(daoIter);
 
         result.emplace(Api::EventType::ConversationRemoved,

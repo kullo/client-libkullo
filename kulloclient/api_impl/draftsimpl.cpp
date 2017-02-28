@@ -2,6 +2,7 @@
 #include "kulloclient/api_impl/draftsimpl.h"
 
 #include <stdexcept>
+#include <smartsqlite/scopedtransaction.h>
 
 #include "kulloclient/api/DraftState.h"
 #include "kulloclient/api/Event.h"
@@ -47,17 +48,22 @@ void DraftsImpl::setText(int64_t convId, const std::string &text)
     {
         if (draftIter->second.text() != text)
         {
+            SmartSqlite::ScopedTransaction tx(sessionData_->dbSession_, SmartSqlite::Immediate);
             draftIter->second.setText(text);
             draftIter->second.save();
+            tx.commit();
             changed = true;
         }
     }
     else
     {
+        SmartSqlite::ScopedTransaction tx(sessionData_->dbSession_, SmartSqlite::Immediate);
         Dao::DraftDao dao(sessionData_->dbSession_);
         dao.setConversationId(convId);
         dao.setText(text);
         dao.save();
+        tx.commit();
+
         drafts_.emplace(convId, std::move(dao));
         changed = true;
     }
@@ -104,6 +110,7 @@ void DraftsImpl::prepareToSend(int64_t convId)
         throw std::logic_error("UserSettings::name() must be non-empty");
     }
 
+    SmartSqlite::ScopedTransaction tx(sessionData_->dbSession_, SmartSqlite::Immediate);
     dao.setState(Dao::DraftState::Sending);
     dao.setFooter(userSettings->footer());
     dao.setSenderName(senderName);
@@ -111,6 +118,7 @@ void DraftsImpl::prepareToSend(int64_t convId)
     dao.setSenderAvatar(userSettings->avatar());
     dao.setSenderAvatarMimeType(userSettings->avatarMimeType());
     dao.save();
+    tx.commit();
 
     Api::Event event(Api::EventType::DraftStateChanged, convId, -1, -1);
     sessionListener_->internalEvent(
@@ -124,9 +132,11 @@ void DraftsImpl::clear(int64_t convId)
     auto draftIter = drafts_.find(convId);
     if (draftIter != drafts_.end())
     {
+        SmartSqlite::ScopedTransaction tx(sessionData_->dbSession_, SmartSqlite::Immediate);
         Dao::DraftDao &dao = draftIter->second;
         dao.clear();
         dao.save();
+        tx.commit();
 
         sessionListener_->internalEvent(
                     std::make_shared<Event::DraftRemovedEvent>(convId));

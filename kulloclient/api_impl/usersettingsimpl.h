@@ -45,6 +45,7 @@ public:
 
 private:
     Util::UserSettings userSettings_;
+    Db::SharedSessionPtr dbSession_;
     Dao::UserSettingsDao dao_;
 };
 

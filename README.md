@@ -63,6 +63,12 @@ Tips and Tricks
 Changelog
 ---------
 
+### v61 (2017-02-28)
+
+ * Link highlighting: improve detection for links in brackets
+ * Link highlighting: allow some special characters in URL path
+ * Improve implementation of concurrent database access
+
 ### v60 (2017-01-30)
 
  * Process plan and storage information from Kullo server

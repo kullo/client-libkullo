@@ -2,6 +2,7 @@
 #include "kulloclient/sync/profilesyncer.h"
 
 #include <algorithm>
+#include <smartsqlite/scopedtransaction.h>
 
 #include "kulloclient/crypto/symmetriccryptor.h"
 #include "kulloclient/crypto/symmetrickeygenerator.h"
@@ -49,7 +50,9 @@ void ProfileSyncer::run(std::shared_ptr<std::atomic<bool>> shouldCancel)
     for (auto remoteChange : remoteChanges)
     {
         remoteChange.value = decrypt(remoteChange.value);
+        SmartSqlite::ScopedTransaction tx(session_, SmartSqlite::Immediate);
         dao.setRemoteValue(remoteChange);
+        tx.commit();
         EMIT(events.profileModified, remoteChange.key);
         maxLastModified = std::max(maxLastModified, remoteChange.lastModified);
     }
@@ -64,7 +67,9 @@ void ProfileSyncer::run(std::shared_ptr<std::atomic<bool>> shouldCancel)
             localChange.value = encrypt(localChange.value);
             auto remoteChange = client_->uploadChange(localChange);
             remoteChange.value = decrypt(remoteChange.value);
+            SmartSqlite::ScopedTransaction tx(session_, SmartSqlite::Immediate);
             dao.setRemoteValue(remoteChange);
+            tx.commit();
         }
         catch (Protocol::Conflict)
         {

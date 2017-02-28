@@ -2,6 +2,7 @@
 #include "kulloclient/api_impl/messagesimpl.h"
 
 #include <algorithm>
+#include <smartsqlite/scopedtransaction.h>
 
 #include "kulloclient/api/Address.h"
 #include "kulloclient/api_impl/DateTime.h"
@@ -96,9 +97,11 @@ Event::ApiEvents MessagesImpl::removeFromDb(Dao::MessageDao &dao)
     auto conversationId = dao.conversationId();
     auto messageId = dao.id();
 
+    SmartSqlite::ScopedTransaction tx(sessionData_->dbSession_, SmartSqlite::Immediate);
     dao.clearData();
     dao.setDeleted(true);
     dao.save(Dao::CreateOld::Yes);
+    tx.commit();
 
     return {
         Api::Event(Api::EventType::MessageRemoved,
@@ -345,8 +348,10 @@ void MessagesImpl::setState(MessagesImpl::MessageState state, int64_t msgId, boo
         {
             id_type conversationId = dao.conversationId();
 
+            SmartSqlite::ScopedTransaction tx(sessionData_->dbSession_, SmartSqlite::Immediate);
             dao.setState(daoStateType,value);
             dao.save(Dao::CreateOld::Yes);
+            tx.commit();
 
             sessionListener_->internalEvent(
                         std::make_shared<Event::ConversationModifiedEvent>(

@@ -446,6 +446,11 @@ void AttachmentDao::deletePermanently()
 {
     if (deleted_) return;
 
+    const std::string savepointName =
+            "attachmentdao_delete_permanently_"
+            + std::to_string(draft_) + "_" + std::to_string(messageId_);
+    SmartSqlite::ScopedSavepoint sp(session_, savepointName);
+
     auto stmt = session_->prepare(
                 "DELETE FROM attachments "
                 "WHERE draft = :draft AND message_id = :message_id AND idx = :idx");
@@ -461,6 +466,8 @@ void AttachmentDao::deletePermanently()
     stmt.bind(":message_id", messageId_);
     stmt.bind(":idx", index_);
     stmt.execWithoutResult();
+
+    sp.release();
 
     deleted_ = true;
     storedInDb_ = false;

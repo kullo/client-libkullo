@@ -173,12 +173,12 @@ endif()
 if (APPLE)
     find_library(CORE_FOUNDATION CoreFoundation)
     if (NOT CORE_FOUNDATION)
-        message(FATAL ERROR "CoreFoundation not found")
+        message(FATAL_ERROR "CoreFoundation not found")
     endif()
 
     find_library(FOUNDATION Foundation)
     if (NOT FOUNDATION)
-        message(FATAL ERROR "Foundation not found")
+        message(FATAL_ERROR "Foundation not found")
     endif()
 
     target_link_libraries(${target_name}

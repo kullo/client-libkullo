@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <smartsqlite/exceptions.h>
+#include <smartsqlite/scopedtransaction.h>
 
 #include "kulloclient/api_impl/asynctaskimpl.h"
 #include "kulloclient/api_impl/messageattachmentscontentworker.h"
@@ -144,7 +145,9 @@ Event::ApiEvents MessageAttachmentsImpl::messageRemoved(
         auto daoIter = attachments_.find(std::make_pair(msgId, attId));
         if (daoIter != attachments_.end())
         {
+            SmartSqlite::ScopedTransaction tx(sessionData_->dbSession_, SmartSqlite::Immediate);
             daoIter->second.deletePermanently();
+            tx.commit();
             attachments_.erase(daoIter);
 
             auto &idsForMsg = attIds_[msgId];

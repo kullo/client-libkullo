@@ -168,7 +168,6 @@ void Syncer::run(
             .count();
 
     Log.i() << "Sync finished successfully. " << progress_;
-    EMIT(events.finished, progress_);
 }
 
 void Syncer::downloadAttachmentsForMessage(
@@ -201,7 +200,7 @@ void Syncer::downloadAttachmentsForMessage(
             std::chrono::duration_cast<std::chrono::milliseconds>(runTime)
             .count();
 
-    EMIT(events.finished, progress_);
+    Log.i() << "Sync finished successfully. " << progress_;
 }
 
 }

@@ -1,6 +1,8 @@
 /* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #include "kulloclient/api_impl/sendersimpl.h"
 
+#include <smartsqlite/scopedtransaction.h>
+
 #include "kulloclient/api_impl/addressimpl.h"
 #include "kulloclient/dao/avatardao.h"
 #include "kulloclient/db/exceptions.h"
@@ -101,7 +103,9 @@ Event::ApiEvents SendersImpl::messageRemoved(int64_t convId, int64_t msgId)
     auto daoIter = senders_.find(msgId);
     if (daoIter != senders_.end())
     {
+        SmartSqlite::ScopedTransaction tx(sessionData_->dbSession_, SmartSqlite::Immediate);
         daoIter->second.deletePermanently();
+        tx.commit();
         senders_.erase(daoIter);
     }
     return {{}};

@@ -1,6 +1,8 @@
 /* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #include "kulloclient/api_impl/usersettingsimpl.h"
 
+#include <smartsqlite/scopedtransaction.h>
+
 #include "kulloclient/api/Address.h"
 #include "kulloclient/api/MasterKey.h"
 #include "kulloclient/api_impl/DateTime.h"
@@ -16,6 +18,7 @@ UserSettingsImpl::UserSettingsImpl(
         const Db::SharedSessionPtr &dbSession,
         const Util::Credentials &credentials)
     : userSettings_(Util::UserSettings(credentials))
+    , dbSession_(dbSession)
     , dao_(dbSession)
 {
     dao_.load(userSettings_);
@@ -40,7 +43,9 @@ std::string UserSettingsImpl::name()
 void UserSettingsImpl::setName(const std::string &name)
 {
     userSettings_.name = name;
+    SmartSqlite::ScopedTransaction tx(dbSession_, SmartSqlite::Immediate);
     dao_.setName(name);
+    tx.commit();
 }
 
 std::string UserSettingsImpl::organization()
@@ -51,7 +56,9 @@ std::string UserSettingsImpl::organization()
 void UserSettingsImpl::setOrganization(const std::string &organization)
 {
     userSettings_.organization = organization;
+    SmartSqlite::ScopedTransaction tx(dbSession_, SmartSqlite::Immediate);
     dao_.setOrganization(organization);
+    tx.commit();
 }
 
 std::string UserSettingsImpl::footer()
@@ -62,7 +69,9 @@ std::string UserSettingsImpl::footer()
 void UserSettingsImpl::setFooter(const std::string &footer)
 {
     userSettings_.footer = footer;
+    SmartSqlite::ScopedTransaction tx(dbSession_, SmartSqlite::Immediate);
     dao_.setFooter(footer);
+    tx.commit();
 }
 
 std::string UserSettingsImpl::avatarMimeType()
@@ -73,7 +82,9 @@ std::string UserSettingsImpl::avatarMimeType()
 void UserSettingsImpl::setAvatarMimeType(const std::string &mimeType)
 {
     userSettings_.avatarMimeType = mimeType;
+    SmartSqlite::ScopedTransaction tx(dbSession_, SmartSqlite::Immediate);
     dao_.setAvatarMimeType(mimeType);
+    tx.commit();
 }
 
 std::vector<uint8_t> UserSettingsImpl::avatar()
@@ -84,7 +95,9 @@ std::vector<uint8_t> UserSettingsImpl::avatar()
 void UserSettingsImpl::setAvatar(const std::vector<uint8_t> &avatar)
 {
     userSettings_.avatarData = avatar;
+    SmartSqlite::ScopedTransaction tx(dbSession_, SmartSqlite::Immediate);
     dao_.setAvatarData(avatar);
+    tx.commit();
 }
 
 boost::optional<Api::DateTime> UserSettingsImpl::nextMasterKeyBackupReminder()
@@ -104,7 +117,9 @@ void UserSettingsImpl::setNextMasterKeyBackupReminder(
     if (!reminderDate)
     {
         userSettings_.nextMasterKeyBackupReminder = boost::none;
+        SmartSqlite::ScopedTransaction tx(dbSession_, SmartSqlite::Immediate);
         dao_.setNextMasterKeyBackupReminder(boost::none);
+        tx.commit();
         return;
     }
 
@@ -115,7 +130,9 @@ void UserSettingsImpl::setNextMasterKeyBackupReminder(
         date.tzOffsetMinutes
     };
     userSettings_.nextMasterKeyBackupReminder = result;
+    SmartSqlite::ScopedTransaction tx(dbSession_, SmartSqlite::Immediate);
     dao_.setNextMasterKeyBackupReminder(result);
+    tx.commit();
 }
 
 Event::ApiEvents UserSettingsImpl::userSettingModified(const std::string &key)

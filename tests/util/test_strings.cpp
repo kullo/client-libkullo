@@ -192,17 +192,6 @@ K_TEST_F(Strings, highlightLinksSpecialChars)
     EXPECT_THAT(result, HasSubstr("</a>"));
     EXPECT_THAT(result, HasSubstr("href=\"https://github.com/kullo?result=2*3\""));
 
-    // percent encoding
-    result = Util::Strings::highlightWebLinks("Link http://en.wikipedia.org/wiki/H%26M");
-    EXPECT_THAT(result, HasSubstr("</a>"));
-    EXPECT_THAT(result, HasSubstr("href=\"http://en.wikipedia.org/wiki/H%26M\""));
-
-    // Chrome does not escape "(" and ")" when user copies a link
-    // from the address bar. Firefox does.
-    result = Util::Strings::highlightWebLinks("Different meanings of bank http://en.wikipedia.org/wiki/Bank_(disambiguation)");
-    EXPECT_THAT(result, HasSubstr("</a>"));
-    EXPECT_THAT(result, HasSubstr("href=\"http://en.wikipedia.org/wiki/Bank_(disambiguation)\""));
-
     result = Util::Strings::highlightWebLinks("Link http://ticketsystem.com/projects/1/report?filters[]=done ok?");
     EXPECT_THAT(result, HasSubstr("</a>"));
     EXPECT_THAT(result, HasSubstr("href=\"http://ticketsystem.com/projects/1/report?filters[]=done\""));
@@ -211,6 +200,39 @@ K_TEST_F(Strings, highlightLinksSpecialChars)
     EXPECT_THAT(result, HasSubstr("</a>"));
     EXPECT_THAT(result, HasSubstr(R"(href="https://www.google.de/maps/place/52%C2%B031%2725.2%22N+13%C2%B022%2706.0%22E/@52.523677,13.368332,173m")"));
 
+    // no path but query and fragment
+    result = Util::Strings::highlightWebLinks("Link https://foo.bar?123;456#home ok?");
+    EXPECT_THAT(result, HasSubstr("</a>"));
+    EXPECT_THAT(result, HasSubstr(R"(href="https://foo.bar?123;456#home")"));
+}
+
+K_TEST_F(Strings, highlightLinksSpecialCharsPath)
+{
+    std::string result;
+
+    // percent encoding
+    result = Util::Strings::highlightWebLinks("Link http://en.wikipedia.org/wiki/H%26M");
+    EXPECT_THAT(result, HasSubstr("</a>"));
+    EXPECT_THAT(result, HasSubstr("href=\"http://en.wikipedia.org/wiki/H%26M\""));
+
+    // broken percent encoding
+    result = Util::Strings::highlightWebLinks("Link http://en.wikipedia.org/wiki/H%2");
+    EXPECT_THAT(result, HasSubstr("</a>"));
+    EXPECT_THAT(result, HasSubstr("href=\"http://en.wikipedia.org/wiki/H\""));
+    result = Util::Strings::highlightWebLinks("Link http://en.wikipedia.org/wiki/H%_2");
+    EXPECT_THAT(result, HasSubstr("</a>"));
+    EXPECT_THAT(result, HasSubstr("href=\"http://en.wikipedia.org/wiki/H\""));
+    result = Util::Strings::highlightWebLinks("Link http://en.wikipedia.org/wiki/H%xx");
+    EXPECT_THAT(result, HasSubstr("</a>"));
+    EXPECT_THAT(result, HasSubstr("href=\"http://en.wikipedia.org/wiki/H\""));
+
+    // Chrome does not escape "(" and ")" when user copies a link
+    // from the address bar. Firefox does.
+    result = Util::Strings::highlightWebLinks("Different meanings of bank http://en.wikipedia.org/wiki/Bank_(disambiguation)");
+    EXPECT_THAT(result, HasSubstr("</a>"));
+    EXPECT_THAT(result, HasSubstr("href=\"http://en.wikipedia.org/wiki/Bank_(disambiguation)\""));
+
+    // valid path chars
     for (const auto &character : std::vector<std::string>{".", "-", ",", ";", "~", "_", "+", "*"})
     {
         result = Util::Strings::highlightWebLinks("A link: http://example.com/some" + character + "thing");
@@ -218,22 +240,46 @@ K_TEST_F(Strings, highlightLinksSpecialChars)
         EXPECT_THAT(result, HasSubstr("href=\"http://example.com/some" + character + "thing\""));
     }
 
-    for (const auto &character : std::vector<std::string>{"ä", "ß", "`", "^", ">", "<", "{", "}", "\\"})
+    // invalid path chars
+    for (const auto &character : std::vector<std::string>{"`", "^", ">", "<", "{", "}", "\\"})
     {
         result = Util::Strings::highlightWebLinks("A link: http://example.com/some" + character + "thing");
         EXPECT_THAT(result, HasSubstr("</a>"));
         EXPECT_THAT(result, Not(HasSubstr("href=\"http://example.com/some" + character + "thing\"")));
     }
 
-    // ; in path, empty fragment
-    result = Util::Strings::highlightWebLinks("Link https://foo.bar/123;456# ok?");
-    EXPECT_THAT(result, HasSubstr("</a>"));
-    EXPECT_THAT(result, HasSubstr(R"(href="https://foo.bar/123;456#")"));
+    // Opera and Safari think it is a good idea, to export unescapted special chars in the path
+    // that are not covered by the standard, e.g.
+    //   https://de.wikipedia.org/wiki/Vorsätze_für_Maßeinheiten#SI-Pr.C3.A4fixe
+    //   https://be.wikipedia.org/wiki/Пі
+    //   https://be.wikipedia.org/wiki/Ірацыянальны_лік
+    // Users blame Kullo for not highlighting those. Since we do not have full unicode support
+    // we whitelist commonly used characters on a case to case basis.
+    for (const auto &character : std::vector<std::string>{"ä", "ö", "ü", "Ä", "Ö", "Ü", "ß"})
+    {
+        result = Util::Strings::highlightWebLinks("A link: http://example.com/some" + character + "thing");
+        EXPECT_THAT(result, HasSubstr("</a>"));
+        EXPECT_THAT(result, HasSubstr("href=\"http://example.com/some" + character + "thing\""));
+    }
+}
 
-    // no path but query and fragment
-    result = Util::Strings::highlightWebLinks("Link https://foo.bar?123;456#home ok?");
+K_TEST_F(Strings, highlightLinksSpecialCharsFragment)
+{
+    std::string result;
+
+    // empty fragment
+    result = Util::Strings::highlightWebLinks("Link https://foo.bar/123456# ok?");
     EXPECT_THAT(result, HasSubstr("</a>"));
-    EXPECT_THAT(result, HasSubstr(R"(href="https://foo.bar?123;456#home")"));
+    EXPECT_THAT(result, HasSubstr(R"(href="https://foo.bar/123456#")"));
+
+    // No special chars in fragment
+    // Safari/Opera: https://de.wikipedia.org/wiki/Vorsätze_für_Maßeinheiten#SI-Pr.C3.A4fixe
+    for (const auto &character : std::vector<std::string>{"ä", "ö", "ü", "Ä", "Ö", "Ü", "ß"})
+    {
+        result = Util::Strings::highlightWebLinks("A link: http://example.com/some#" + character + "thing");
+        EXPECT_THAT(result, HasSubstr("</a>"));
+        EXPECT_THAT(result, HasSubstr("href=\"http://example.com/some#\""));
+    }
 }
 
 K_TEST_F(Strings, highlightLinkInBrackets)
@@ -248,9 +294,18 @@ K_TEST_F(Strings, highlightLinkInBrackets)
     EXPECT_THAT(result, HasSubstr("</a>"));
     EXPECT_THAT(result, HasSubstr(R"|(href="http://example.com/dir/root_(unix)")|"));
 
+    result = Util::Strings::highlightWebLinks("Auf der Seite (http://example.com/dir/root#page2) habe ich die Infos gefunden.");
+    EXPECT_THAT(result, HasSubstr("</a>"));
+    EXPECT_THAT(result, HasSubstr(R"|(href="http://example.com/dir/root#page2")|"));
+
     result = Util::Strings::highlightWebLinks("Auf einigen Seiten (http://example.com zum Beispiel) habe ich die Infos gefunden.");
     EXPECT_THAT(result, HasSubstr("</a>"));
     EXPECT_THAT(result, HasSubstr(R"(href="http://example.com")"));
+
+    // brackets over punctuation
+    result = Util::Strings::highlightWebLinks("Auf der Seite (http://example.com/path).");
+    EXPECT_THAT(result, HasSubstr("</a>"));
+    EXPECT_THAT(result, HasSubstr(R"(href="http://example.com/path")"));
 }
 
 K_TEST_F(Strings, highlightLinkBeforePunctuation)
