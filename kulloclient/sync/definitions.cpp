@@ -20,11 +20,23 @@ std::string percentStr(int64_t part, int64_t whole)
 }
 }
 
+bool AttachmentsBlockDownloadProgress::operator==(const AttachmentsBlockDownloadProgress &other) const
+{
+    return other.downloadedBytes == downloadedBytes
+            && other.totalBytes == totalBytes;
+}
+
+bool AttachmentsBlockDownloadProgress::operator!=(const AttachmentsBlockDownloadProgress &other) const
+{
+    return !(*this==other);
+}
+
 bool SyncIncomingAttachmentsProgress::operator==(
         const SyncIncomingAttachmentsProgress &other) const
 {
     return other.downloadedBytes == downloadedBytes
-            && other.totalBytes == totalBytes;
+            && other.totalBytes == totalBytes
+            && other.attachmentsBlocks == attachmentsBlocks;
 }
 
 bool SyncIncomingAttachmentsProgress::operator!=(
@@ -61,7 +73,22 @@ std::ostream &operator<<(std::ostream &out, const SyncIncomingAttachmentsProgres
 {
     out << "incoming attachments: "
         << rhs.downloadedBytes << "/" << rhs.totalBytes
-        << "B (" << percentStr(rhs.downloadedBytes, rhs.totalBytes) << ")";
+        << "B (" << percentStr(rhs.downloadedBytes, rhs.totalBytes) << ") ";
+
+    out << "[";
+    bool firstAttachmentElement = true;
+    for (const auto &iter: rhs.attachmentsBlocks) {
+        auto msgId = iter.first;
+        auto downloaded = iter.second.downloadedBytes;
+        auto total = iter.second.totalBytes;
+
+        if (!firstAttachmentElement) out << ", ";
+        out << msgId << ": " << percentStr(downloaded, total);
+
+        firstAttachmentElement = false;
+    }
+    out << "]";
+
     return out;
 }
 

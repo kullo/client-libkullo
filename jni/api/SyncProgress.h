@@ -25,7 +25,7 @@ private:
     friend ::djinni::JniClass<SyncProgress>;
 
     const ::djinni::GlobalRef<jclass> clazz { ::djinni::jniFindClass("net/kullo/libkullo/api/SyncProgress") };
-    const jmethodID jconstructor { ::djinni::jniGetMethodID(clazz.get(), "<init>", "(Lnet/kullo/libkullo/api/SyncPhase;JJJJJJJJJJJ)V") };
+    const jmethodID jconstructor { ::djinni::jniGetMethodID(clazz.get(), "<init>", "(Lnet/kullo/libkullo/api/SyncPhase;JJJJJJJJLjava/util/HashMap;JJJ)V") };
     const jfieldID field_phase { ::djinni::jniGetFieldID(clazz.get(), "phase", "Lnet/kullo/libkullo/api/SyncPhase;") };
     const jfieldID field_incomingMessagesProcessed { ::djinni::jniGetFieldID(clazz.get(), "incomingMessagesProcessed", "J") };
     const jfieldID field_incomingMessagesTotal { ::djinni::jniGetFieldID(clazz.get(), "incomingMessagesTotal", "J") };
@@ -35,6 +35,7 @@ private:
     const jfieldID field_incomingMessagesDeleted { ::djinni::jniGetFieldID(clazz.get(), "incomingMessagesDeleted", "J") };
     const jfieldID field_incomingAttachmentsDownloadedBytes { ::djinni::jniGetFieldID(clazz.get(), "incomingAttachmentsDownloadedBytes", "J") };
     const jfieldID field_incomingAttachmentsTotalBytes { ::djinni::jniGetFieldID(clazz.get(), "incomingAttachmentsTotalBytes", "J") };
+    const jfieldID field_incomingAttachments { ::djinni::jniGetFieldID(clazz.get(), "incomingAttachments", "Ljava/util/HashMap;") };
     const jfieldID field_outgoingMessagesUploadedBytes { ::djinni::jniGetFieldID(clazz.get(), "outgoingMessagesUploadedBytes", "J") };
     const jfieldID field_outgoingMessagesTotalBytes { ::djinni::jniGetFieldID(clazz.get(), "outgoingMessagesTotalBytes", "J") };
     const jfieldID field_runTimeMs { ::djinni::jniGetFieldID(clazz.get(), "runTimeMs", "J") };

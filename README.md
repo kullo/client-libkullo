@@ -63,6 +63,12 @@ Tips and Tricks
 Changelog
 ---------
 
+### v62 (2017-04-14)
+
+ * Fix crash bug in messageModified
+ * Set a HTTP timeout of 10 seconds for non-attachment requests
+ * Add single attachment download progress to sync progress
+
 ### v61 (2017-02-28)
 
  * Link highlighting: improve detection for links in brackets

@@ -3,8 +3,10 @@
 
 #pragma once
 
+#include "kulloclient/api/AttachmentsBlockDownloadProgress.h"
 #include "kulloclient/api/SyncPhase.h"
 #include <cstdint>
+#include <unordered_map>
 #include <utility>
 
 namespace Kullo { namespace Api {
@@ -22,6 +24,7 @@ struct SyncProgress final {
     /** incoming attachments (unit: bytes) */
     int64_t incomingAttachmentsDownloadedBytes;
     int64_t incomingAttachmentsTotalBytes;
+    std::unordered_map<int64_t, AttachmentsBlockDownloadProgress> incomingAttachments;
     /** outgoing messages + attachments (unit: uncompressed bytes) */
     int64_t outgoingMessagesUploadedBytes;
     int64_t outgoingMessagesTotalBytes;
@@ -37,6 +40,7 @@ struct SyncProgress final {
                  int64_t incomingMessagesDeleted_,
                  int64_t incomingAttachmentsDownloadedBytes_,
                  int64_t incomingAttachmentsTotalBytes_,
+                 std::unordered_map<int64_t, AttachmentsBlockDownloadProgress> incomingAttachments_,
                  int64_t outgoingMessagesUploadedBytes_,
                  int64_t outgoingMessagesTotalBytes_,
                  int64_t runTimeMs_)
@@ -49,6 +53,7 @@ struct SyncProgress final {
     , incomingMessagesDeleted(std::move(incomingMessagesDeleted_))
     , incomingAttachmentsDownloadedBytes(std::move(incomingAttachmentsDownloadedBytes_))
     , incomingAttachmentsTotalBytes(std::move(incomingAttachmentsTotalBytes_))
+    , incomingAttachments(std::move(incomingAttachments_))
     , outgoingMessagesUploadedBytes(std::move(outgoingMessagesUploadedBytes_))
     , outgoingMessagesTotalBytes(std::move(outgoingMessagesTotalBytes_))
     , runTimeMs(std::move(runTimeMs_))

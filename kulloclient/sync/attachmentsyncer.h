@@ -48,8 +48,6 @@ public:
             const std::shared_ptr<Http::HttpClient> &httpClient);
     ~AttachmentSyncer();
 
-    SyncIncomingAttachmentsProgress initialProgress();
-
     /// @brief Start the syncer.
     void run(std::shared_ptr<std::atomic<bool>> shouldCancel);
 

@@ -2,7 +2,10 @@
 #include "kulloclient/api_impl/syncerworker.h"
 
 #include <exception>
+#include <unordered_map>
 
+#include "kulloclient/api/AttachmentsBlockDownloadProgress.h"
+#include "kulloclient/api/SyncPhase.h"
 #include "kulloclient/api/SyncProgress.h"
 #include "kulloclient/api_impl/exception_conversion.h"
 #include "kulloclient/event/conversationaddedevent.h"
@@ -23,6 +26,53 @@
 
 namespace Kullo {
 namespace ApiImpl {
+
+namespace {
+inline Api::SyncPhase implToApi(Sync::SyncPhase phase) {
+    switch (phase) {
+    case Sync::SyncPhase::Keys:
+        return Api::SyncPhase::Keys;
+    case Sync::SyncPhase::Profile:
+        return Api::SyncPhase::Profile;
+    case Sync::SyncPhase::IncomingMessages:
+        return Api::SyncPhase::IncomingMessages;
+    case Sync::SyncPhase::IncomingAttachments:
+        return Api::SyncPhase::IncomingAttachments;
+    case Sync::SyncPhase::OutgoingMessages:
+        return Api::SyncPhase::OutgoingMessages;
+    }
+}
+
+inline Api::AttachmentsBlockDownloadProgress implToApi(const Sync::AttachmentsBlockDownloadProgress &in) {
+    return Api::AttachmentsBlockDownloadProgress(in.downloadedBytes, in.totalBytes);
+}
+
+std::unordered_map<int64_t, Api::AttachmentsBlockDownloadProgress> implToApi(const std::unordered_map<int64_t, Sync::AttachmentsBlockDownloadProgress> &in) {
+    std::unordered_map<int64_t, Api::AttachmentsBlockDownloadProgress> out;
+    for (const auto &iter : in) {
+        out.emplace(iter.first, implToApi(iter.second));
+    }
+    return out;
+}
+
+inline Api::SyncProgress implToApi(Sync::SyncProgress progress) {
+    return Api::SyncProgress(
+                implToApi(progress.phase),
+                progress.incomingMessages.processedMessages,
+                progress.incomingMessages.totalMessages,
+                progress.incomingMessages.newMessages,
+                progress.incomingMessages.newUnreadMessages,
+                progress.incomingMessages.modifiedMessages,
+                progress.incomingMessages.deletedMessages,
+                progress.incomingAttachments.downloadedBytes,
+                progress.incomingAttachments.totalBytes,
+                implToApi(progress.incomingAttachments.attachmentsBlocks),
+                progress.outgoingMessages.uploadedBytes,
+                progress.outgoingMessages.totalBytes,
+                progress.runTimeMs
+                );
+}
+}
 
 SyncerWorker::SyncerWorker(
         std::shared_ptr<SessionData> sessionData,
@@ -175,20 +225,7 @@ void SyncerWorker::setupEvents()
         if (auto listener = safeListener())
         {
             Log.d() << "Sync progress: " << progress;
-            listener->progressed(Api::SyncProgress(
-                                      implToApi(progress.phase),
-                                      progress.incomingMessages.processedMessages,
-                                      progress.incomingMessages.totalMessages,
-                                      progress.incomingMessages.newMessages,
-                                      progress.incomingMessages.newUnreadMessages,
-                                      progress.incomingMessages.modifiedMessages,
-                                      progress.incomingMessages.deletedMessages,
-                                      progress.incomingAttachments.downloadedBytes,
-                                      progress.incomingAttachments.totalBytes,
-                                      progress.outgoingMessages.uploadedBytes,
-                                      progress.outgoingMessages.totalBytes,
-                                      progress.runTimeMs
-                                      ));
+            listener->progressed(implToApi(progress));
         }
     };
 }

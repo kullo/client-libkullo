@@ -25,11 +25,6 @@
 namespace {
 const auto KULLO_DEVELOPMENT_DOMAIN = std::string{"kullo.test"};
 const auto KULLO_DEVELOPMENT_PORT = 8001;
-
-// This timeout limits the entire download or send process. When sending 100 MiB via
-// 1 MBit/s this takes 14 Minutes. Since a timeout this high is still to fragile,
-// this does not help at all. Thus we set the timeout to 0 = inifinite.
-const std::int32_t DEFAULT_TIMEOUT_MS = 0;
 }
 
 namespace Kullo {
@@ -115,13 +110,16 @@ std::vector<Http::HttpHeader> BaseClient::makeHeaders(
 
 Http::Response BaseClient::sendRequest(
         const Http::Request &request,
-        const boost::optional<ProgressHandler> &onProgress)
+        const boost::optional<ProgressHandler> &onProgress,
+        const std::int32_t timeout)
 {
-    return doSendRequest(request, nullptr, onProgress);
+    return doSendRequest(request, nullptr, onProgress, timeout);
 }
 
 Http::Response BaseClient::sendRequest(
-        const Http::Request &request, const Json::Value &reqJson)
+        const Http::Request &request,
+        const Json::Value &reqJson,
+        const std::int32_t timeout)
 {
     Json::StreamWriterBuilder wBuilder;
     wBuilder["commentStyle"] = "None";
@@ -131,15 +129,16 @@ Http::Response BaseClient::sendRequest(
     writer->write(reqJson, &reqStream);
 
     auto reqBody = reqStream.str();
-    return doSendRequest(request, &reqBody);
+    return doSendRequest(request, &reqBody, boost::none, timeout);
 }
 
 Http::Response BaseClient::sendRequest(
         const Http::Request &request,
         const std::string &reqBody,
-        const boost::optional<ProgressHandler> &onProgress)
+        const boost::optional<ProgressHandler> &onProgress,
+        const std::int32_t timeout)
 {
-    return doSendRequest(request, &reqBody, onProgress);
+    return doSendRequest(request, &reqBody, onProgress, timeout);
 }
 
 void BaseClient::throwOnError(const Http::Response &response)
@@ -195,8 +194,10 @@ Json::Value BaseClient::parseJsonBody()
 }
 
 Http::Response BaseClient::doSendRequest(
-        const Http::Request &request, const std::string *reqBody,
-        const boost::optional<ProgressHandler> onProgress)
+        const Http::Request &request,
+        const std::string *reqBody,
+        const boost::optional<ProgressHandler> onProgress,
+        const std::int32_t timeout)
 {
     canceled_ = false;
 
@@ -250,7 +251,7 @@ Http::Response BaseClient::doSendRequest(
     });
 
     Log.i() << request;
-    auto response = client_->sendRequest(request, DEFAULT_TIMEOUT_MS, reqL, respL);
+    auto response = client_->sendRequest(request, timeout, reqL, respL);
     throwOnError(response);
     return response;
 }

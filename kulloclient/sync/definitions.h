@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <iosfwd>
+#include <unordered_map>
 
 namespace Kullo {
 namespace Sync {
@@ -26,10 +27,20 @@ struct SyncIncomingMessagesProgress
     int64_t deletedMessages = 0;
 };
 
+// a block of attachments from a single message
+struct AttachmentsBlockDownloadProgress {
+    int64_t downloadedBytes = 0;
+    int64_t totalBytes = 0;
+
+    bool operator==(const AttachmentsBlockDownloadProgress &other) const;
+    bool operator!=(const AttachmentsBlockDownloadProgress &other) const;
+};
+
 struct SyncIncomingAttachmentsProgress
 {
     int64_t downloadedBytes = 0;
     int64_t totalBytes = 0;
+    std::unordered_map<int64_t, AttachmentsBlockDownloadProgress> attachmentsBlocks;
 
     bool operator==(const SyncIncomingAttachmentsProgress &other) const;
     bool operator!=(const SyncIncomingAttachmentsProgress &other) const;

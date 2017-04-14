@@ -14,6 +14,7 @@
 #include "kulloclient/event/messageremovedevent.h"
 #include "kulloclient/event/sendapieventsevent.h"
 #include "kulloclient/util/assert.h"
+#include "kulloclient/util/librarylogger.h"
 #include "kulloclient/util/misc.h"
 #include "kulloclient/util/strings.h"
 
@@ -256,15 +257,17 @@ Event::ApiEvents MessagesImpl::messageModified(int64_t convId, int64_t msgId)
                 msgId, Dao::Old::No, sessionData_->dbSession_);
     if (!dao) throw Db::DatabaseIntegrityError("MessagesImpl::messageModified");
 
-    auto pos = messages_.find(msgId);
-    auto oldDao = pos->second;
-    bool stateChanged = *dao != oldDao;
-    if (pos != messages_.end())
+    bool stateChanged = true;
+    auto iter = messages_.find(msgId);
+    if (iter != messages_.end())
     {
-        messages_.emplace_hint(messages_.erase(pos), msgId, *dao);
+        auto oldDao = iter->second;
+        stateChanged = *dao != oldDao;
+        messages_.emplace_hint(messages_.erase(iter), msgId, *dao);
     }
     else
     {
+        Log.w() << "messageModified for unknown message; inserting.";
         messages_.emplace(msgId, *dao);
     }
 

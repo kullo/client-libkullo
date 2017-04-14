@@ -7,6 +7,8 @@ api/Address.h
 api/AddressNotAvailableReason.h
 api/AsyncTask.cpp
 api/AsyncTask.h
+api/AttachmentsBlockDownloadProgress.cpp
+api/AttachmentsBlockDownloadProgress.h
 api/Challenge.cpp
 api/Challenge.h
 api/ChallengeType.h

@@ -6,7 +6,6 @@
 
 #include "kulloclient/api/SessionListener.h"
 #include "kulloclient/api/SyncerListener.h"
-#include "kulloclient/api/SyncPhase.h"
 #include "kulloclient/api_impl/sessiondata.h"
 #include "kulloclient/api_impl/worker.h"
 #include "kulloclient/sync/syncer.h"
@@ -41,21 +40,6 @@ private:
     std::shared_ptr<Api::SessionListener> sessionListener_;
     std::shared_ptr<Api::SyncerListener> listener_;
 };
-
-inline Api::SyncPhase implToApi(Sync::SyncPhase phase) {
-    switch (phase) {
-    case Sync::SyncPhase::Keys:
-        return Api::SyncPhase::Keys;
-    case Sync::SyncPhase::Profile:
-        return Api::SyncPhase::Profile;
-    case Sync::SyncPhase::IncomingMessages:
-        return Api::SyncPhase::IncomingMessages;
-    case Sync::SyncPhase::IncomingAttachments:
-        return Api::SyncPhase::IncomingAttachments;
-    case Sync::SyncPhase::OutgoingMessages:
-        return Api::SyncPhase::OutgoingMessages;
-    }
-}
 
 }
 }

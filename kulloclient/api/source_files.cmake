@@ -4,6 +4,7 @@ api/AccountInfo.h
 api/Address.h
 api/AddressNotAvailableReason.h
 api/AsyncTask.h
+api/AttachmentsBlockDownloadProgress.h
 api/Challenge.h
 api/ChallengeType.h
 api/Client.cpp

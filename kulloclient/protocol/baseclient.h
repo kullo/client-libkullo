@@ -29,6 +29,8 @@ public:
     void cancel();
 
 protected:
+    static const std::int32_t DEFAULT_TIMEOUT_MS = 10*1000; // 10 seconds
+
     enum struct Authenticated { False, True };
 
     std::string baseUrl(const Util::KulloAddress *address = nullptr);
@@ -40,13 +42,17 @@ protected:
 
     Http::Response sendRequest(
             const Http::Request &request,
-            const boost::optional<ProgressHandler> &onProgress = boost::none);
+            const boost::optional<ProgressHandler> &onProgress = boost::none,
+            const std::int32_t timeout = DEFAULT_TIMEOUT_MS);
     Http::Response sendRequest(
-            const Http::Request &request, const Json::Value &reqJson);
+            const Http::Request &request,
+            const Json::Value &reqJson,
+            const std::int32_t timeout = DEFAULT_TIMEOUT_MS);
     Http::Response sendRequest(
             const Http::Request &request,
             const std::string &reqBody,
-            const boost::optional<ProgressHandler> &onProgress);
+            const boost::optional<ProgressHandler> &onProgress,
+            const std::int32_t timeout = DEFAULT_TIMEOUT_MS);
 
     void throwOnError(const Http::Response &response);
     Json::Value parseJsonBody();
@@ -61,7 +67,8 @@ private:
     Http::Response doSendRequest(
             const Http::Request &request,
             const std::string *reqBody,
-            const boost::optional<ProgressHandler> onProgress = boost::none);
+            const boost::optional<ProgressHandler> onProgress,
+            const std::int32_t timeout);
 };
 
 }

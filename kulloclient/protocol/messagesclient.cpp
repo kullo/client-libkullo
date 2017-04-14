@@ -18,6 +18,12 @@ using namespace Kullo::Util;
 namespace Kullo {
 namespace Protocol {
 
+namespace {
+// This timeout limits the entire download or send process. When sending 100 MiB via
+// 1 MBit/s this takes 14 minutes.
+const std::int32_t ATTACHMENT_REQUEST_TIMEOUT_MS = 60*60*1000; // 60 minutes
+}
+
 MessagesClient::MessagesClient(
         const KulloAddress &address,
         const MasterKey &masterKey,
@@ -111,7 +117,8 @@ MessageAttachments MessagesClient::getMessageAttachments(
                     Http::HttpMethod::Get,
                     url,
                     makeHeaders(Authenticated::True)),
-                onProgress);
+                onProgress,
+                ATTACHMENT_REQUEST_TIMEOUT_MS);
 
     MessageAttachments attachments;
     attachments.id = id;
@@ -202,7 +209,8 @@ MessagesClient::SendMessageResult MessagesClient::doSendMessage(
                     baseUserUrl(recipient) + "/messages",
                     makeHeaders(auth, contentType, body.size())),
                 body,
-                onProgress);
+                onProgress,
+                ATTACHMENT_REQUEST_TIMEOUT_MS);
 
     SendMessageResult result;
     if (toSelf)

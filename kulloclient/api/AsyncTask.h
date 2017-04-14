@@ -18,18 +18,26 @@ public:
     /**
      * Tells the asynchronous task to finish, but doesn't wait for termination.
      * Stops all callbacks, even if the task continues to run.
+     * Thread safe.
      */
     virtual void cancel() = 0;
 
-    /** Returns true iff the task has finished its work. */
+    /**
+     * Returns true iff the task has finished its work.
+     * Thread safe.
+     */
     virtual bool isDone() = 0;
 
-    /** Blocks until the task has finished executing. */
+    /**
+     * Blocks until the task has finished executing.
+     * Thread safe.
+     */
     virtual void waitUntilDone() = 0;
 
     /**
      * Blocks until the task has finished executing or until the timeout has
      * expired. Returns false on timeout, true otherwise.
+     * Thread safe.
      */
     virtual bool waitForMs(int32_t timeout) = 0;
 };

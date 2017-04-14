@@ -46,14 +46,6 @@ AttachmentSyncer::~AttachmentSyncer()
 {
 }
 
-SyncIncomingAttachmentsProgress AttachmentSyncer::initialProgress()
-{
-    SyncIncomingAttachmentsProgress progress;
-    progress.downloadedBytes = 0;
-    progress.totalBytes = Dao::AttachmentDao::sizeOfAllDownloadable(session_);
-    return progress;
-}
-
 void AttachmentSyncer::run(std::shared_ptr<std::atomic<bool>> shouldCancel)
 {
     while (true)
@@ -101,16 +93,16 @@ size_t AttachmentSyncer::downloadForMessage(
                 msg->id(),
                 session_);
     std::vector<std::unique_ptr<Dao::AttachmentDao>> attachmentDaos;
-    size_t totalSize = 0;
+    size_t attachmentsBlockTotalBytes = 0;
     while (auto dao = attachmentDaoResult->next())
     {
-        totalSize += dao->size();
+        attachmentsBlockTotalBytes += dao->size();
         attachmentDaos.push_back(std::move(dao));
     }
 
     // for downloading attachments of a single message: initialize estimate
     if (estimatedRemaining_ == 0) {
-        estimatedRemaining_ = totalSize;
+        estimatedRemaining_ = attachmentsBlockTotalBytes;
     }
 
     if (*shouldCancel) throw SyncCanceled();
@@ -126,24 +118,33 @@ size_t AttachmentSyncer::downloadForMessage(
     stream.pushFilter(make_unique<Codec::SizeLimitingFilter>(
                        MESSAGE_ATTACHMENTS_MAX_BYTES));
 
-    size_t downloadedBytes = 0;
+    size_t attachmentsBlockDownloadedBytes = 0;
+
+    {
+        Sync::AttachmentsBlockDownloadProgress newElement;
+        newElement.downloadedBytes = attachmentsBlockDownloadedBytes;
+        newElement.totalBytes = attachmentsBlockTotalBytes;
+        bool insertionOk = progress_.attachmentsBlocks.emplace(msgId, std::move(newElement)).second;
+        kulloAssert(insertionOk);
+    }
+
     try
     {
         // only download attachments if they are non-empty
-        if (totalSize > 0)
+        if (attachmentsBlockTotalBytes > 0)
         {
             if (*shouldCancel) throw SyncCanceled();
 
             // download attachments for the given message
             auto attachments = messagesClient_->getMessageAttachments(
                         msgId,
-                        [this, totalSize, shouldCancel]
-                        (const Http::TransferProgress &progress)
+                        [this, msgId, attachmentsBlockTotalBytes, shouldCancel]
+                        (const Http::TransferProgress &httpProgress)
             {
                 // make sure downloadTotal has a sane value
                 auto downloadTotal = std::max(
-                            progress.downloadTotal,
-                            progress.downloadTransferred);
+                            httpProgress.downloadTotal,
+                            httpProgress.downloadTransferred);
 
                 int64_t improvedEstimate;
                 if (downloadTotal > 0)
@@ -151,21 +152,23 @@ size_t AttachmentSyncer::downloadForMessage(
                     // Remove the current download's impact on the estimate,
                     // replace by value returned by the HTTP client.
                     improvedEstimate = estimatedRemaining_
-                            - totalSize + downloadTotal;
+                            - attachmentsBlockTotalBytes + downloadTotal;
                 }
                 else
                 {
                     improvedEstimate = estimatedRemaining_;
                 }
 
-                SyncIncomingAttachmentsProgress newProgress;
-                newProgress.downloadedBytes =
-                        previouslyDownloaded_ + progress.downloadTransferred;
-                newProgress.totalBytes = previouslyDownloaded_ + improvedEstimate;
+                auto previousProgress = progress_;
 
-                if (newProgress != progress_)
+                progress_.attachmentsBlocks[msgId].downloadedBytes = httpProgress.downloadTransferred;
+                progress_.attachmentsBlocks[msgId].totalBytes = downloadTotal;
+
+                progress_.downloadedBytes = previouslyDownloaded_ + httpProgress.downloadTransferred;
+                progress_.totalBytes = previouslyDownloaded_ + improvedEstimate;
+
+                if (progress_ != previousProgress)
                 {
-                    progress_ = newProgress;
                     EMIT(events.progressed, progress_);
                 }
 
@@ -173,7 +176,7 @@ size_t AttachmentSyncer::downloadForMessage(
             });
 
             // decrypt/decompress and store attachments
-            downloadedBytes = attachments.attachments.size();
+            attachmentsBlockDownloadedBytes = attachments.attachments.size();
             stream.write(attachments.attachments);
         }
         stream.close();
@@ -186,20 +189,20 @@ size_t AttachmentSyncer::downloadForMessage(
     {
         Log.e() << "Integrity failure while decrypting attachments for "
                 << "message " << std::to_string(msgId) << ", skipping.";
-        return downloadedBytes;
+        return attachmentsBlockDownloadedBytes;
     }
     catch (Util::GZipStreamError &ex)
     {
         Log.e() << "Error while decompressing attachments for "
                 << "message " << std::to_string(msgId) << ", skipping.\n"
                 << "Exception: " << formatException(ex);
-        return downloadedBytes;
+        return attachmentsBlockDownloadedBytes;
     }
 
     EMIT(events.messageAttachmentsDownloaded,
          msg->conversationId(),
          msg->id());
-    return downloadedBytes;
+    return attachmentsBlockDownloadedBytes;
 }
 
 }
