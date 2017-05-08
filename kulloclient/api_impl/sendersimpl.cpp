@@ -20,7 +20,7 @@ SendersImpl::SendersImpl(
     , sessionListener_(sessionListener)
     , avatars_(Dao::AvatarDao::all(sessionData_->dbSession_))
 {
-    auto daos = Dao::ParticipantDao::all(sessionData_->dbSession_);
+    auto daos = Dao::SenderDao::all(sessionData_->dbSession_);
     while (const auto &dao = daos->next())
     {
         senders_.emplace_hint(senders_.end(), dao->messageId(), *dao);
@@ -82,7 +82,7 @@ std::vector<uint8_t> SendersImpl::avatar(int64_t msgId)
 
 Event::ApiEvents SendersImpl::senderAdded(int64_t msgId)
 {
-    auto dao = Dao::ParticipantDao::load(msgId, sessionData_->dbSession_);
+    auto dao = Dao::SenderDao::load(msgId, sessionData_->dbSession_);
     if (!dao) throw Db::DatabaseIntegrityError("SendersImpl::senderAdded");
     senders_.emplace(dao->messageId(), *dao);
 

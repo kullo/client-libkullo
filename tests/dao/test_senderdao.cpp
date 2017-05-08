@@ -1,6 +1,6 @@
 /* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
-#include <kulloclient/dao/participantdao.h>
 #include <kulloclient/dao/messagedao.h>
+#include <kulloclient/dao/senderdao.h>
 #include <kulloclient/util/hex.h>
 
 #include "tests/dbtest.h"
@@ -28,7 +28,8 @@ K_TEST_F(ParticipantDao, insertsNewParticipant)
 {
     TestData data;
 
-    auto dao = Dao::ParticipantDao(Util::KulloAddress(data.address), session_);
+    auto dao = Dao::SenderDao(Util::KulloAddress(data.address), session_);
+    dao.setMessageId(data.messageId);
     EXPECT_THAT(dao.save(), Eq(true));
     EXPECT_THAT(dao.save(), Eq(false));
 }
@@ -37,7 +38,7 @@ K_TEST_F(ParticipantDao, doesntModifySetData)
 {
     TestData data;
 
-    auto dao = Dao::ParticipantDao(Util::KulloAddress(data.address), session_);
+    auto dao = Dao::SenderDao(Util::KulloAddress(data.address), session_);
     dao.setName(data.name);
     dao.setOrganization(data.organization);
     dao.setMessageId(data.messageId);
@@ -54,22 +55,23 @@ K_TEST_F(ParticipantDao, doesntModifySetData)
 
 K_TEST_F(ParticipantDao, loadedParticipantIsNotDirty)
 {
-    const auto senderAddress   = Util::KulloAddress("sender#kullo.net");
+    const auto senderAddress = Util::KulloAddress("sender#kullo.net");
+    const auto messageId = 1;
 
     // Store in db
     {
         auto msg = Dao::MessageDao(session_);
         msg.setSender(senderAddress.toString());
-        msg.setId(1);
+        msg.setId(messageId);
         msg.save(Dao::CreateOld::No);
-        auto sender = Dao::ParticipantDao(senderAddress, session_);
-        sender.setMessageId(1);
+        auto sender = Dao::SenderDao(senderAddress, session_);
+        sender.setMessageId(messageId);
         sender.save();
     }
 
     // Read from db
     {
-        auto sender = Dao::ParticipantDao::load(senderAddress, session_);
+        auto sender = Dao::SenderDao::load(messageId, session_);
         ASSERT_THAT(sender, NotNull());
         EXPECT_THAT(sender->save(), Eq(false));
     }

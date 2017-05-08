@@ -11,8 +11,8 @@
 #include "kulloclient/codec/messageencryptor.h"
 #include "kulloclient/codec/privatekeyprovider.h"
 #include "kulloclient/dao/deliverydao.h"
-#include "kulloclient/dao/participantdao.h"
 #include "kulloclient/dao/publickeydao.h"
+#include "kulloclient/dao/senderdao.h"
 #include "kulloclient/dao/symmetrickeydao.h"
 #include "kulloclient/dao/syncdao.h"
 #include "kulloclient/db/exceptions.h"
@@ -182,7 +182,7 @@ void MessagesSyncer::handleDeletedMessage(const Protocol::Message &httpMsg, Mess
 
     // delete dependent data
     AttachmentDao::deleteAttachmentsForMessage(local.id(), session_);
-    auto sender = ParticipantDao::load(local.id(), session_);
+    auto sender = SenderDao::load(local.id(), session_);
     if (sender) sender->deletePermanently();
 
     messageId = local.id();

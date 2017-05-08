@@ -138,7 +138,7 @@ void UserSettingsImpl::setNextMasterKeyBackupReminder(
 Event::ApiEvents UserSettingsImpl::userSettingModified(const std::string &key)
 {
     dao_.load(userSettings_, key);
-    return {{}};
+    return {Api::Event(Api::EventType::UserSettingsChanged, -1, -1, -1)};
 }
 
 Util::UserSettings UserSettingsImpl::userSettings() const

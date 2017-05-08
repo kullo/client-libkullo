@@ -9,6 +9,7 @@
 #include "kulloclient/kulloclient-forwards.h"
 #include "kulloclient/api/DraftPart.h"
 #include "kulloclient/codec/codecstructs.h"
+#include "kulloclient/dao/senderdao.h"
 #include "kulloclient/db/dbsession.h"
 #include "kulloclient/protocol/httpstructs.h"
 #include "kulloclient/sync/definitions.h"
@@ -105,7 +106,7 @@ private:
             const Util::DateTime &dateSent,
             const Protocol::MessageSent &msgSent,
             const Dao::DraftDao &draft);
-    Dao::ParticipantDao makeSender(
+    Dao::SenderDao makeSender(
             const Dao::MessageDao &message,
             const Dao::DraftDao &draft);
 

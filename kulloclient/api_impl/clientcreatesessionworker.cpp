@@ -31,11 +31,13 @@ ClientCreateSessionWorker::ClientCreateSessionWorker(
         const std::shared_ptr<Api::MasterKey> &masterKey,
         const std::string &dbFilePath,
         std::shared_ptr<Api::SessionListener> sessionListener,
-        std::shared_ptr<Api::ClientCreateSessionListener> listener)
+        std::shared_ptr<Api::ClientCreateSessionListener> listener,
+        const boost::optional<std::thread::id> mainThread)
     : address_(address)
     , masterKey_(masterKey)
     , dbFilePath_(dbFilePath)
     , sessionListener_(sessionListener)
+    , mainThread_(mainThread)
     , listener_(listener)
 {}
 
@@ -102,7 +104,7 @@ std::shared_ptr<Api::Session> ClientCreateSessionWorker::makeSession()
     kulloAssert(Db::hasCurrentSchema(dbSession));
 
     return std::make_shared<SessionImpl>(
-                sessionConfig, dbSession, sessionListener_);
+                sessionConfig, dbSession, sessionListener_, mainThread_);
 }
 
 }

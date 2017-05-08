@@ -1,6 +1,8 @@
 /* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #pragma once
 
+#include <thread>
+
 #include "kulloclient/api/ClientCreateSessionListener.h"
 #include "kulloclient/api/MasterKey.h"
 #include "kulloclient/api/SessionListener.h"
@@ -17,7 +19,8 @@ public:
             const std::shared_ptr<Api::MasterKey> &masterKey,
             const std::string &dbFilePath,
             std::shared_ptr<Api::SessionListener> sessionListener,
-            std::shared_ptr<Api::ClientCreateSessionListener> listener);
+            std::shared_ptr<Api::ClientCreateSessionListener> listener,
+            const boost::optional<std::thread::id> mainThread);
 
     void work() override;
     void cancel() override;
@@ -31,6 +34,7 @@ private:
     std::shared_ptr<Api::MasterKey> masterKey_;
     std::string dbFilePath_;
     std::shared_ptr<Api::SessionListener> sessionListener_;
+    const boost::optional<std::thread::id> mainThread_;
 
     // all uses must be synchronized
     std::shared_ptr<Api::ClientCreateSessionListener> listener_;

@@ -27,7 +27,7 @@ void ApiModelTest::makeSession()
 {
     sessionListener_ = std::make_shared<StubSessionListener>();
     session_ = ApiImpl::ClientCreateSessionWorker(
-                address_, masterKey_, sessionConfig_.dbFileName, sessionListener_, nullptr
+                address_, masterKey_, sessionConfig_.dbFileName, sessionListener_, nullptr, boost::none
                 ).makeSession();
     sessionListener_->setSession(session_);
     session_->userSettings()->setName("X. Ample User");

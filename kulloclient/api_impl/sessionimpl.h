@@ -1,6 +1,8 @@
 /* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #pragma once
 
+#include <thread>
+
 #include "kulloclient/api/Session.h"
 #include "kulloclient/api/SessionListener.h"
 #include "kulloclient/api/Syncer.h"
@@ -24,7 +26,8 @@ public:
     SessionImpl(
             const Db::SessionConfig sessionConfig,
             Db::SharedSessionPtr dbSession,
-            std::shared_ptr<Api::SessionListener> listener);
+            std::shared_ptr<Api::SessionListener> listener,
+            const boost::optional<std::thread::id> mainThread);
 
     // Api::Session impl
     std::shared_ptr<Api::UserSettings> userSettings() override;
@@ -64,6 +67,7 @@ private:
     std::shared_ptr<DraftAttachmentsImpl> draftAttachments_;
     std::shared_ptr<Api::Syncer> syncer_;
     std::shared_ptr<Api::SessionListener> listener_;
+    const boost::optional<std::thread::id> mainThread_;
 
     friend class MessagesEventDispatcher;
     std::unique_ptr<MessagesEventDispatcher> messagesEventDispatcher_;

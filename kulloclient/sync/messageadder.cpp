@@ -2,6 +2,7 @@
 #include "kulloclient/sync/messageadder.h"
 
 #include "kulloclient/dao/avatardao.h"
+#include "kulloclient/dao/senderdao.h"
 #include "kulloclient/util/assert.h"
 #include "kulloclient/util/events.h"
 
@@ -11,7 +12,7 @@ namespace Sync {
 void MessageAdder::addMessage(
         Dao::MessageDao &message,
         Dao::ConversationDao &conversation,
-        Dao::ParticipantDao &sender,
+        Dao::SenderDao &sender,
         const std::vector<unsigned char> &avatar,
         const std::vector<std::unique_ptr<Dao::AttachmentDao>> &attachments,
         const Db::SharedSessionPtr &session)

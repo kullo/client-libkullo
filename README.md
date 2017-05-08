@@ -63,6 +63,13 @@ Tips and Tricks
 Changelog
 ---------
 
+### v63 (2017-05-08)
+
+ * Allow upper case when highlighting Kullo addresses
+ * Let setRead/setDone return true iff changed
+ * Rename and fix event ConversationLatestMessageTimestampChanged
+ * Add event UserSettingsChanged
+
 ### v62 (2017-04-14)
 
  * Fix crash bug in messageModified

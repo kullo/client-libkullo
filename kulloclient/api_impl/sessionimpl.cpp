@@ -22,6 +22,7 @@
 #include "kulloclient/event/event.h"
 #include "kulloclient/util/assert.h"
 #include "kulloclient/util/kulloaddress.h"
+#include "kulloclient/util/librarylogger.h"
 #include "kulloclient/util/masterkey.h"
 #include "kulloclient/util/misc.h"
 
@@ -31,7 +32,8 @@ namespace ApiImpl {
 SessionImpl::SessionImpl(
         const Db::SessionConfig sessionConfig,
         Db::SharedSessionPtr dbSession,
-        std::shared_ptr<Api::SessionListener> listener)
+        std::shared_ptr<Api::SessionListener> listener,
+        const boost::optional<std::thread::id> mainThread)
     : sessionData_(
           std::make_shared<SessionData>(
               sessionConfig,
@@ -53,42 +55,71 @@ SessionImpl::SessionImpl(
     , syncer_(
           std::make_shared<SyncerImpl>(sessionData_, listener))
     , listener_(listener)
+    , mainThread_(mainThread)
     , messagesEventDispatcher_(make_unique<MessagesEventDispatcher>(*this))
     , removalEventDispatcher_(make_unique<RemovalEventDispatcher>(*this))
 {}
 
 std::shared_ptr<Api::UserSettings> SessionImpl::userSettings()
 {
+    if (mainThread_ && *mainThread_ != std::this_thread::get_id())
+    {
+        Log.w() << "Called userSettings() from non-main thread";
+    }
     return sessionData_->userSettings_;
 }
 
 std::shared_ptr<Api::Conversations> SessionImpl::conversations()
 {
+    if (mainThread_ && *mainThread_ != std::this_thread::get_id())
+    {
+        Log.w() << "Called conversations() from non-main thread";
+    }
     return conversations_;
 }
 
 std::shared_ptr<Api::Messages> SessionImpl::messages()
 {
+    if (mainThread_ && *mainThread_ != std::this_thread::get_id())
+    {
+        Log.w() << "Called messages() from non-main thread";
+    }
     return messages_;
 }
 
 std::shared_ptr<Api::MessageAttachments> SessionImpl::messageAttachments()
 {
+    if (mainThread_ && *mainThread_ != std::this_thread::get_id())
+    {
+        Log.w() << "Called messageAttachments() from non-main thread";
+    }
     return messageAttachments_;
 }
 
 std::shared_ptr<Api::Senders> SessionImpl::senders()
 {
+    if (mainThread_ && *mainThread_ != std::this_thread::get_id())
+    {
+        Log.w() << "Called senders() from non-main thread";
+    }
     return senders_;
 }
 
 std::shared_ptr<Api::Drafts> SessionImpl::drafts()
 {
+    if (mainThread_ && *mainThread_ != std::this_thread::get_id())
+    {
+        Log.w() << "Called drafts() from non-main thread";
+    }
     return drafts_;
 }
 
 std::shared_ptr<Api::DraftAttachments> SessionImpl::draftAttachments()
 {
+    if (mainThread_ && *mainThread_ != std::this_thread::get_id())
+    {
+        Log.w() << "Called draftAttachments() from non-main thread";
+    }
     return draftAttachments_;
 }
 
@@ -100,6 +131,11 @@ std::shared_ptr<Api::Syncer> SessionImpl::syncer()
 std::shared_ptr<Api::AsyncTask> SessionImpl::accountInfoAsync(
         const std::shared_ptr<Api::SessionAccountInfoListener> &listener)
 {
+    if (mainThread_ && *mainThread_ != std::this_thread::get_id())
+    {
+        Log.w() << "Called accountInfoAsync() from non-main thread";
+    }
+
     kulloAssert(listener);
 
     auto &userSettings = sessionData_->userSettings_;
@@ -126,6 +162,11 @@ void validateToken(const Api::PushToken &token)
 std::shared_ptr<Api::AsyncTask> SessionImpl::registerPushToken(
         const Api::PushToken &token)
 {
+    if (mainThread_ && *mainThread_ != std::this_thread::get_id())
+    {
+        Log.w() << "Called registerPushToken() from non-main thread";
+    }
+
     validateToken(token);
 
     auto &userSettings = sessionData_->userSettings_;
@@ -141,6 +182,11 @@ std::shared_ptr<Api::AsyncTask> SessionImpl::registerPushToken(
 std::shared_ptr<Api::AsyncTask> SessionImpl::unregisterPushToken(
         const Api::PushToken &token)
 {
+    if (mainThread_ && *mainThread_ != std::this_thread::get_id())
+    {
+        Log.w() << "Called unregisterPushToken() from non-main thread";
+    }
+
     validateToken(token);
 
     auto &userSettings = sessionData_->userSettings_;
@@ -156,6 +202,11 @@ std::shared_ptr<Api::AsyncTask> SessionImpl::unregisterPushToken(
 std::vector<Api::Event> SessionImpl::notify(
         const std::shared_ptr<Api::InternalEvent> &internalEvent)
 {
+    if (mainThread_ && *mainThread_ != std::this_thread::get_id())
+    {
+        Log.w() << "Called notify() from non-main thread";
+    }
+
     kulloAssert(internalEvent);
 
     auto event = std::dynamic_pointer_cast<Event::Event>(internalEvent);
@@ -169,41 +220,73 @@ std::vector<Api::Event> SessionImpl::notify(
 
 Event::ConversationsEventListener &SessionImpl::conversationsEventListener() const
 {
+    if (mainThread_ && *mainThread_ != std::this_thread::get_id())
+    {
+        Log.w() << "Called conversationsEventListener() from non-main thread";
+    }
     return *conversations_;
 }
 
 Event::MessagesEventListener &SessionImpl::messagesEventListener() const
 {
+    if (mainThread_ && *mainThread_ != std::this_thread::get_id())
+    {
+        Log.w() << "Called messagesEventListener() from non-main thread";
+    }
     return *messagesEventDispatcher_;
 }
 
 Event::SendersEventListener &SessionImpl::sendersEventListener() const
 {
+    if (mainThread_ && *mainThread_ != std::this_thread::get_id())
+    {
+        Log.w() << "Called sendersEventListener() from non-main thread";
+    }
     return *senders_;
 }
 
 Event::MessageAttachmentsEventListener &SessionImpl::messageAttachmentsEventListener() const
 {
+    if (mainThread_ && *mainThread_ != std::this_thread::get_id())
+    {
+        Log.w() << "Called messageAttachmentsEventListener() from non-main thread";
+    }
     return *messageAttachments_;
 }
 
 Event::DraftsEventListener &SessionImpl::draftsEventListener() const
 {
+    if (mainThread_ && *mainThread_ != std::this_thread::get_id())
+    {
+        Log.w() << "Called draftsEventListener() from non-main thread";
+    }
     return *drafts_;
 }
 
 Event::DraftAttachmentsEventListener &SessionImpl::draftAttachmentsEventListener() const
 {
+    if (mainThread_ && *mainThread_ != std::this_thread::get_id())
+    {
+        Log.w() << "Called draftAttachmentsEventListener() from non-main thread";
+    }
     return *draftAttachments_;
 }
 
 Event::UserSettingsEventListener &SessionImpl::userSettingsEventListener() const
 {
+    if (mainThread_ && *mainThread_ != std::this_thread::get_id())
+    {
+        Log.w() << "Called userSettingsEventListener() from non-main thread";
+    }
     return *sessionData_->userSettings_;
 }
 
 Event::RemovalEventListener &SessionImpl::removalEventListener() const
 {
+    if (mainThread_ && *mainThread_ != std::this_thread::get_id())
+    {
+        Log.w() << "Called removalEventListener() from non-main thread";
+    }
     return *removalEventDispatcher_;
 }
 

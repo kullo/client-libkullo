@@ -24,6 +24,8 @@ public:
 
         if (auto session = session_.lock())
         {
+            // This does NOT run notify() on main thread, because events
+            // would be hard to test in an asynchonous environment
             auto result = session->notify(event);
             externalEvents_.insert(result.begin(), result.end());
         }
@@ -42,6 +44,23 @@ public:
     Kullo::Event::ApiEvents externalEvents() {
         std::lock_guard<std::recursive_mutex> lock(mutex_); K_RAII(lock);
         return externalEvents_;
+    }
+
+    Kullo::Event::ApiEvents externalEvents(const Kullo::Api::EventType typeFilter) {
+        std::lock_guard<std::recursive_mutex> lock(mutex_); K_RAII(lock);
+
+        Kullo::Event::ApiEvents out;
+        for (const auto &event : externalEvents_)
+        {
+            if (event.event == typeFilter) out.insert(event);
+        }
+        return out;
+    }
+
+    void resetEvents() {
+        std::lock_guard<std::recursive_mutex> lock(mutex_); K_RAII(lock);
+        internalEventCounts_.clear();
+        externalEvents_.clear();
     }
 
 private:

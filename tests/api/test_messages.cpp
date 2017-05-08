@@ -252,6 +252,21 @@ K_TEST_F(ApiMessages, setReadSkipsConsecutiveCalls)
     }
 }
 
+K_TEST_F(ApiMessages, setReadReturnsCorrectValue)
+{
+    ASSERT_THAT(uut->isRead(data1_.id), Eq(true));
+
+    // Set read -> unread
+    EXPECT_THAT(uut->setRead(data1_.id, false), Eq(true));
+    EXPECT_THAT(uut->setRead(data1_.id, false), Eq(false));
+    EXPECT_THAT(uut->setRead(data1_.id, false), Eq(false));
+
+    // Set unread -> read
+    EXPECT_THAT(uut->setRead(data1_.id, true), Eq(true));
+    EXPECT_THAT(uut->setRead(data1_.id, true), Eq(false));
+    EXPECT_THAT(uut->setRead(data1_.id, true), Eq(false));
+}
+
 K_TEST_F(ApiMessages, isDoneWorks)
 {
     EXPECT_THAT(uut->isDone(data1_.id), Eq(true));
@@ -312,6 +327,21 @@ K_TEST_F(ApiMessages, setDoneSkipsConsecutiveCalls)
         // Updated data
         EXPECT_THAT(uut->isRead(data1_.id), Eq(true));
     }
+}
+
+K_TEST_F(ApiMessages, setDoneReturnsCorrectValue)
+{
+    ASSERT_THAT(uut->isDone(data1_.id), Eq(true));
+
+    // Set done -> undone
+    EXPECT_THAT(uut->setDone(data1_.id, false), Eq(true));
+    EXPECT_THAT(uut->setDone(data1_.id, false), Eq(false));
+    EXPECT_THAT(uut->setDone(data1_.id, false), Eq(false));
+
+    // Set undone -> done
+    EXPECT_THAT(uut->setDone(data1_.id, true), Eq(true));
+    EXPECT_THAT(uut->setDone(data1_.id, true), Eq(false));
+    EXPECT_THAT(uut->setDone(data1_.id, true), Eq(false));
 }
 
 K_TEST_F(ApiMessages, dateSentWorks)

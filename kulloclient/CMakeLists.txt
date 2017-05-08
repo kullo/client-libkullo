@@ -95,8 +95,8 @@ kullo_add_simple_library(
     dao/draftdao.cpp
     dao/messageattachmentsink.cpp
     dao/messagedao.cpp
-    dao/participantdao.cpp
     dao/publickeydao.cpp
+    dao/senderdao.cpp
     dao/symmetrickeydao.cpp
     dao/syncdao.cpp
     dao/unprocessedmessagedao.cpp

@@ -36,11 +36,13 @@ public:
 
     virtual bool isRead(int64_t msgId) = 0;
 
-    virtual void setRead(int64_t msgId, bool value) = 0;
+    /** returns true iff value changed in this call */
+    virtual bool setRead(int64_t msgId, bool value) = 0;
 
     virtual bool isDone(int64_t msgId) = 0;
 
-    virtual void setDone(int64_t msgId, bool value) = 0;
+    /** returns true iff value changed in this call */
+    virtual bool setDone(int64_t msgId, bool value) = 0;
 
     virtual DateTime dateSent(int64_t msgId) = 0;
 
@@ -49,9 +51,9 @@ public:
     virtual std::string text(int64_t msgId) = 0;
 
     /**
-     * Escapes special characters and converts text links to 'a' tags
+     * Escapes special characters and wraps links into 'a' tags
      *
-     * An application using this must preserve the white space in the HTML code,
+     * An application using this must preserve the whitespace in the HTML code,
      * i.e. treat \n and \r\n as line breaks and not strip leading or trailing
      * spaces in lines.
      * This can be archived for example by wrapping this in a html block with
@@ -61,9 +63,9 @@ public:
      * Kullo internal scheme "kulloInternal:" followed by the unescaped address.
      * Those links must be handled by the Kullo client and must not be passed to
      * other applications since the URI scheme is not standardized and the hash
-     * symbol not compatible with a lot of applications.
+     * symbol is not compatible with a lot of applications.
      *
-     * Weblinks are prioritized over Kullo adress links and links do not overlap.
+     * Web links are prioritized over Kullo address links and links do not overlap.
      */
     virtual std::string textAsHtml(int64_t msgId, bool includeKulloAddresses) = 0;
 

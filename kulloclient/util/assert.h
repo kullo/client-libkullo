@@ -16,6 +16,10 @@
     ((expr) \
     ? (void)(0) \
     : ::Kullo::Util::assertionFailed(__FILE__, __LINE__, KULLO_PRETTY_FUNCTION, #expr))
+#define kulloAssertMsg(expr, msg) \
+    ((expr) \
+    ? (void)(0) \
+    : ::Kullo::Util::assertionFailed(__FILE__, __LINE__, KULLO_PRETTY_FUNCTION, #expr "; " msg))
 #define kulloAssertionFailed(msg) \
     ::Kullo::Util::assertionFailed(__FILE__, __LINE__, KULLO_PRETTY_FUNCTION, msg)
 

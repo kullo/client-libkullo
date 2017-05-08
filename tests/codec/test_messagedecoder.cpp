@@ -9,6 +9,7 @@
 #include <kulloclient/codec/messagedecryptor.h>
 #include <kulloclient/crypto/hasher.h>
 #include <kulloclient/crypto/symmetrickey.h>
+#include <kulloclient/dao/senderdao.h>
 #include <kulloclient/db/exceptions.h>
 #include <kulloclient/protocol/exceptions.h>
 #include <kulloclient/util/base64.h>
@@ -234,7 +235,7 @@ K_TEST_F(MessageDecoder, validMax)
     EXPECT_THAT(avatar, Eq(expectedAvatar));
 }
 
-bool compareElementsInParticipantsSet(const std::shared_ptr<Dao::ParticipantDao> &lhs, const std::shared_ptr<Dao::ParticipantDao> &rhs)
+bool compareElementsInParticipantsSet(const std::shared_ptr<Dao::SenderDao> &lhs, const std::shared_ptr<Dao::SenderDao> &rhs)
 {
     return lhs->address() < rhs->address();
 }
@@ -262,7 +263,7 @@ K_TEST_F(MessageDecoder, validMin)
     EXPECT_THAT(decoder.attachments(), IsEmpty());
 
     // things that should be non-empty
-    Dao::ParticipantDao &senderDao = decoder.sender();
+    Dao::SenderDao &senderDao = decoder.sender();
 
     // Only check stuff that might be affected by removing optional stuff.
     // Everything else is checked in validMax.

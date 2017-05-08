@@ -17,36 +17,20 @@
 namespace Kullo {
 namespace Dao {
 
-typedef Result<ParticipantDao> ParticipantResult;
+using SenderResult = Result<SenderDao>;
 
 /**
- * @brief Data Access Object for participants
+ * @brief Data Access Object for senders
  */
-class ParticipantDao
+class SenderDao
 {
 public:
-    /**
-     * @brief Create a new participant.
-     */
-    explicit ParticipantDao(const Util::KulloAddress &address, Db::SharedSessionPtr session);
+    /// Create a new sender
+    explicit SenderDao(const Util::KulloAddress &address, Db::SharedSessionPtr session);
 
-    static std::unique_ptr<ParticipantDao> load(id_type messageId, Db::SharedSessionPtr session);
+    static std::unique_ptr<SenderDao> load(id_type messageId, Db::SharedSessionPtr session);
 
-    /**
-     * @brief Load a participant from DB.
-     * @param address Address of the participant
-     */
-    static std::unique_ptr<ParticipantDao> load(
-            const Util::KulloAddress &address, Db::SharedSessionPtr session);
-
-    /**
-     * @brief Returns an executed query for all participants.
-     *
-     * For every address, if there are sender records for the address, the newest will be included.
-     * Otherwise, the only (non-sender) record is included.
-     */
-    static std::unique_ptr<ParticipantResult> latestSenders(Db::SharedSessionPtr session);
-    static std::unique_ptr<ParticipantResult> all(Db::SharedSessionPtr session);
+    static std::unique_ptr<SenderResult> all(Db::SharedSessionPtr session);
 
     /**
      * @brief Saves the current state to DB if the state was changed.
@@ -55,16 +39,14 @@ public:
     bool save();
 
     /**
-     * @brief Deletes a participant if it is a sender for a message.
+     * @brief Deletes a sender if it is a sender for a message.
      *
      * Should be used when a message was deleted.
      */
     void deletePermanently();
 
-    /**
-     * @brief Get the message ID of which the participant is the sender
-     * @return The message ID, or 0 iff this is not a sender record
-     */
+    /// Get the message ID of which the sender is the sender or
+    /// undefined if not assigned to a message
     id_type messageId() const;
 
     /// Set the message id
@@ -78,9 +60,6 @@ public:
 
     /// Get the address (e.g. "john.doe#kullo.net")
     Util::KulloAddress address() const;
-
-    /// Set the address
-    bool setAddress(const Util::KulloAddress &address);
 
     /// Get the organization name (e.g. "Doe Inc.")
     std::string organization() const;
@@ -101,17 +80,20 @@ public:
     bool setAvatarHash(boost::optional<int64_t> avatarHash);
 
 private:
-    static std::unique_ptr<ParticipantDao> loadFromDb(const SmartSqlite::Row &row, Db::SharedSessionPtr session);
+    static std::unique_ptr<SenderDao> loadFromDb(const SmartSqlite::Row &row, Db::SharedSessionPtr session);
 
     Db::SharedSessionPtr session_;
-    bool dirty_ = true, storedInDb_ = false;
-    id_type messageId_ = 0;
-    Util::KulloAddress address_;
-    std::string name_, organization_;
+    bool dirty_ = true;
+    bool storedInDb_ = false;
+
+    const Util::KulloAddress address_;
+    id_type messageId_ = -1;
+    std::string name_;
+    std::string organization_;
     std::string avatarMimeType_;
     boost::optional<std::int64_t> avatarHash_;
 
-    friend class Result<ParticipantDao>;
+    friend class Result<SenderDao>;
 };
 
 }

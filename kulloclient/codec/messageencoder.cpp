@@ -7,6 +7,7 @@
 #include "kulloclient/dao/attachmentdao.h"
 #include "kulloclient/dao/avatardao.h"
 #include "kulloclient/dao/conversationdao.h"
+#include "kulloclient/dao/senderdao.h"
 #include "kulloclient/db/exceptions.h"
 #include "kulloclient/util/base64.h"
 #include "kulloclient/util/binary.h"
@@ -26,7 +27,7 @@ EncodedMessage MessageEncoder::encodeMessage(
         const Util::DateTime &dateSent,
         Db::SharedSessionPtr session)
 {
-    auto sender = Dao::ParticipantDao(*credentials.address, session);
+    auto sender = Dao::SenderDao(*credentials.address, session);
     sender.setName(draft.senderName());
     sender.setOrganization(draft.senderOrganization());
     sender.setAvatarMimeType(draft.senderAvatarMimeType());
@@ -48,7 +49,7 @@ EncodedMessage MessageEncoder::encodeMessage(
 EncodedMessage MessageEncoder::encodeMessage(
         const MessageDao &messageDao, Db::SharedSessionPtr session)
 {
-    auto sender = Dao::ParticipantDao::load(messageDao.id(), session);
+    auto sender = Dao::SenderDao::load(messageDao.id(), session);
     if (!sender)
     {
         throw Db::DatabaseIntegrityError(
@@ -122,7 +123,7 @@ std::vector<unsigned char> MessageEncoder::encodeMeta(
 
 EncodedMessage MessageEncoder::encodeMessage(
         id_type conversationId,
-        const ParticipantDao &sender,
+        const SenderDao &sender,
         const std::vector<unsigned char> &avatar,
         const std::string &dateSent,
         const std::string &text,
@@ -156,7 +157,7 @@ EncodedMessage MessageEncoder::encodeMessage(
 }
 
 Json::Value MessageEncoder::encodeSender(
-        const Dao::ParticipantDao &sender,
+        const Dao::SenderDao &sender,
         const std::vector<unsigned char> &avatar)
 {
     Json::Value senderJson(Json::objectValue);

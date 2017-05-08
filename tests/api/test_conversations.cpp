@@ -3,10 +3,13 @@
 
 #include <kulloclient/api/Address.h>
 #include <kulloclient/api/Conversations.h>
+#include <kulloclient/api/Messages.h>
 #include "kulloclient/api_impl/DateTime.h"
 #include <kulloclient/api_impl/conversationsimpl.h>
+#include <kulloclient/api_impl/event.h>
 #include <kulloclient/dao/conversationdao.h>
 #include <kulloclient/event/conversationaddedevent.h>
+#include <kulloclient/event/conversationmodifiedevent.h>
 #include <kulloclient/event/conversationwillberemovedevent.h>
 
 using namespace testing;
@@ -323,6 +326,148 @@ K_TEST_F(ApiConversations, participantsWorks)
     EXPECT_THAT(found2, Eq(true));
 
     EXPECT_THAT(uut_->participants(42), IsEmpty());
+}
+
+K_TEST_F(ApiConversations, changedEventFromMessageState)
+{
+    // Set to undone
+    session_->messages()->setDone(messageData1_.id, false);
+    {
+        auto events = sessionListener_->externalEvents(Api::EventType::ConversationChanged);
+        EXPECT_THAT(events, Contains(
+                        Api::Event(Api::EventType::ConversationChanged, data_.id, -1, -1))
+                    );
+    }
+
+    sessionListener_->resetEvents();
+
+    // Set to undone again
+    session_->messages()->setDone(messageData1_.id, false);
+    {
+        auto events = sessionListener_->externalEvents(Api::EventType::ConversationChanged);
+        EXPECT_THAT(events, IsEmpty());
+    }
+
+    sessionListener_->resetEvents();
+
+    // Set to done
+    session_->messages()->setDone(messageData1_.id, true);
+    {
+        auto events = sessionListener_->externalEvents(Api::EventType::ConversationChanged);
+        EXPECT_THAT(events, Contains(
+                        Api::Event(Api::EventType::ConversationChanged, data_.id, -1, -1))
+                    );
+    }
+
+    sessionListener_->resetEvents();
+
+    // Set to done again
+    session_->messages()->setDone(messageData1_.id, true);
+    {
+        auto events = sessionListener_->externalEvents(Api::EventType::ConversationChanged);
+        EXPECT_THAT(events, IsEmpty());
+    }
+
+    sessionListener_->resetEvents();
+
+    // Set to unread
+    session_->messages()->setRead(messageData1_.id, false);
+    {
+        auto events = sessionListener_->externalEvents(Api::EventType::ConversationChanged);
+        EXPECT_THAT(events, Contains(
+                        Api::Event(Api::EventType::ConversationChanged, data_.id, -1, -1))
+                    );
+    }
+
+    sessionListener_->resetEvents();
+
+    // Set to unread again
+    session_->messages()->setRead(messageData1_.id, false);
+    {
+        auto events = sessionListener_->externalEvents(Api::EventType::ConversationChanged);
+        EXPECT_THAT(events, IsEmpty());
+    }
+
+    sessionListener_->resetEvents();
+
+    // Set to read
+    session_->messages()->setRead(messageData1_.id, true);
+    {
+        auto events = sessionListener_->externalEvents(Api::EventType::ConversationChanged);
+        EXPECT_THAT(events, Contains(
+                        Api::Event(Api::EventType::ConversationChanged, data_.id, -1, -1))
+                    );
+    }
+
+    sessionListener_->resetEvents();
+
+    // Set to read again
+    session_->messages()->setRead(messageData1_.id, true);
+    {
+        auto events = sessionListener_->externalEvents(Api::EventType::ConversationChanged);
+        EXPECT_THAT(events, IsEmpty());
+    }
+}
+
+K_TEST_F(ApiConversations, latestMessageTimestampChangedEventFromDeleting)
+{
+    // Delete oldest
+    session_->messages()->remove(messageData1_.id);
+    {
+        auto events = sessionListener_->externalEvents(Api::EventType::ConversationLatestMessageTimestampChanged);
+        EXPECT_THAT(events, IsEmpty());
+    }
+
+    sessionListener_->resetEvents();
+
+    // Delete newest
+    session_->messages()->remove(messageData3_.id);
+    {
+        auto events = sessionListener_->externalEvents(Api::EventType::ConversationLatestMessageTimestampChanged);
+        EXPECT_THAT(events, Contains(
+                        Api::Event(Api::EventType::ConversationLatestMessageTimestampChanged, data_.id, -1, -1))
+                    );
+    }
+}
+
+K_TEST_F(ApiConversations, latestMessageTimestampChangedEventFromAdding)
+{
+    // Add old message
+    {
+        Dao::MessageDao dao(dbSession_);
+        dao.setSender(messageData1_.sender);
+        dao.setConversationId(data_.id);
+        dao.setId(2);
+        dao.setDateSent(Api::DateTime(2014, 7, 23, 16, 06, 00, 120).toString());
+        dao.setDateReceived(Api::DateTime(2014, 7, 23, 16, 06, 00, 120).toString());
+        dao.save(Dao::CreateOld::No);
+        sessionListener_->internalEvent(std::make_shared<Event::ConversationModifiedEvent>(data_.id));
+    }
+
+    {
+        auto events = sessionListener_->externalEvents(Api::EventType::ConversationLatestMessageTimestampChanged);
+        EXPECT_THAT(events, IsEmpty());
+    }
+
+    sessionListener_->resetEvents();
+
+    // Add new message
+    {
+        Dao::MessageDao dao(dbSession_);
+        dao.setSender(messageData1_.sender);
+        dao.setConversationId(data_.id);
+        dao.setId(2222);
+        dao.setDateSent(Api::DateTime(2018, 7, 23, 16, 06, 00, 120).toString());
+        dao.setDateReceived(Api::DateTime(2018, 7, 23, 16, 06, 00, 120).toString());
+        dao.save(Dao::CreateOld::No);
+        sessionListener_->internalEvent(std::make_shared<Event::ConversationModifiedEvent>(data_.id));
+    }
+    {
+        auto events = sessionListener_->externalEvents(Api::EventType::ConversationLatestMessageTimestampChanged);
+        EXPECT_THAT(events, Contains(
+                        Api::Event(Api::EventType::ConversationLatestMessageTimestampChanged, data_.id, -1, -1))
+                    );
+    }
 }
 
 K_TEST_F(ApiConversations, totalMessagesWorks)

@@ -371,6 +371,16 @@ K_TEST_F(Strings, highlightKulloAddressesSimple)
                 HasSubstr("</a>"));
     EXPECT_THAT(Util::Strings::highlightKulloAdresses("And this one sits at the end of text: bla#example.com"),
                 HasSubstr("</a>"));
+
+    // with uppercase
+    EXPECT_THAT(Util::Strings::highlightKulloAdresses("address: Bla#example.com"),
+                HasSubstr("</a>"));
+    EXPECT_THAT(Util::Strings::highlightKulloAdresses("address: bla#Example.com"),
+                HasSubstr("</a>"));
+    EXPECT_THAT(Util::Strings::highlightKulloAdresses("address: bla#example.Com"),
+                HasSubstr("</a>"));
+    EXPECT_THAT(Util::Strings::highlightKulloAdresses("address: BLA#EXAMPLE.COM"),
+                HasSubstr("</a>"));
 }
 
 K_TEST_F(Strings, highlightKulloAddressesLinkContent)

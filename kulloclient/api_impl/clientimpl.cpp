@@ -57,9 +57,11 @@ std::shared_ptr<Api::AsyncTask> ClientImpl::createSessionAsync(
     kulloAssert(sessionListener);
     kulloAssert(listener);
 
+    const auto mainThread = std::this_thread::get_id();
+
     return std::make_shared<AsyncTaskImpl>(
         std::make_shared<ClientCreateSessionWorker>(
-                    address, masterKey, dbFilePath, sessionListener, listener));
+                    address, masterKey, dbFilePath, sessionListener, listener, mainThread));
 }
 
 std::shared_ptr<Api::AsyncTask> ClientImpl::addressExistsAsync(

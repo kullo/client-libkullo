@@ -9,10 +9,10 @@
 #include "kulloclient/dao/attachmentdao.h"
 #include "kulloclient/dao/conversationdao.h"
 #include "kulloclient/dao/messagedao.h"
-#include "kulloclient/dao/participantdao.h"
 #include "kulloclient/db/dbsession.h"
 #include "kulloclient/util/delivery.h"
 #include "kulloclient/codec/messagecompressor.h"
+#include "kulloclient/kulloclient-forwards.h"
 
 namespace Kullo {
 namespace Codec {
@@ -97,8 +97,8 @@ public:
      *
      * decode() must be called before this function.
      */
-    Dao::ParticipantDao &sender();
-    const Dao::ParticipantDao &sender() const;
+    Dao::SenderDao &sender();
+    const Dao::SenderDao &sender() const;
 
     /**
      * @brief Return the parsed sender's avatar.
@@ -128,7 +128,7 @@ private:
     std::unique_ptr<Dao::MessageDao> message_;
     std::vector<Util::Delivery> delivery_;
     std::vector<std::unique_ptr<Dao::AttachmentDao>> attachments_;
-    std::shared_ptr<Dao::ParticipantDao> sender_;
+    std::shared_ptr<Dao::SenderDao> sender_;
     std::vector<unsigned char> avatar_;
     bool contentDecoded_ = false;
     bool madeConversation_ = false;

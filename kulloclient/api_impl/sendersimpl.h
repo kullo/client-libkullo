@@ -4,7 +4,7 @@
 #include "kulloclient/api/Senders.h"
 #include "kulloclient/api/SessionListener.h"
 #include "kulloclient/api_impl/sessiondata.h"
-#include "kulloclient/dao/participantdao.h"
+#include "kulloclient/dao/senderdao.h"
 #include "kulloclient/event/removaleventlistener.h"
 #include "kulloclient/event/senderseventlistener.h"
 
@@ -44,7 +44,7 @@ public:
 private:
     std::shared_ptr<SessionData> sessionData_;
     std::shared_ptr<Api::SessionListener> sessionListener_;
-    std::map<int64_t, Dao::ParticipantDao> senders_;
+    std::map<int64_t, Dao::SenderDao> senders_;
     std::map<int64_t, std::vector<unsigned char>> avatars_;
 };
 

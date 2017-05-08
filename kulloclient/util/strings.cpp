@@ -86,21 +86,21 @@ const Regex LINKS_BEFORE_PUNCTUATION_REGEX(
         "(" + HTTP_URI + ")([,;\\.:](?:$|[\\t\\n\\r ]))"
         );
 
-const std::string KULLO_ADRESS =
-    "[a-z0-9]+"                      // username part
+const std::string KULLO_ADRESS_REGEX =
+    "[a-zA-Z0-9]+"                   // username part
     "(?:"
         "[-\\._]"                    // separator: -._
-        "[a-z0-9]+"                  // username part
+        "[a-zA-Z0-9]+"               // username part
     ")*"
     "#"
     "(?:"
-        "[a-z0-9]+(?:-[a-z0-9]+)*"
+        "[a-zA-Z0-9]+(?:-[a-zA-Z0-9]+)*"
     "\\.)+"
-    "[a-z][a-z0-9]*(?:-[a-z0-9]+)*"
+    "[a-zA-Z][a-zA-Z0-9]*(?:-[a-zA-Z0-9]+)*"
 ;
 
 const Regex KULLO_ADRESS_IN_MESSAGE_REGEX(
-        "(^|[\\t\\n\\r \\(;])(" + KULLO_ADRESS + ")"
+        "(^|[\\t\\n\\r \\(;])(" + KULLO_ADRESS_REGEX + ")"
         );
 
 const std::string KULLO_ADDRESS_SCHEME = "kulloInternal";

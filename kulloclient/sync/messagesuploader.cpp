@@ -342,11 +342,11 @@ MessageDao MessagesUploader::makeMessageDao(
     return message;
 }
 
-ParticipantDao MessagesUploader::makeSender(
+SenderDao MessagesUploader::makeSender(
         const MessageDao &message,
         const DraftDao &draft)
 {
-    ParticipantDao sender(*settings_.credentials.address, session_);
+    SenderDao sender(*settings_.credentials.address, session_);
     sender.setMessageId(message.id());
     sender.setName(draft.senderName());
     sender.setOrganization(draft.senderOrganization());

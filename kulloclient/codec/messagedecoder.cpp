@@ -13,6 +13,7 @@
 #include "kulloclient/crypto/symmetrickeyloader.h"
 #include "kulloclient/dao/asymmetrickeypairdao.h"
 #include "kulloclient/dao/publickeydao.h"
+#include "kulloclient/dao/senderdao.h"
 #include "kulloclient/dao/symmetrickeydao.h"
 #include "kulloclient/db/exceptions.h"
 #include "kulloclient/util/binary.h"
@@ -122,13 +123,13 @@ std::vector<std::unique_ptr<AttachmentDao>> &MessageDecoder::attachments()
     return attachments_;
 }
 
-ParticipantDao &MessageDecoder::sender()
+SenderDao &MessageDecoder::sender()
 {
     kulloAssert(contentDecoded_); // decode() must be called before this function
     return *sender_;
 }
 
-const ParticipantDao &MessageDecoder::sender() const
+const SenderDao &MessageDecoder::sender() const
 {
     kulloAssert(contentDecoded_); // decode() must be called before this function
     return *sender_;
@@ -290,10 +291,10 @@ void MessageDecoder::parseSender(const Json::Value &sender, id_type messageId)
             ConversionException,
             InvalidContentFormat("sender address invalid"));
 
-    std::shared_ptr<ParticipantDao> part(ParticipantDao::load(messageId, session_));
+    std::shared_ptr<SenderDao> part(SenderDao::load(messageId, session_));
     if (!part)
     {
-        part.reset(new ParticipantDao(*address, session_));
+        part.reset(new SenderDao(*address, session_));
         part->setMessageId(messageId);
     }
     sender_ = part;

@@ -8,9 +8,18 @@
 namespace Kullo { namespace Api {
 
 enum class EventType : int {
+    /** Conversation added */
     ConversationAdded,
-    ConversationChanged,
+    /** Conversation removed */
     ConversationRemoved,
+    /** Any property of Conversations has changed for a single conversation */
+    ConversationChanged,
+    /**
+     * Timestamp of the latest message in a single conversation changed. This may affect
+     * the order of the conversations list. Whenever this is emitted, ConversationChanged
+     * is also emitted.
+     */
+    ConversationLatestMessageTimestampChanged,
     DraftStateChanged,
     DraftTextChanged,
     DraftAttachmentAdded,
@@ -20,7 +29,11 @@ enum class EventType : int {
     MessageStateChanged,
     MessageAttachmentsDownloadedChanged,
     MessageRemoved,
-    LatestSenderChanged,
+    /**
+     * One of the user settings keys changed. Emitted once for every key that changed.
+     * TODO: pass key with this event
+     */
+    UserSettingsChanged,
 };
 
 } }  // namespace Kullo::Api

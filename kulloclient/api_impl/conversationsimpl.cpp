@@ -243,28 +243,22 @@ Event::ApiEvents ConversationsImpl::conversationModified(int64_t convId)
     events.emplace(Api::EventType::ConversationChanged, convId, -1, -1);
     if (oldTimestamp != newTimestamp)
     {
-        events.emplace(Api::EventType::LatestSenderChanged, convId, -1, -1);
+        events.emplace(Api::EventType::ConversationLatestMessageTimestampChanged, convId, -1, -1);
     }
     return events;
 }
 
 Event::ApiEvents ConversationsImpl::messageAdded(int64_t convId, int64_t msgId)
 {
+    K_UNUSED(convId);
     K_UNUSED(msgId);
-
-    // Simple hack: throw away cache data causing latestMessageTimestamp()
-    // to reload next time it is called
-    latestMessageTimestampsCache_.erase(convId);
     return {{}};
 }
 
 Event::ApiEvents ConversationsImpl::messageRemoved(int64_t convId, int64_t msgId)
 {
+    K_UNUSED(convId);
     K_UNUSED(msgId);
-
-    // Simple hack: throw away cache data causing latestMessageTimestamp()
-    // to reload next time it is called
-    latestMessageTimestampsCache_.erase(convId);
     return {{}};
 }
 

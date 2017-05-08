@@ -6,11 +6,11 @@
 #include <string>
 #include <vector>
 
+#include "kulloclient/kulloclient-forwards.h"
 #include "kulloclient/types.h"
 #include "kulloclient/dao/attachmentdao.h"
 #include "kulloclient/dao/conversationdao.h"
 #include "kulloclient/dao/messagedao.h"
-#include "kulloclient/dao/participantdao.h"
 #include "kulloclient/db/dbsession.h"
 
 namespace Kullo {
@@ -35,7 +35,7 @@ public:
 
     void addMessage(Dao::MessageDao &message,
             Dao::ConversationDao &conversation,
-            Dao::ParticipantDao &sender,
+            Dao::SenderDao &sender,
             const std::vector<unsigned char> &avatar,
             const std::vector<std::unique_ptr<Dao::AttachmentDao>> &attachments,
             const Db::SharedSessionPtr &session);

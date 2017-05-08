@@ -38,11 +38,11 @@ public:
 
     bool isRead(int64_t msgId) override;
 
-    void setRead(int64_t msgId, bool value) override;
+    bool setRead(int64_t msgId, bool value) override;
 
     bool isDone(int64_t msgId) override;
 
-    void setDone(int64_t msgId, bool value) override;
+    bool setDone(int64_t msgId, bool value) override;
 
     Api::DateTime dateSent(int64_t msgId) override;
 
@@ -70,7 +70,7 @@ private:
         Done
     };
 
-    void setState(MessageState state, int64_t msgId, bool value);
+    bool setState(MessageState state, int64_t msgId, bool value);
 
     /**
      * @brief Removes the given message from the data structures of this class.

@@ -38,8 +38,8 @@ namespace Kullo {
         class ConversationDao;
         class DraftDao;
         class MessageDao;
-        class ParticipantDao;
         class PublicKeyDao;
+        class SenderDao;
         class SymmetricKeyDao;
         class UnprocessedMessageDao;
     }

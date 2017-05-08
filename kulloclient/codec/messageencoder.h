@@ -9,12 +9,12 @@
 #include "kulloclient/dao/attachmentdao.h"
 #include "kulloclient/dao/draftdao.h"
 #include "kulloclient/dao/messagedao.h"
-#include "kulloclient/dao/participantdao.h"
 #include "kulloclient/db/dbsession.h"
 #include "kulloclient/protocol/httpstructs.h"
 #include "kulloclient/util/delivery.h"
 #include "kulloclient/util/kulloaddress.h"
 #include "kulloclient/util/usersettings.h"
+#include "kulloclient/kulloclient-forwards.h"
 
 namespace Kullo {
 namespace Codec {
@@ -46,7 +46,7 @@ public:
 private:
     static EncodedMessage encodeMessage(
             id_type conversationId,
-            const Dao::ParticipantDao &sender,
+            const Dao::SenderDao &sender,
             const std::vector<unsigned char> &avatar,
             const std::string &dateSent,
             const std::string &text,
@@ -55,7 +55,7 @@ private:
             Db::SharedSessionPtr session);
 
     static Json::Value encodeSender(
-            const Dao::ParticipantDao &sender,
+            const Dao::SenderDao &sender,
             const std::vector<unsigned char> &avatar);
 
     static Json::Value encodeAttachments(

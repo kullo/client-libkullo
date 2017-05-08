@@ -81,14 +81,15 @@ CJNIEXPORT jboolean JNICALL Java_net_kullo_libkullo_api_Messages_00024CppProxy_n
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, 0 /* value doesn't matter */)
 }
 
-CJNIEXPORT void JNICALL Java_net_kullo_libkullo_api_Messages_00024CppProxy_native_1setRead(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef, jlong j_msgId, jboolean j_value)
+CJNIEXPORT jboolean JNICALL Java_net_kullo_libkullo_api_Messages_00024CppProxy_native_1setRead(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef, jlong j_msgId, jboolean j_value)
 {
     try {
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
         const auto& ref = ::djinni::objectFromHandleAddress<::Kullo::Api::Messages>(nativeRef);
-        ref->setRead(::djinni::I64::toCpp(jniEnv, j_msgId),
-                     ::djinni::Bool::toCpp(jniEnv, j_value));
-    } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, )
+        auto r = ref->setRead(::djinni::I64::toCpp(jniEnv, j_msgId),
+                              ::djinni::Bool::toCpp(jniEnv, j_value));
+        return ::djinni::release(::djinni::Bool::fromCpp(jniEnv, r));
+    } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, 0 /* value doesn't matter */)
 }
 
 CJNIEXPORT jboolean JNICALL Java_net_kullo_libkullo_api_Messages_00024CppProxy_native_1isDone(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef, jlong j_msgId)
@@ -101,14 +102,15 @@ CJNIEXPORT jboolean JNICALL Java_net_kullo_libkullo_api_Messages_00024CppProxy_n
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, 0 /* value doesn't matter */)
 }
 
-CJNIEXPORT void JNICALL Java_net_kullo_libkullo_api_Messages_00024CppProxy_native_1setDone(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef, jlong j_msgId, jboolean j_value)
+CJNIEXPORT jboolean JNICALL Java_net_kullo_libkullo_api_Messages_00024CppProxy_native_1setDone(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef, jlong j_msgId, jboolean j_value)
 {
     try {
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
         const auto& ref = ::djinni::objectFromHandleAddress<::Kullo::Api::Messages>(nativeRef);
-        ref->setDone(::djinni::I64::toCpp(jniEnv, j_msgId),
-                     ::djinni::Bool::toCpp(jniEnv, j_value));
-    } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, )
+        auto r = ref->setDone(::djinni::I64::toCpp(jniEnv, j_msgId),
+                              ::djinni::Bool::toCpp(jniEnv, j_value));
+        return ::djinni::release(::djinni::Bool::fromCpp(jniEnv, r));
+    } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, 0 /* value doesn't matter */)
 }
 
 CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_Messages_00024CppProxy_native_1dateSent(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef, jlong j_msgId)

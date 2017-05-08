@@ -161,9 +161,9 @@ bool MessagesImpl::isRead(int64_t msgId)
                 iter->second.state(Dao::MessageState::Read) : false;
 }
 
-void MessagesImpl::setRead(int64_t msgId, bool value)
+bool MessagesImpl::setRead(int64_t msgId, bool value)
 {
-    setState(MessageState::Read, msgId, value);
+    return setState(MessageState::Read, msgId, value);
 }
 
 bool MessagesImpl::isDone(int64_t msgId)
@@ -175,9 +175,9 @@ bool MessagesImpl::isDone(int64_t msgId)
                 iter->second.state(Dao::MessageState::Done) : false;
 }
 
-void MessagesImpl::setDone(int64_t msgId, bool value)
+bool MessagesImpl::setDone(int64_t msgId, bool value)
 {
-    setState(MessageState::Done, msgId, value);
+    return setState(MessageState::Done, msgId, value);
 }
 
 namespace {
@@ -335,7 +335,7 @@ Event::ApiEvents MessagesImpl::messageRemoved(int64_t convId, int64_t msgId)
     return result;
 }
 
-void MessagesImpl::setState(MessagesImpl::MessageState state, int64_t msgId, bool value)
+bool MessagesImpl::setState(MessagesImpl::MessageState state, int64_t msgId, bool value)
 {
     kulloAssert(msgId >= Kullo::ID_MIN && msgId <= Kullo::ID_MAX);
 
@@ -365,7 +365,13 @@ void MessagesImpl::setState(MessagesImpl::MessageState state, int64_t msgId, boo
                                 Api::Event(Api::EventType::MessageStateChanged,
                                 conversationId, msgId, -1)
                             }));
+            return true;
+        } else {
+            return false;
         }
+    } else {
+        // not found = nothing changed
+        return false;
     }
 }
 

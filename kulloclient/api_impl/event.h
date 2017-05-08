@@ -26,11 +26,15 @@ inline bool operator<(const Event &lhs, const Event &rhs)
             lhs.attachmentId < rhs.attachmentId;
 }
 
+// "It's important that the << operator is defined in the SAME
+// namespace that defines Bar.  C++'s look-up rules rely on that."
+// https://github.com/google/googletest/blob/master/googletest/docs/AdvancedGuide.md#teaching-google-test-how-to-print-your-values
+std::ostream & operator<<(std::ostream &os, const Kullo::Api::EventType& t);
+std::ostream & operator<<(std::ostream &os, const Kullo::Api::Event& e);
+
 }
 }
 
-std::ostream & operator<<(std::ostream &os, const Kullo::Api::EventType& t);
-std::ostream & operator<<(std::ostream &os, const Kullo::Api::Event& e);
 
 namespace std {
 template <>
