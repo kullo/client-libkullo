@@ -54,6 +54,14 @@ public:
 
     std::string footer(int64_t msgId) override;
 
+    std::shared_ptr<Api::AsyncTask> searchAsync(
+            const std::string &searchText,
+            int64_t convId,
+            const boost::optional<Api::SenderPredicate> &sender,
+            int32_t limitResults,
+            const boost::optional<std::string> & boundary,
+            const std::shared_ptr<Api::MessagesSearchListener> &listener) override;
+
     // Event::MessagesEventListener
 
     Event::ApiEvents messageAdded(int64_t convId, int64_t msgId) override;

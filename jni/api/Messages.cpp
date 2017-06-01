@@ -3,8 +3,11 @@
 
 #include "Messages.h"  // my header
 #include "Address.h"
+#include "AsyncTask.h"
 #include "DateTime.h"
 #include "Delivery.h"
+#include "MessagesSearchListener.h"
+#include "SenderPredicate.h"
 #include "jni/support-lib/jni/Marshal.hpp"
 
 namespace JNI { namespace Kullo { namespace Api {
@@ -161,6 +164,21 @@ CJNIEXPORT jstring JNICALL Java_net_kullo_libkullo_api_Messages_00024CppProxy_na
         const auto& ref = ::djinni::objectFromHandleAddress<::Kullo::Api::Messages>(nativeRef);
         auto r = ref->footer(::djinni::I64::toCpp(jniEnv, j_msgId));
         return ::djinni::release(::djinni::String::fromCpp(jniEnv, r));
+    } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, 0 /* value doesn't matter */)
+}
+
+CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_Messages_00024CppProxy_native_1searchAsync(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef, jstring j_searchText, jlong j_convId, jobject j_sender, jint j_limitResults, jstring j_boundary, jobject j_listener)
+{
+    try {
+        DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
+        const auto& ref = ::djinni::objectFromHandleAddress<::Kullo::Api::Messages>(nativeRef);
+        auto r = ref->searchAsync(::djinni::String::toCpp(jniEnv, j_searchText),
+                                  ::djinni::I64::toCpp(jniEnv, j_convId),
+                                  ::djinni::Optional<boost::optional, ::JNI::Kullo::Api::SenderPredicate>::toCpp(jniEnv, j_sender),
+                                  ::djinni::I32::toCpp(jniEnv, j_limitResults),
+                                  ::djinni::Optional<boost::optional, ::djinni::String>::toCpp(jniEnv, j_boundary),
+                                  ::JNI::Kullo::Api::MessagesSearchListener::toCpp(jniEnv, j_listener));
+        return ::djinni::release(::JNI::Kullo::Api::AsyncTask::fromCpp(jniEnv, r));
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, 0 /* value doesn't matter */)
 }
 

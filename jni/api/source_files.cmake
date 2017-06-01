@@ -63,6 +63,10 @@ api/MessageAttachmentsSaveToListener.cpp
 api/MessageAttachmentsSaveToListener.h
 api/Messages.cpp
 api/Messages.h
+api/MessagesSearchListener.cpp
+api/MessagesSearchListener.h
+api/MessagesSearchResult.cpp
+api/MessagesSearchResult.h
 api/NetworkError.h
 api/PushToken.cpp
 api/PushToken.h
@@ -74,6 +78,9 @@ api/RegistrationRegisterAccountListener.cpp
 api/RegistrationRegisterAccountListener.h
 api/Registry.cpp
 api/Registry.h
+api/SearchPredicateOperator.h
+api/SenderPredicate.cpp
+api/SenderPredicate.h
 api/Senders.cpp
 api/Senders.h
 api/Session.cpp

@@ -86,52 +86,54 @@ void MessagesUploader::run(std::shared_ptr<std::atomic<bool>> shouldCancel)
         progress_.totalBytes = previouslyUploaded_ + estimatedRemaining_;
         EMIT(events.progressed, progress_);
 
-        auto conv = loadConversation(draft->conversationId());
-
-        if (*shouldCancel) throw SyncCanceled();
-
-        // encode message
+        std::unique_ptr<Dao::ConversationDao> conv;
         auto dateSent = DateTime::nowUtc();
-        auto encodedMessage = Codec::MessageEncoder::encodeMessage(
-                    settings_.credentials,
-                    *draft,
-                    dateSent,
-                    session_);
-
-        if (*shouldCancel) throw SyncCanceled();
-
-        // must be calculated the same way as sizeOfAllSendable()
-        auto totalSize =
-                Dao::PER_MESSAGE_OVERHEAD
-                + draft->text().size()
-                + encodedMessage.attachments.size();
-
-        Codec::MessageCompressor().compress(encodedMessage);
-
-        if (*shouldCancel) throw SyncCanceled();
-
-        auto sendableMsg = makeSendableMessage(encodedMessage);
-        if (!ensureSizeLimitCompliance(sendableMsg, *draft)) continue;
-
-        if (*shouldCancel) throw SyncCanceled();
-
-        // create and encode meta
-        auto delivery = makeDelivery(*conv);
-        auto encodedMeta = Codec::MessageEncoder::encodeMeta(
-                    true,  // read
-                    true,  // done
-                    delivery);
-        auto meta = Codec::MessageEncryptor().encryptMeta(
-                    encodedMeta,
-                    Dao::SymmetricKeyDao::loadKey(
-                        Dao::SymmetricKeyDao::PRIVATE_DATA_KEY,
-                        session_));
-
-        if (*shouldCancel) throw SyncCanceled();
-
         boost::optional<Protocol::MessageSent> msgSent;
+        std::vector<Util::Delivery> delivery;
         try
         {
+            conv = loadConversation(draft->conversationId());
+
+            if (*shouldCancel) throw SyncCanceled();
+
+            // encode message
+            auto encodedMessage = Codec::MessageEncoder::encodeMessage(
+                        settings_.credentials,
+                        *draft,
+                        dateSent,
+                        session_);
+
+            if (*shouldCancel) throw SyncCanceled();
+
+            // must be calculated the same way as sizeOfAllSendable()
+            auto totalSize =
+                    Dao::PER_MESSAGE_OVERHEAD
+                    + draft->text().size()
+                    + encodedMessage.attachments.size();
+
+            Codec::MessageCompressor().compress(encodedMessage);
+
+            if (*shouldCancel) throw SyncCanceled();
+
+            auto sendableMsg = makeSendableMessage(encodedMessage);
+            if (!ensureSizeLimitCompliance(sendableMsg, *draft)) continue;
+
+            if (*shouldCancel) throw SyncCanceled();
+
+            // create and encode meta
+            delivery = makeDelivery(*conv);
+            auto encodedMeta = Codec::MessageEncoder::encodeMeta(
+                        true,  // read
+                        true,  // done
+                        delivery);
+            auto meta = Codec::MessageEncryptor().encryptMeta(
+                        encodedMeta,
+                        Dao::SymmetricKeyDao::loadKey(
+                            Dao::SymmetricKeyDao::PRIVATE_DATA_KEY,
+                            session_));
+
+            if (*shouldCancel) throw SyncCanceled();
+
             // send message
             msgSent = messagesClient_->sendMessageToSelf(
                         sendableMsg,
@@ -179,6 +181,26 @@ void MessagesUploader::run(std::shared_ptr<std::atomic<bool>> shouldCancel)
         catch (Protocol::Canceled&)
         {
             throw SyncCanceled();
+        }
+        catch (SyncCanceled&)
+        {
+            throw;
+        }
+        catch (std::exception &ex)
+        {
+            Log.e() << "MessagesUploader failed: " << Util::formatException(ex);
+
+            SmartSqlite::ScopedTransaction tx(session_, SmartSqlite::Immediate);
+            auto deletedIndexes = Dao::AttachmentDao::deleteAttachmentsForDraft(
+                        conv->id(), session_);
+            resetDraftToEditing(*draft);
+            tx.commit();
+
+            for (auto index : deletedIndexes) {
+                EMIT(events.draftAttachmentDeleted, conv->id(), index);
+            }
+            EMIT(events.draftModified, conv->id());
+            continue;
         }
 
         previouslyUploaded_ += msgSent->size;
@@ -312,13 +334,17 @@ bool MessagesUploader::checkAndHandleSizeLimit(
                 << " (allowed: "
                 << Util::Strings::formatReadable(maxSize)
                 << ")";
-        draft.setState(DraftState::Editing);
-        draft.save();
-        auto convId = draft.conversationId();
-        EMIT(events.draftPartTooBig, convId, part, size, maxSize);
-        EMIT(events.draftModified, convId);
+        resetDraftToEditing(draft);
+        EMIT(events.draftModified, draft.conversationId());
+        EMIT(events.draftPartTooBig, draft.conversationId(), part, size, maxSize);
         return false;
     }
+}
+
+void MessagesUploader::resetDraftToEditing(DraftDao &draft)
+{
+    draft.setState(DraftState::Editing);
+    draft.save();
 }
 
 MessageDao MessagesUploader::makeMessageDao(

@@ -46,6 +46,7 @@ kullo_add_simple_library(
     api_impl/messageattachmentssavetoworker.cpp
     api_impl/messageseventdispatcher.cpp
     api_impl/messagesimpl.cpp
+    api_impl/messagessearchworker.cpp
     api_impl/registrationimpl.cpp
     api_impl/registrationregisteraccountworker.cpp
     api_impl/removaleventdispatcher.cpp
@@ -95,6 +96,7 @@ kullo_add_simple_library(
     dao/draftdao.cpp
     dao/messageattachmentsink.cpp
     dao/messagedao.cpp
+    dao/messagesearchdao.cpp
     dao/publickeydao.cpp
     dao/senderdao.cpp
     dao/symmetrickeydao.cpp

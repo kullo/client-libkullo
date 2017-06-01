@@ -103,7 +103,7 @@ std::shared_ptr<Api::AsyncTask> MessageAttachmentsImpl::saveToAsync(
 {
     kulloAssert(msgId >= Kullo::ID_MIN && msgId <= Kullo::ID_MAX);
     kulloAssert(attId >= Kullo::ID_MIN && attId <= Kullo::ID_MAX);
-    kulloAssert(path.size());
+    kulloAssert(!path.empty());
     kulloAssert(listener);
 
     return std::make_shared<AsyncTaskImpl>(

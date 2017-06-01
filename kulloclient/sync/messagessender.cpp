@@ -60,48 +60,49 @@ void MessagesSender::run(
     auto idsAndRecipients = Dao::DeliveryDao(session_).unsentMessages();
     for (const auto &idAndRecipient : idsAndRecipients)
     {
-        if (*shouldCancel) throw SyncCanceled();
-
-        estimatedRemaining_ = Dao::MessageDao::sizeOfAllUndelivered(session_);
-        progress_.uploadedBytes = previouslyUploaded_;
-        progress_.totalBytes = previouslyUploaded_ + estimatedRemaining_;
-        EMIT(events.progressed, progress_);
-
-        auto oldMessageId = currentMessageId;
-        currentMessageId = std::get<0>(idAndRecipient);
-        auto currentRecipient = std::get<1>(idAndRecipient);
-
-        if (oldMessageId != currentMessageId)
+        boost::optional<Util::KulloAddress> currentRecipient;
+        try
         {
-            // load message
-            auto messageDao = Dao::MessageDao::load(
-                        currentMessageId, Dao::Old::No, session_);
-            if (!messageDao || messageDao->deleted())
+            if (*shouldCancel) throw SyncCanceled();
+
+            estimatedRemaining_ = Dao::MessageDao::sizeOfAllUndelivered(session_);
+            progress_.uploadedBytes = previouslyUploaded_;
+            progress_.totalBytes = previouslyUploaded_ + estimatedRemaining_;
+            EMIT(events.progressed, progress_);
+
+            auto oldMessageId = currentMessageId;
+            currentMessageId = std::get<0>(idAndRecipient);
+            currentRecipient = std::get<1>(idAndRecipient);
+
+            if (oldMessageId != currentMessageId)
             {
-                Dao::DeliveryDao(session_).remove(currentMessageId);
-                continue;
+                // load message
+                auto messageDao = Dao::MessageDao::load(
+                            currentMessageId, Dao::Old::No, session_);
+                if (!messageDao || messageDao->deleted())
+                {
+                    Dao::DeliveryDao(session_).remove(currentMessageId);
+                    continue;
+                }
+                currentConversationId = messageDao->conversationId();
+
+                if (*shouldCancel) throw SyncCanceled();
+
+                // encode message
+                encodedMessage = Codec::MessageEncoder::encodeMessage(
+                            *messageDao, session_);
+                // must be calculated the same way as in sizeOfAllUndelivered()
+                currentMessageEstimatedSize =
+                        Dao::PER_MESSAGE_OVERHEAD +
+                        messageDao->text().size() +
+                        encodedMessage.attachments.size();
+                Codec::MessageCompressor().compress(encodedMessage);
             }
-            currentConversationId = messageDao->conversationId();
 
             if (*shouldCancel) throw SyncCanceled();
 
-            // encode message
-            encodedMessage = Codec::MessageEncoder::encodeMessage(
-                        *messageDao, session_);
-            // must be calculated the same way as in sizeOfAllUndelivered()
-            currentMessageEstimatedSize =
-                    Dao::PER_MESSAGE_OVERHEAD +
-                    messageDao->text().size() +
-                    encodedMessage.attachments.size();
-            Codec::MessageCompressor().compress(encodedMessage);
-        }
-
-        if (*shouldCancel) throw SyncCanceled();
-
-        try
-        {
             auto encKeyPair = keysClient_.getPublicKey(
-                        currentRecipient,
+                        *currentRecipient,
                         Protocol::PublicKeysClient::LATEST_ENCRYPTION_PUBKEY);
 
             if (*shouldCancel) throw SyncCanceled();
@@ -129,7 +130,7 @@ void MessagesSender::run(
             sendMessage(shouldCancel,
                         currentConversationId,
                         currentMessageId,
-                        currentRecipient,
+                        *currentRecipient,
                         sendableMsg,
                         currentMessageEstimatedSize);
         }
@@ -139,10 +140,25 @@ void MessagesSender::run(
         }
         catch (Protocol::NotFound)
         {
-            handleNotFound(
+            handleFailed(
                         currentConversationId,
                         currentMessageId,
-                        currentRecipient);
+                        *currentRecipient,
+                        Util::Delivery::doesnt_exist);
+            continue;
+        }
+        catch (SyncCanceled&)
+        {
+            throw;
+        }
+        catch (std::exception &ex)
+        {
+            Log.e() << "MessagesSender failed: " << Util::formatException(ex);
+            handleFailed(
+                        currentConversationId,
+                        currentMessageId,
+                        *currentRecipient,
+                        Util::Delivery::unknown);
             continue;
         }
     }
@@ -203,10 +219,11 @@ void MessagesSender::sendMessage(
     }
     catch (Protocol::NotFound&)
     {
-        handleNotFound(
+        handleFailed(
                     currentConversationId,
                     currentMessageId,
-                    currentRecipient);
+                    currentRecipient,
+                    Util::Delivery::doesnt_exist);
         return;
     }
 
@@ -217,16 +234,17 @@ void MessagesSender::sendMessage(
     EMIT(events.messageModified, currentConversationId, currentMessageId);
 }
 
-void MessagesSender::handleNotFound(
+void MessagesSender::handleFailed(
         id_type currentConversationId,
         id_type currentMessageId,
-        const KulloAddress &currentRecipient)
+        const KulloAddress &currentRecipient,
+        Util::Delivery::Reason reason)
 {
     Dao::DeliveryDao(session_).markAsFailed(
                 currentMessageId,
                 currentRecipient,
                 Util::DateTime::nowUtc(),
-                Util::Delivery::doesnt_exist);
+                reason);
     EMIT(events.messageModified, currentConversationId, currentMessageId);
 }
 

@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <boost/optional.hpp>
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -11,8 +12,11 @@
 namespace Kullo { namespace Api {
 
 class Address;
+class AsyncTask;
 class Delivery;
+class MessagesSearchListener;
 struct DateTime;
+struct SenderPredicate;
 
 class Messages {
 public:
@@ -70,6 +74,17 @@ public:
     virtual std::string textAsHtml(int64_t msgId, bool includeKulloAddresses) = 0;
 
     virtual std::string footer(int64_t msgId) = 0;
+
+    /**
+     * Full-text search for messages
+     *
+     * searchText: The text to search for. Does prefix matching.
+     * convId: Conversation ID to filter by conversation, or -1 to search all.
+     * sender: Filter by sender, if set.
+     * boundary: boundary used in result highlighting; auto-generated if unset
+     * limitResults: The maximum number of results to return.
+     */
+    virtual std::shared_ptr<AsyncTask> searchAsync(const std::string & searchText, int64_t convId, const boost::optional<SenderPredicate> & sender, int32_t limitResults, const boost::optional<std::string> & boundary, const std::shared_ptr<MessagesSearchListener> & listener) = 0;
 };
 
 } }  // namespace Kullo::Api

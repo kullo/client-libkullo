@@ -25,7 +25,7 @@ using namespace Kullo::Util;
 namespace Kullo {
 namespace Db {
 
-const unsigned int CURRENT_DB_VERSION(9);
+const unsigned int CURRENT_DB_VERSION(10);
 
 namespace {
 
@@ -162,6 +162,105 @@ void migrateTo8(SharedSessionPtr session)
 
     // drop participants table
     session->exec("DROP TABLE participants");
+}
+
+void migrateTo10(SharedSessionPtr session)
+{
+    session->exec(
+        "CREATE VIEW messages_searchable "
+        "    (id, conversation_id, sender, sent, received, text, footer) "
+        "AS "
+        "  SELECT id, conversation_id, sender, sent, received, text, footer "
+        "  FROM messages "
+        "  WHERE old = 0 AND deleted = 0;");
+
+    session->exec(
+        "CREATE VIRTUAL TABLE messages_fts USING fts5( "
+        "  conversation_id UNINDEXED, sender UNINDEXED, "
+        "  sent UNINDEXED, received UNINDEXED, "
+        "  text, footer UNINDEXED, "
+        "  content=messages_searchable, content_rowid=id);");
+
+    session->exec(
+        "INSERT INTO messages_fts "
+        "    (rowid, conversation_id, sender, sent, received, text, footer) "
+        "  SELECT id, conversation_id, sender, sent, received, text, footer "
+        "  FROM messages WHERE old = 0 AND deleted = 0;");
+
+    session->exec(
+        "CREATE TRIGGER messages_trigger_insert_searchable "
+        "  AFTER INSERT ON messages "
+        "  WHEN new.old = 0 AND new.deleted = 0 "
+        "BEGIN "
+        "  INSERT INTO messages_fts "
+        "    (rowid, conversation_id, sender, sent, received, text, footer) "
+        "  VALUES "
+        "    (new.id, new.conversation_id, new.sender, new.sent, new.received, "
+        "    new.text, new.footer); "
+        "END;");
+
+    session->exec(
+        "CREATE TRIGGER messages_trigger_promote_to_searchable "
+        "  AFTER UPDATE ON messages "
+        "  WHEN (old.old = 1 OR old.deleted = 1) "
+        "    AND new.old = 0 AND new.deleted = 0 "
+        "BEGIN "
+        "  INSERT INTO messages_fts "
+        "    (rowid, conversation_id, sender, sent, received, text, footer) "
+        "  VALUES "
+        "    (new.id, new.conversation_id, new.sender, new.sent, new.received, "
+        "    new.text, new.footer); "
+        "END;");
+
+    session->exec(
+        "CREATE TRIGGER messages_trigger_delete_searchable "
+        "  AFTER DELETE ON messages "
+        "  WHEN old.old = 0 AND old.deleted = 0 "
+        "BEGIN "
+        "  INSERT INTO messages_fts "
+        "    (messages_fts, rowid, conversation_id, sender, sent, received, "
+        "    text, footer) "
+        "  VALUES "
+        "    ('delete', old.id, old.conversation_id, old.sender, old.sent, "
+        "    old.received, old.text, old.footer); "
+        "END;");
+
+    session->exec(
+        "CREATE TRIGGER messages_trigger_demote_from_searchable "
+        "  AFTER UPDATE ON messages "
+        "  WHEN old.old = 0 AND old.deleted = 0 "
+        "    AND (new.old = 1 OR new.deleted = 1) "
+        "BEGIN "
+        "  INSERT INTO messages_fts "
+        "    (messages_fts, rowid, conversation_id, sender, sent, received, "
+        "    text, footer) "
+        "  VALUES "
+        "    ('delete', old.id, old.conversation_id, old.sender, old.sent, "
+        "    old.received, old.text, old.footer); "
+        "END;");
+
+    session->exec(
+        "CREATE TRIGGER messages_trigger_update_searchable "
+        "  AFTER UPDATE ON messages "
+        "  WHEN old.old = 0 AND old.deleted = 0 "
+        "    AND new.old = 0 AND new.deleted = 0 "
+        "    AND (old.conversation_id != new.conversation_id "
+        "      OR old.sender != new.sender OR old.sent != new.sent "
+        "      OR old.received != new.received OR old.text != new.text "
+        "      OR old.footer != new.footer) "
+        "BEGIN "
+        "  INSERT INTO messages_fts "
+        "    (messages_fts, rowid, conversation_id, sender, sent, received, "
+        "    text, footer) "
+        "  VALUES "
+        "    ('delete', old.id, old.conversation_id, old.sender, old.sent, "
+        "    old.received, old.text, old.footer); "
+        "  INSERT INTO messages_fts "
+        "    (rowid, conversation_id, sender, sent, received, text, footer) "
+        "  VALUES "
+        "    (new.id, new.conversation_id, new.sender, new.sent, new.received, "
+        "    new.text, new.footer); "
+        "END;");
 }
 
 }
@@ -429,6 +528,10 @@ void migrate(SharedSessionPtr session)
                         "remote_value TEXT,"
                         "local_value TEXT,"
                         "last_modified INTEGER DEFAULT 0)");
+            break;
+
+        case 9:
+            migrateTo10(session);
             break;
 
         default:

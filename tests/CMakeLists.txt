@@ -43,6 +43,7 @@ set(source_files
     dao/test_draftdao.cpp
     dao/test_messageattachmentsink.cpp
     dao/test_messagedao.cpp
+    dao/test_messagesearchdao.cpp
     dao/test_senderdao.cpp
     dao/test_usersettingsdao.cpp
     http/fake_httpclientfactory.cpp

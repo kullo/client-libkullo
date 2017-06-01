@@ -5,8 +5,10 @@
 #include <smartsqlite/scopedtransaction.h>
 
 #include "kulloclient/api/Address.h"
+#include "kulloclient/api_impl/asynctaskimpl.h"
 #include "kulloclient/api_impl/DateTime.h"
 #include "kulloclient/api_impl/deliveryimpl.h"
+#include "kulloclient/api_impl/messagessearchworker.h"
 #include "kulloclient/dao/deliverydao.h"
 #include "kulloclient/db/exceptions.h"
 #include "kulloclient/event/conversationmodifiedevent.h"
@@ -54,22 +56,18 @@ int64_t MessagesImpl::latestForSender(const std::shared_ptr<Api::Address> &addre
     kulloAssert(address);
     const auto addressString = address->toString();
 
-    int64_t latestId = -1;
-
-    for (auto itr = messages_.rbegin(); itr != messages_.rend(); ++itr)
+    // Messages are ordered by id and "latest" means having the greatest id,
+    // so we can iterate from the end and use the first hit
+    for (auto itr = messages_.crbegin(); itr != messages_.crend(); ++itr)
     {
-        auto &dao = itr->second;
+        const auto &dao = itr->second;
         if (dao.sender() == addressString)
         {
-            auto id = dao.id();
-            if (id > latestId)
-            {
-                latestId = id;
-            }
+            return dao.id();
         }
     }
 
-    return latestId;
+    return -1; // not found
 }
 
 boost::optional<Dao::MessageDao> MessagesImpl::removeFromCache(int64_t msgId)
@@ -221,6 +219,25 @@ std::string MessagesImpl::footer(int64_t msgId)
 
     auto iter = messages_.find(msgId);
     return iter != messages_.end() ? iter->second.footer() : "";
+}
+
+std::shared_ptr<Api::AsyncTask> MessagesImpl::searchAsync(
+        const std::string &searchText,
+        int64_t convId,
+        const boost::optional<Api::SenderPredicate> &sender,
+        int32_t limitResults,
+        const boost::optional<std::string> &boundary,
+        const std::shared_ptr<Api::MessagesSearchListener> &listener)
+{
+    kulloAssert(convId == -1 || (convId >= Kullo::ID_MIN && convId <= Kullo::ID_MAX));
+    kulloAssert(limitResults > 0);
+    kulloAssert(boundary == boost::none || !boundary->empty());
+    kulloAssert(listener);
+
+    return std::make_shared<AsyncTaskImpl>(
+                std::make_shared<MessagesSearchWorker>(
+                    searchText, convId, sender, limitResults, boundary,
+                    sessionData_->sessionConfig_, listener));
 }
 
 Event::ApiEvents MessagesImpl::messageAdded(int64_t convId, int64_t msgId)

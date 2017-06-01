@@ -8,7 +8,10 @@
 #include "kulloclient/api/DeliveryState.h"
 #include "kulloclient/api/DraftPart.h"
 #include "kulloclient/api/LocalError.h"
+#include "kulloclient/api/MessagesSearchResult.h"
 #include "kulloclient/api/NetworkError.h"
+#include "kulloclient/api/SearchPredicateOperator.h"
+#include "kulloclient/api/SenderPredicate.h"
 #include "kulloclient/util/assert.h"
 
 namespace Kullo {
@@ -112,6 +115,39 @@ inline std::ostream &operator<<(std::ostream &os, Api::NetworkError value)
         os << "Unknown";
         break;
     }
+    return os;
+}
+
+inline std::ostream &operator<<(std::ostream &os, Api::MessagesSearchResult value)
+{
+    os << "MessagesSearchResult("
+       << "msgId=" << value.msgId << ", "
+       << "convId=" << value.convId << ", "
+       << "senderAddress=" << value.senderAddress << ", "
+       << "dateReceived=" << value.dateReceived << ", "
+       << "snippet=\"" << value.snippet << "\")";
+    return os;
+}
+
+inline std::ostream &operator<<(std::ostream &os, Api::SearchPredicateOperator value)
+{
+    switch (value)
+    {
+    case Api::SearchPredicateOperator::Is:
+        os << "Is";
+        break;
+    case Api::SearchPredicateOperator::IsNot:
+        os << "IsNot";
+        break;
+    }
+    return os;
+}
+
+inline std::ostream &operator<<(std::ostream &os, Api::SenderPredicate value)
+{
+    os << "SenderPredicate("
+       << "predicateOperator=" << value.predicateOperator << ", "
+       << "senderAddress=\"" << value.senderAddress << "\")";
     return os;
 }
 

@@ -16,9 +16,12 @@ namespace Kullo {
         struct AccountInfo;
         struct DateTime;
         struct Event;
+        struct MessagesSearchResult;
+        struct SenderPredicate;
         struct SyncProgress;
 
         enum class ChallengeType;
+        enum class LocalError;
         enum class NetworkError;
     }
     namespace Codec {
@@ -38,6 +41,7 @@ namespace Kullo {
         class ConversationDao;
         class DraftDao;
         class MessageDao;
+        class MessageSearchDao;
         class PublicKeyDao;
         class SenderDao;
         class SymmetricKeyDao;

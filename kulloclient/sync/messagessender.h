@@ -13,6 +13,7 @@
 #include "kulloclient/protocol/httpstructs.h"
 #include "kulloclient/protocol/publickeysclient.h"
 #include "kulloclient/sync/definitions.h"
+#include "kulloclient/util/delivery.h"
 #include "kulloclient/util/misc.h"
 #include "kulloclient/util/usersettings.h"
 
@@ -58,10 +59,10 @@ private:
             const Util::KulloAddress &currentRecipient,
             Protocol::SendableMessage sendableMsg,
             std::size_t estimatedSize);
-    void handleNotFound(
-            id_type currentConversationId,
+    void handleFailed(id_type currentConversationId,
             id_type currentMessageId,
-            const Util::KulloAddress &currentRecipient);
+            const Util::KulloAddress &currentRecipient,
+            Util::Delivery::Reason reason);
 
     Db::SharedSessionPtr session_;
     Protocol::PublicKeysClient keysClient_;

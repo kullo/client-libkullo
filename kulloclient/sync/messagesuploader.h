@@ -102,6 +102,7 @@ private:
     bool checkAndHandleSizeLimit(
             Dao::DraftDao &draft, Api::DraftPart part,
             std::size_t size, std::size_t maxSize);
+    void resetDraftToEditing(Dao::DraftDao &draft);
     Dao::MessageDao makeMessageDao(
             const Util::DateTime &dateSent,
             const Protocol::MessageSent &msgSent,

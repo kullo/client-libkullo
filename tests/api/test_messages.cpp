@@ -4,8 +4,12 @@
 #include <boost/optional/optional_io.hpp>
 
 #include <kulloclient/api/Address.h>
+#include <kulloclient/api/AsyncTask.h>
 #include <kulloclient/api/Delivery.h>
 #include <kulloclient/api/Messages.h>
+#include <kulloclient/api/MessagesSearchListener.h>
+#include <kulloclient/api/MessagesSearchResult.h>
+#include <kulloclient/api/SenderPredicate.h>
 #include <kulloclient/api_impl/DateTime.h>
 #include <kulloclient/api_impl/debug.h>
 #include <kulloclient/api_impl/deliveryimpl.h>
@@ -15,8 +19,45 @@
 #include <kulloclient/dao/messagedao.h>
 #include <kulloclient/event/messageremovedevent.h>
 
+#include "tests/testutil.h"
+
 using namespace testing;
 using namespace Kullo;
+
+namespace {
+
+class SearchListener : public Api::MessagesSearchListener
+{
+public:
+    void finished(const std::vector<Api::MessagesSearchResult> &results) override
+    {
+        isFinished_ = true;
+        results_ = results;
+    }
+
+    bool isFinished_ = false;
+    std::vector<Api::MessagesSearchResult> results_;
+};
+
+const std::string SEARCH_BOUNDARY = "srgVGZIt9";
+
+}
+
+namespace Kullo {
+namespace Api {
+
+bool operator==(const MessagesSearchResult &lhs, const MessagesSearchResult &rhs)
+{
+    return
+            lhs.msgId == rhs.msgId &&
+            lhs.convId == rhs.convId &&
+            lhs.senderAddress == rhs.senderAddress &&
+            lhs.dateReceived == rhs.dateReceived &&
+            lhs.snippet == rhs.snippet;
+}
+
+}
+}
 
 class ApiMessages : public ApiModelTest
 {
@@ -34,46 +75,64 @@ public:
         data1_.id = 23;
         data1_.read = true;
         data1_.done = true;
-        data1_.address = "recipient#example.com";
+        data1_.senderAddress = "recipient#example.com";
         data1_.dateSent = Api::DateTime(2015, 6, 23, 16, 06, 00, 120);
         data1_.dateReceived = Api::DateTime(*deliveryData.date);
         data1_.text = "Hello, world.";
+        data1_.snippet = "(srgVGZIt9)Hello(/srgVGZIt9), world.";
         data1_.footer = "Bye, world.";
 
         data2_.id = 24;
         data2_.read = true;
         data2_.done = true;
-        data2_.address = "recipient#example.com";
+        data2_.senderAddress = "recipient#example.com";
         data2_.dateSent     = Api::DateTime(2015, 6, 24, 16, 06, 00, 120);
         data2_.dateReceived = Api::DateTime(2015, 6, 24, 16, 06, 02, 120);
         data2_.text = "Are you okay?";
+        data2_.snippet = "Are (srgVGZIt9)you(/srgVGZIt9) okay?";
         data2_.footer = "It's me again";
 
         data3_.id = 25;
         data3_.read = true;
         data3_.done = true;
-        data3_.address = "recipient#example.com";
+        data3_.senderAddress = "recipient#example.com";
         data3_.dateSent     = Api::DateTime(2015, 6, 25, 16, 06, 00, 120);
         data3_.dateReceived = Api::DateTime(2015, 6, 25, 16, 06, 02, 120);
         data3_.text = "Are you okay?";
+        data3_.snippet = "Are (srgVGZIt9)you(/srgVGZIt9) okay?";
         data3_.footer = "It's me again";
+
+        data4_.id = 72;
+        data4_.read = true;
+        data4_.done = true;
+        data4_.senderAddress = "someone-else#example.com";
+        data4_.dateSent     = Api::DateTime(2016, 6, 25, 16, 06, 00, 120);
+        data4_.dateReceived = Api::DateTime(2016, 6, 25, 16, 06, 02, 120);
+        data4_.text = "Good evening Mr. Smith,\n\nthanks.  What time?";
+        data4_.snippet = "Good evening Mr. Smith, (srgVGZIt9)thanks(/srgVGZIt9). What time?";
+        data4_.footer = "";
 
         dbSession_ = Db::makeSession(sessionConfig_);
         Db::migrate(dbSession_);
 
-        Dao::ConversationDao convDao(dbSession_);
-        convDao.setParticipants(data1_.address);
-        convDao.save();
-        data1_.convId = convDao.id();
-        data2_.convId = convDao.id();
-        data3_.convId = convDao.id();
+        Dao::ConversationDao convDao1(dbSession_);
+        convDao1.setParticipants(data1_.senderAddress);
+        convDao1.save();
+        data1_.convId = convDao1.id();
+        data2_.convId = convDao1.id();
+        data3_.convId = convDao1.id();
 
-        for (const auto &d : std::vector<SampleData>{data1_, data2_, data3_})
+        Dao::ConversationDao convDao2(dbSession_);
+        convDao2.setParticipants(data4_.senderAddress);
+        convDao2.save();
+        data4_.convId = convDao2.id();
+
+        for (const auto &d : std::vector<SampleData>{data1_, data2_, data3_, data4_})
         {
             Dao::MessageDao dao(dbSession_);
             dao.setConversationId(d.convId);
             dao.setId(d.id);
-            dao.setSender(d.address);
+            dao.setSender(d.senderAddress);
             dao.setState(Dao::MessageState::Read, d.read);
             dao.setState(Dao::MessageState::Done, d.done);
             dao.setDateSent(d.dateSent->toString());
@@ -96,13 +155,29 @@ protected:
         int64_t id;
         bool read;
         bool done;
-        std::string address;
+        std::string senderAddress;
         boost::optional<Api::DateTime> dateSent;
         boost::optional<Api::DateTime> dateReceived;
         std::string text;
+        std::string snippet;
         std::string footer;
     };
-    SampleData data1_, data2_, data3_;
+
+    Api::MessagesSearchResult makeExpectedResult(
+            const SampleData &sampleData,
+            const std::string &customSnippet = "")
+    {
+        return Api::MessagesSearchResult(
+                    sampleData.id,
+                    sampleData.convId,
+                    sampleData.senderAddress,
+                    *sampleData.dateReceived,
+                    !customSnippet.empty() ? customSnippet : sampleData.snippet,
+                    SEARCH_BOUNDARY
+                    );
+    }
+
+    SampleData data1_, data2_, data3_, data4_;
 
     Util::Delivery deliveryData;
 
@@ -123,7 +198,7 @@ K_TEST_F(ApiMessages, allForConversationWorks)
 
 K_TEST_F(ApiMessages, latestForSenderWorks)
 {
-    EXPECT_THAT(uut->latestForSender(Api::Address::create(data1_.address)),
+    EXPECT_THAT(uut->latestForSender(Api::Address::create(data1_.senderAddress)),
                 Eq(data3_.id));
 
     EXPECT_THAT(uut->latestForSender(Api::Address::create("noone#example.com")),
@@ -440,4 +515,233 @@ K_TEST_F(ApiMessages, idRangeWorks)
         EXPECT_ANY_THROW(uut->footer(id));
         EXPECT_ANY_THROW(uut->remove(id));
     }
+}
+
+K_TEST_F(ApiMessages, searchAsyncFailsOnBadInput)
+{
+    auto listener = std::make_shared<SearchListener>();
+
+    EXPECT_THROW(uut->searchAsync("hello", -2, boost::none, 5, SEARCH_BOUNDARY, listener),
+                 Util::AssertionFailed);
+    EXPECT_THROW(uut->searchAsync("hello", -1, boost::none, 5, SEARCH_BOUNDARY, nullptr),
+                 Util::AssertionFailed);
+    EXPECT_THROW(uut->searchAsync("hello", -1, boost::none, 0, SEARCH_BOUNDARY, listener),
+                 Util::AssertionFailed);
+    EXPECT_THROW(uut->searchAsync("hello", -1, boost::none, 5, std::string{""}, listener),
+                 Util::AssertionFailed);
+}
+
+K_TEST_F(ApiMessages, searchAsyncCanBeCanceled)
+{
+    auto listener = std::make_shared<SearchListener>();
+    auto task = uut->searchAsync("hello", -1, boost::none, 5, SEARCH_BOUNDARY, listener);
+    ASSERT_THAT(task, Not(IsNull()));
+    EXPECT_NO_THROW(task->cancel());
+}
+
+K_TEST_F(ApiMessages, searchAsyncFullMatch)
+{
+    auto listener = std::make_shared<SearchListener>();
+    auto task = uut->searchAsync("hello", -1, boost::none, 5, SEARCH_BOUNDARY, listener);
+
+    ASSERT_THAT(TestUtil::waitAndCheck(task, listener->isFinished_),
+                Eq(TestUtil::OK));
+    EXPECT_THAT(listener->results_, ElementsAre(makeExpectedResult(data1_)));
+}
+
+K_TEST_F(ApiMessages, searchAsyncPrefixMatch)
+{
+    auto listener = std::make_shared<SearchListener>();
+    auto task = uut->searchAsync("hell", -1, boost::none, 5, SEARCH_BOUNDARY, listener);
+
+    ASSERT_THAT(TestUtil::waitAndCheck(task, listener->isFinished_),
+                Eq(TestUtil::OK));
+    EXPECT_THAT(listener->results_, ElementsAre(makeExpectedResult(data1_)));
+}
+
+K_TEST_F(ApiMessages, searchAsyncMultiwordMatch)
+{
+    auto listener = std::make_shared<SearchListener>();
+    auto task = uut->searchAsync("hello world", -1, boost::none, 5, SEARCH_BOUNDARY, listener);
+
+    ASSERT_THAT(TestUtil::waitAndCheck(task, listener->isFinished_),
+                Eq(TestUtil::OK));
+    std::string expected = "(srgVGZIt9)Hello(/srgVGZIt9), (srgVGZIt9)world(/srgVGZIt9).";
+    EXPECT_THAT(listener->results_,
+                ElementsAre(makeExpectedResult(data1_, expected)));
+}
+
+K_TEST_F(ApiMessages, searchAsyncMultiwordUnorderedMatch)
+{
+    auto listener = std::make_shared<SearchListener>();
+    auto task = uut->searchAsync("world hello", -1, boost::none, 5, SEARCH_BOUNDARY, listener);
+
+    ASSERT_THAT(TestUtil::waitAndCheck(task, listener->isFinished_),
+                Eq(TestUtil::OK));
+    std::string expected = "(srgVGZIt9)Hello(/srgVGZIt9), (srgVGZIt9)world(/srgVGZIt9).";
+    EXPECT_THAT(listener->results_,
+                ElementsAre(makeExpectedResult(data1_, expected)));
+}
+
+K_TEST_F(ApiMessages, searchAsyncMultiwordPrefixMatch)
+{
+    auto listener = std::make_shared<SearchListener>();
+    auto task = uut->searchAsync("he w", -1, boost::none, 5, SEARCH_BOUNDARY, listener);
+
+    ASSERT_THAT(TestUtil::waitAndCheck(task, listener->isFinished_),
+                Eq(TestUtil::OK));
+    std::string expected = "(srgVGZIt9)Hello(/srgVGZIt9), (srgVGZIt9)world(/srgVGZIt9).";
+    EXPECT_THAT(listener->results_,
+                ElementsAre(makeExpectedResult(data1_, expected)));
+}
+
+K_TEST_F(ApiMessages, searchAsyncMultipleMatches)
+{
+    auto listener = std::make_shared<SearchListener>();
+    auto task = uut->searchAsync("you", -1, boost::none, 5, SEARCH_BOUNDARY, listener);
+
+    ASSERT_THAT(TestUtil::waitAndCheck(task, listener->isFinished_),
+                Eq(TestUtil::OK));
+    EXPECT_THAT(listener->results_, UnorderedElementsAre(
+                    makeExpectedResult(data2_), makeExpectedResult(data3_)));
+}
+
+K_TEST_F(ApiMessages, searchAsyncNoMatch)
+{
+    auto listener = std::make_shared<SearchListener>();
+    auto task = uut->searchAsync("help", -1, boost::none, 5, SEARCH_BOUNDARY, listener);
+
+    ASSERT_THAT(TestUtil::waitAndCheck(task, listener->isFinished_),
+                Eq(TestUtil::OK));
+    EXPECT_THAT(listener->results_, IsEmpty());
+}
+
+K_TEST_F(ApiMessages, searchAsyncEmptySearchText)
+{
+    auto listener = std::make_shared<SearchListener>();
+    auto task = uut->searchAsync("", -1, boost::none, 5, SEARCH_BOUNDARY, listener);
+
+    ASSERT_THAT(TestUtil::waitAndCheck(task, listener->isFinished_),
+                Eq(TestUtil::OK));
+    EXPECT_THAT(listener->results_, IsEmpty());
+}
+
+K_TEST_F(ApiMessages, searchAsyncIgnoresQuotation)
+{
+    auto listener = std::make_shared<SearchListener>();
+    auto task = uut->searchAsync("hello\"", -1, boost::none, 5, SEARCH_BOUNDARY, listener);
+
+    ASSERT_THAT(TestUtil::waitAndCheck(task, listener->isFinished_),
+                Eq(TestUtil::OK));
+    EXPECT_THAT(listener->results_, ElementsAre(makeExpectedResult(data1_)));
+}
+
+K_TEST_F(ApiMessages, searchAsyncRespectsConversationFilterPositiveCase)
+{
+    auto listener = std::make_shared<SearchListener>();
+    auto task = uut->searchAsync("hello", data1_.convId, boost::none, 5, SEARCH_BOUNDARY, listener);
+
+    ASSERT_THAT(TestUtil::waitAndCheck(task, listener->isFinished_),
+                Eq(TestUtil::OK));
+    EXPECT_THAT(listener->results_, ElementsAre(makeExpectedResult(data1_)));
+}
+
+K_TEST_F(ApiMessages, searchAsyncRespectsConversationFilterNegativeCase)
+{
+    auto listener = std::make_shared<SearchListener>();
+    auto task = uut->searchAsync("hello", data1_.convId + 1, boost::none, 5, SEARCH_BOUNDARY, listener);
+
+    ASSERT_THAT(TestUtil::waitAndCheck(task, listener->isFinished_),
+                Eq(TestUtil::OK));
+    EXPECT_THAT(listener->results_, IsEmpty());
+}
+
+K_TEST_F(ApiMessages, searchAsyncRespectsSenderFilterWithIsPositiveCase)
+{
+    auto listener = std::make_shared<SearchListener>();
+    auto predicate = Api::SenderPredicate(Api::SearchPredicateOperator::Is, data1_.senderAddress);
+    auto task = uut->searchAsync("hello", -1, predicate, 5, SEARCH_BOUNDARY, listener);
+
+    ASSERT_THAT(TestUtil::waitAndCheck(task, listener->isFinished_),
+                Eq(TestUtil::OK));
+    EXPECT_THAT(listener->results_, ElementsAre(makeExpectedResult(data1_)));
+}
+
+K_TEST_F(ApiMessages, searchAsyncRespectsSenderFilterWithIsNegativeCase)
+{
+    auto listener = std::make_shared<SearchListener>();
+    auto predicate = Api::SenderPredicate(Api::SearchPredicateOperator::Is, "x" + data1_.senderAddress);
+    auto task = uut->searchAsync("hello", -1, predicate, 5, SEARCH_BOUNDARY, listener);
+
+    ASSERT_THAT(TestUtil::waitAndCheck(task, listener->isFinished_),
+                Eq(TestUtil::OK));
+    EXPECT_THAT(listener->results_, IsEmpty());
+}
+
+K_TEST_F(ApiMessages, searchAsyncRespectsSenderFilterWithIsNotPositiveCase)
+{
+    auto listener = std::make_shared<SearchListener>();
+    auto predicate = Api::SenderPredicate(Api::SearchPredicateOperator::IsNot, "x" + data1_.senderAddress);
+    auto task = uut->searchAsync("hello", -1, predicate, 5, SEARCH_BOUNDARY, listener);
+
+    ASSERT_THAT(TestUtil::waitAndCheck(task, listener->isFinished_),
+                Eq(TestUtil::OK));
+    EXPECT_THAT(listener->results_, ElementsAre(makeExpectedResult(data1_)));
+}
+
+K_TEST_F(ApiMessages, searchAsyncRespectsSenderFilterWithIsNotNegativeCase)
+{
+    auto listener = std::make_shared<SearchListener>();
+    auto predicate = Api::SenderPredicate(Api::SearchPredicateOperator::IsNot, data1_.senderAddress);
+    auto task = uut->searchAsync("hello", -1, predicate, 5, SEARCH_BOUNDARY, listener);
+
+    ASSERT_THAT(TestUtil::waitAndCheck(task, listener->isFinished_),
+                Eq(TestUtil::OK));
+    EXPECT_THAT(listener->results_, IsEmpty());
+}
+
+K_TEST_F(ApiMessages, searchAsyncMultipleMatchesWithLimit)
+{
+    auto listener = std::make_shared<SearchListener>();
+    auto task = uut->searchAsync("you", -1, boost::none, 1, SEARCH_BOUNDARY, listener);
+
+    ASSERT_THAT(TestUtil::waitAndCheck(task, listener->isFinished_),
+                Eq(TestUtil::OK));
+    EXPECT_THAT(listener->results_, SizeIs(1));
+}
+
+K_TEST_F(ApiMessages, searchAsyncRandomBoundary)
+{
+    auto listener = std::make_shared<SearchListener>();
+    auto task = uut->searchAsync("hello", -1, boost::none, 5, boost::none, listener);
+
+    ASSERT_THAT(TestUtil::waitAndCheck(task, listener->isFinished_),
+                Eq(TestUtil::OK));
+
+    ASSERT_THAT(listener->results_, SizeIs(1));
+    auto result = listener->results_[0];
+
+    // Regex with brackets not supported on Windows
+    // "On Windows, Google Test uses its own simple regular expression
+    // implementation. It lacks many features you can find in POSIX extended
+    // regular expressions."
+    // https://github.com/google/googletest/blob/master/googletest/docs/AdvancedGuide.md#regular-expression-syntax
+#if defined(_MSC_VER)
+    ASSERT_THAT(result.boundary, StrNe(""));
+#else
+    ASSERT_THAT(result.boundary, MatchesRegex("[a-zA-Z0-9]+"));
+#endif
+
+    auto boundary = result.boundary;
+    EXPECT_THAT(result.snippet, HasSubstr("(" + boundary + ")Hello(/" + boundary + ")"));
+}
+
+K_TEST_F(ApiMessages, searchAsyncSnippetCompressed)
+{
+    auto listener = std::make_shared<SearchListener>();
+    auto task = uut->searchAsync("thanks", -1, boost::none, 5, SEARCH_BOUNDARY, listener);
+
+    ASSERT_THAT(TestUtil::waitAndCheck(task, listener->isFinished_),
+                Eq(TestUtil::OK));
+    EXPECT_THAT(listener->results_, ElementsAre(makeExpectedResult(data4_)));
 }

@@ -14,7 +14,7 @@
 namespace Kullo {
 namespace Dao {
 
-template <class T>
+template <typename T, typename Loader = T>
 class Result
 {
 public:
@@ -27,7 +27,7 @@ public:
     std::unique_ptr<T> next()
     {
         if (m_iter == m_stmt.end()) return nullptr;
-        std::unique_ptr<T> result(T::loadFromDb(*m_iter, m_session));
+        std::unique_ptr<T> result(Loader::loadFromDb(*m_iter, m_session));
         ++m_iter;
         return result;
     }

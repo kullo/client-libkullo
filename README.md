@@ -63,6 +63,11 @@ Tips and Tricks
 Changelog
 ---------
 
+### v64 (2017-06-01)
+
+ * Implement full text search
+ * Gracefully handle failures when sending messages
+
 ### v63 (2017-05-08)
 
  * Allow upper case when highlighting Kullo addresses
