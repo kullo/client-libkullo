@@ -83,7 +83,11 @@ std::vector<uint8_t> SendersImpl::avatar(int64_t msgId)
 Event::ApiEvents SendersImpl::senderAdded(int64_t msgId)
 {
     auto dao = Dao::SenderDao::load(msgId, sessionData_->dbSession_);
-    if (!dao) throw Db::DatabaseIntegrityError("SendersImpl::senderAdded");
+    if (!dao)
+    {
+        throw Db::DatabaseIntegrityError("Sender of message id " + std::to_string(msgId) +
+                                         " not found in SendersImpl::senderAdded");
+    }
     senders_.emplace(dao->messageId(), *dao);
 
     auto avatarHash = dao->avatarHash();

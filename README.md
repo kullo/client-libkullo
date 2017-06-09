@@ -63,6 +63,10 @@ Tips and Tricks
 Changelog
 ---------
 
+### v65 (2017-06-09)
+
+ * Sort search results by date
+
 ### v64 (2017-06-01)
 
  * Implement full text search

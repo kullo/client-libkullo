@@ -52,7 +52,8 @@ std::unique_ptr<MessageSearchResult> MessageSearchDao::search(
         sql += "AND sender " + op + " :sender_address ";
     }
 
-    sql += "ORDER BY rank ASC, received DESC LIMIT :limit ";
+    // sorting by message_id is equivalent to received but much faster for big result sets
+    sql += "ORDER BY message_id DESC LIMIT :limit ";
 
     auto stmt = session->prepare(sql);
 
