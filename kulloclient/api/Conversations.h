@@ -4,13 +4,12 @@
 #pragma once
 
 #include <cstdint>
-#include <memory>
 #include <unordered_set>
 #include <vector>
 
 namespace Kullo { namespace Api {
 
-class Address;
+struct Address;
 struct DateTime;
 
 class Conversations {
@@ -24,7 +23,7 @@ public:
      * Returns the conversation with the given participants (excluding the local
      * user), or -1 if the conversation doesn't exist
      */
-    virtual int64_t get(const std::unordered_set<std::shared_ptr<Address>> & participants) = 0;
+    virtual int64_t get(const std::unordered_set<Address> & participants) = 0;
 
     /**
      * Adds a new conversation with the given participants (excluding the local
@@ -32,7 +31,7 @@ public:
      * addresses should have been validated through Client::addressExistsAsync()
      * before passing them into add().
      */
-    virtual int64_t add(const std::unordered_set<std::shared_ptr<Address>> & participants) = 0;
+    virtual int64_t add(const std::unordered_set<Address> & participants) = 0;
 
     /**
      * Triggers removal of the given conversation. This will also remove all
@@ -42,7 +41,7 @@ public:
     virtual void triggerRemoval(int64_t convId) = 0;
 
     /** Returns the participants (excluding the local user) */
-    virtual std::unordered_set<std::shared_ptr<Address>> participants(int64_t convId) = 0;
+    virtual std::unordered_set<Address> participants(int64_t convId) = 0;
 
     /** Total number of messages */
     virtual int32_t totalMessages(int64_t convId) = 0;

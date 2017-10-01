@@ -5,6 +5,7 @@
 
 #include <boost/optional.hpp>
 #include <cstdint>
+#include <kulloclient/nn.h>
 #include <memory>
 
 namespace Kullo { namespace Api {
@@ -32,7 +33,7 @@ public:
      *
      * Thread-safe.
      */
-    virtual void setListener(const std::shared_ptr<SyncerListener> & listener) = 0;
+    virtual void setListener(const ::Kullo::nn_shared_ptr<SyncerListener> & listener) = 0;
 
     /**
      * Get the finishing time of the last successful full sync.

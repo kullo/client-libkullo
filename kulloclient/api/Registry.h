@@ -4,6 +4,7 @@
 #pragma once
 
 #include <boost/optional.hpp>
+#include <kulloclient/nn.h>
 #include <memory>
 
 namespace Kullo { namespace Api {
@@ -23,7 +24,7 @@ public:
     static void setLogListener(const std::shared_ptr<LogListener> & listener);
 
     /** Sets a new TaskRunner. Must be done before any async method is called. */
-    static void setTaskRunner(const std::shared_ptr<TaskRunner> & taskRunner);
+    static void setTaskRunner(const ::Kullo::nn_shared_ptr<TaskRunner> & taskRunner);
 };
 
 } }  // namespace Kullo::Api

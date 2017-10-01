@@ -23,6 +23,7 @@ CJNIEXPORT void JNICALL Java_net_kullo_libkullo_http_Registry_setHttpClientFacto
 {
     try {
         DJINNI_FUNCTION_PROLOGUE0(jniEnv);
+        DJINNI_ASSERT_MSG(j_factory, jniEnv, "Got unexpected null parameter 'factory' to function net.kullo.libkullo.http.Registry#setHttpClientFactory(net.kullo.libkullo.http.HttpClientFactory factory)");
         ::Kullo::Http::Registry::setHttpClientFactory(::JNI::Kullo::Http::HttpClientFactory::toCpp(jniEnv, j_factory));
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, )
 }

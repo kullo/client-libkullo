@@ -9,11 +9,9 @@
 using namespace Kullo;
 
 ApiTest::ApiTest()
-    : address_(Api::Address::create("exists#example.com"))
-    , masterKey_(
-          Api::MasterKey::createFromDataBlocks(
-              MasterKeyData::VALID_DATA_BLOCKS))
-    , taskRunner_(std::make_shared<Util::StlTaskRunner>())
+    : address_("exists#example.com")
+    , masterKey_(MasterKeyData::VALID_DATA_BLOCKS)
+    , taskRunner_(nn_make_shared<Util::StlTaskRunner>())
 {
     Api::Registry::setTaskRunner(taskRunner_);
 }

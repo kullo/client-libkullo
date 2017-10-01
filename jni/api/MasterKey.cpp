@@ -6,74 +6,23 @@
 
 namespace JNI { namespace Kullo { namespace Api {
 
-MasterKey::MasterKey() : ::djinni::JniInterface<::Kullo::Api::MasterKey, MasterKey>("net/kullo/libkullo/api/MasterKey$CppProxy") {}
+MasterKey::MasterKey() = default;
 
 MasterKey::~MasterKey() = default;
 
-
-CJNIEXPORT void JNICALL Java_net_kullo_libkullo_api_MasterKey_00024CppProxy_nativeDestroy(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef)
-{
-    try {
-        DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
-        delete reinterpret_cast<::djinni::CppProxyHandle<::Kullo::Api::MasterKey>*>(nativeRef);
-    } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, )
+auto MasterKey::fromCpp(JNIEnv* jniEnv, const CppType& c) -> ::djinni::LocalRef<JniType> {
+    const auto& data = ::djinni::JniClass<MasterKey>::get();
+    auto r = ::djinni::LocalRef<JniType>{jniEnv->NewObject(data.clazz.get(), data.jconstructor,
+                                                           ::djinni::get(::djinni::List<::djinni::String>::fromCpp(jniEnv, c.blocks)))};
+    ::djinni::jniExceptionCheck(jniEnv);
+    return r;
 }
 
-CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_MasterKey_createFromPem(JNIEnv* jniEnv, jobject /*this*/, jstring j_pem)
-{
-    try {
-        DJINNI_FUNCTION_PROLOGUE0(jniEnv);
-        auto r = ::Kullo::Api::MasterKey::createFromPem(::djinni::String::toCpp(jniEnv, j_pem));
-        return ::djinni::release(::djinni::Optional<boost::optional, ::JNI::Kullo::Api::MasterKey>::fromCpp(jniEnv, r));
-    } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, 0 /* value doesn't matter */)
-}
-
-CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_MasterKey_createFromDataBlocks(JNIEnv* jniEnv, jobject /*this*/, jobject j_dataBlocks)
-{
-    try {
-        DJINNI_FUNCTION_PROLOGUE0(jniEnv);
-        auto r = ::Kullo::Api::MasterKey::createFromDataBlocks(::djinni::List<::djinni::String>::toCpp(jniEnv, j_dataBlocks));
-        return ::djinni::release(::djinni::Optional<boost::optional, ::JNI::Kullo::Api::MasterKey>::fromCpp(jniEnv, r));
-    } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, 0 /* value doesn't matter */)
-}
-
-CJNIEXPORT jboolean JNICALL Java_net_kullo_libkullo_api_MasterKey_isValidBlock(JNIEnv* jniEnv, jobject /*this*/, jstring j_block)
-{
-    try {
-        DJINNI_FUNCTION_PROLOGUE0(jniEnv);
-        auto r = ::Kullo::Api::MasterKey::isValidBlock(::djinni::String::toCpp(jniEnv, j_block));
-        return ::djinni::release(::djinni::Bool::fromCpp(jniEnv, r));
-    } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, 0 /* value doesn't matter */)
-}
-
-CJNIEXPORT jstring JNICALL Java_net_kullo_libkullo_api_MasterKey_00024CppProxy_native_1pem(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef)
-{
-    try {
-        DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
-        const auto& ref = ::djinni::objectFromHandleAddress<::Kullo::Api::MasterKey>(nativeRef);
-        auto r = ref->pem();
-        return ::djinni::release(::djinni::String::fromCpp(jniEnv, r));
-    } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, 0 /* value doesn't matter */)
-}
-
-CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_MasterKey_00024CppProxy_native_1dataBlocks(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef)
-{
-    try {
-        DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
-        const auto& ref = ::djinni::objectFromHandleAddress<::Kullo::Api::MasterKey>(nativeRef);
-        auto r = ref->dataBlocks();
-        return ::djinni::release(::djinni::List<::djinni::String>::fromCpp(jniEnv, r));
-    } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, 0 /* value doesn't matter */)
-}
-
-CJNIEXPORT jboolean JNICALL Java_net_kullo_libkullo_api_MasterKey_00024CppProxy_native_1isEqualTo(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef, jobject j_other)
-{
-    try {
-        DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
-        const auto& ref = ::djinni::objectFromHandleAddress<::Kullo::Api::MasterKey>(nativeRef);
-        auto r = ref->isEqualTo(::JNI::Kullo::Api::MasterKey::toCpp(jniEnv, j_other));
-        return ::djinni::release(::djinni::Bool::fromCpp(jniEnv, r));
-    } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, 0 /* value doesn't matter */)
+auto MasterKey::toCpp(JNIEnv* jniEnv, JniType j) -> CppType {
+    ::djinni::JniLocalScope jscope(jniEnv, 2);
+    assert(j != nullptr);
+    const auto& data = ::djinni::JniClass<MasterKey>::get();
+    return {::djinni::List<::djinni::String>::toCpp(jniEnv, jniEnv->GetObjectField(j, data.field_blocks))};
 }
 
 } } }  // namespace JNI::Kullo::Api

@@ -79,7 +79,7 @@ void ClientGenerateKeysWorker::work()
     // notify listener of completion
     if (auto listener = Util::copyGuardedByMutex(listener_, mutex_))
     {
-        listener->finished(registration);
+        listener->finished(NN_CHECK_ASSERT(registration));
     }
 }
 

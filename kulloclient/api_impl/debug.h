@@ -3,7 +3,6 @@
 
 #include <iostream>
 
-#include "kulloclient/api/Address.h"
 #include "kulloclient/api/DeliveryReason.h"
 #include "kulloclient/api/DeliveryState.h"
 #include "kulloclient/api/DraftPart.h"
@@ -16,13 +15,6 @@
 
 namespace Kullo {
 namespace Api {
-
-// cannot use const& because toString is Djinni-defined and therefore not const
-inline std::ostream &operator<<(std::ostream &os, Api::Address &value)
-{
-    os << value.toString();
-    return os;
-}
 
 inline std::ostream &operator<<(std::ostream &os, Api::DeliveryReason value)
 {

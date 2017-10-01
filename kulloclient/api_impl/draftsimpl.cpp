@@ -71,7 +71,7 @@ void DraftsImpl::setText(int64_t convId, const std::string &text)
     {
         Api::Event event(Api::EventType::DraftTextChanged, convId, -1, -1);
         sessionListener_->internalEvent(
-                    std::make_shared<Event::SendApiEventsEvent>(event));
+                    nn_make_shared<Event::SendApiEventsEvent>(event));
     }
 }
 
@@ -122,7 +122,7 @@ void DraftsImpl::prepareToSend(int64_t convId)
 
     Api::Event event(Api::EventType::DraftStateChanged, convId, -1, -1);
     sessionListener_->internalEvent(
-                std::make_shared<Event::SendApiEventsEvent>(event));
+                nn_make_shared<Event::SendApiEventsEvent>(event));
 }
 
 void DraftsImpl::clear(int64_t convId)
@@ -139,7 +139,7 @@ void DraftsImpl::clear(int64_t convId)
         tx.commit();
 
         sessionListener_->internalEvent(
-                    std::make_shared<Event::DraftRemovedEvent>(convId));
+                    nn_make_shared<Event::DraftRemovedEvent>(convId));
     }
 }
 

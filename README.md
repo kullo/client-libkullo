@@ -63,6 +63,15 @@ Tips and Tricks
 Changelog
 ---------
 
+### v66 (2017-09-25)
+
+ * Use non-nullable types where possible
+ * Add Argon2 password hashing library
+ * Add support for encrypted MasterKey storage
+ * Improve URI detection/highlighting
+ * Make buildable with Google's Android toolchain
+ * Update JsonCpp to 1.8.2
+
 ### v65 (2017-06-09)
 
  * Sort search results by date

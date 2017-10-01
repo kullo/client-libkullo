@@ -75,7 +75,7 @@ const std::string HTTP_URI = std::string(
             );
 
 const Regex LINKS_IN_MESSAGE_REGEX(
-        "(^|[\\t\\n\\r \\(])(" + HTTP_URI + ")"
+        "(^|[^a-zA-Z0-9])(" + HTTP_URI + ")"
         );
 
 const Regex LINKS_IN_BRACKETS_REGEX(
@@ -100,7 +100,7 @@ const std::string KULLO_ADRESS_REGEX =
 ;
 
 const Regex KULLO_ADRESS_IN_MESSAGE_REGEX(
-        "(^|[\\t\\n\\r \\(;])(" + KULLO_ADRESS_REGEX + ")"
+        "(^|[^-\\.#a-zA-Z0-9])(" + KULLO_ADRESS_REGEX + ")"
         );
 
 const std::string KULLO_ADDRESS_SCHEME = "kulloInternal";

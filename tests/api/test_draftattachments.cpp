@@ -141,7 +141,7 @@ public:
         dao.setContent(Util::to_vector(data.content));
 
         makeSession();
-        uut_ = session_->draftAttachments();
+        uut_ = session_->draftAttachments().as_nullable();
     }
 
 protected:
@@ -184,25 +184,17 @@ K_TEST_F(ApiDraftAttachments, allForDraftWorks)
     EXPECT_THAT(uut_->allForDraft(42), IsEmpty());
 }
 
-K_TEST_F(ApiDraftAttachments, addAsyncFailsOnNull)
-{
-    EXPECT_THROW(uut_->addAsync(
-                     data.convId, data.filepath, data.mimeType, nullptr),
-                 Util::AssertionFailed);
-}
-
 K_TEST_F(ApiDraftAttachments, addAsyncCanBeCanceled)
 {
-    auto listener = std::make_shared<AddListener>();
+    auto listener = Kullo::nn_make_shared<AddListener>();
     auto task = uut_->addAsync(
                 data.convId, data.filepath, data.mimeType, listener);
-    ASSERT_THAT(task, Not(IsNull()));
     EXPECT_NO_THROW(task->cancel());
 }
 
 K_TEST_F(ApiDraftAttachments, addAsyncWorks)
 {
-    auto listener = std::make_shared<AddListener>();
+    auto listener = Kullo::nn_make_shared<AddListener>();
     auto task = uut_->addAsync(
                 data.convId, data.filepath, data.mimeType, listener);
 
@@ -229,21 +221,21 @@ K_TEST_F(ApiDraftAttachments, addAsyncWorks)
 K_TEST_F(ApiDraftAttachments, addAsyncHashingWorks)
 {
     {
-        auto listener = std::make_shared<AddListener>();
+        auto listener = Kullo::nn_make_shared<AddListener>();
         auto task = uut_->addAsync(data.convId, hashData_.path1,
                                    "application/octet-stream", listener);
         ASSERT_THAT(TestUtil::waitAndCheck(task, listener->isFinished_), Eq(TestUtil::OK));
         EXPECT_THAT(uut_->hash(data.convId, listener->attId_), StrEq(hashData_.hash1));
     }
     {
-        auto listener = std::make_shared<AddListener>();
+        auto listener = Kullo::nn_make_shared<AddListener>();
         auto task = uut_->addAsync(data.convId, hashData_.path2,
                                    "application/octet-stream", listener);
         ASSERT_THAT(TestUtil::waitAndCheck(task, listener->isFinished_), Eq(TestUtil::OK));
         EXPECT_THAT(uut_->hash(data.convId, listener->attId_), StrEq(hashData_.hash2));
     }
     {
-        auto listener = std::make_shared<AddListener>();
+        auto listener = Kullo::nn_make_shared<AddListener>();
         auto task = uut_->addAsync(data.convId, hashData_.path3,
                                    "application/octet-stream", listener);
         ASSERT_THAT(TestUtil::waitAndCheck(task, listener->isFinished_), Eq(TestUtil::OK));
@@ -264,7 +256,7 @@ K_TEST_F(ApiDraftAttachments, addAsyncFilenamesWithSpecialsWork)
     };
     const auto mimeType = "text/plain";
 
-    auto listener = std::make_shared<AddListener>();
+    auto listener = Kullo::nn_make_shared<AddListener>();
 
     for (const auto &inFilepath : inFilepaths)
     {
@@ -284,7 +276,7 @@ K_TEST_F(ApiDraftAttachments, addAsyncWorksOnError)
 
     // Add directory
     {
-        auto listener = std::make_shared<AddListener>();
+        auto listener = Kullo::nn_make_shared<AddListener>();
         auto task = uut_->addAsync(data.convId, data.errorFilepathDirectory,
                                   data.mimeType, listener);
 
@@ -295,7 +287,7 @@ K_TEST_F(ApiDraftAttachments, addAsyncWorksOnError)
 
     // Add Non-existing file
     {
-        auto listener = std::make_shared<AddListener>();
+        auto listener = Kullo::nn_make_shared<AddListener>();
         auto task = uut_->addAsync(data.convId, data.errorFilepathNonExisting,
                                   data.mimeType, listener);
 
@@ -306,7 +298,7 @@ K_TEST_F(ApiDraftAttachments, addAsyncWorksOnError)
 
     // Add non-readable file
     {
-        auto listener = std::make_shared<AddListener>();
+        auto listener = Kullo::nn_make_shared<AddListener>();
         auto task = uut_->addAsync(data.convId, data.errorFilepathNonReadable,
                                   data.mimeType, listener);
 
@@ -513,15 +505,9 @@ K_TEST_F(ApiDraftAttachments, hashWorks)
     EXPECT_THAT(uut_->hash(42, 0), StrEq(""));
 }
 
-K_TEST_F(ApiDraftAttachments, contentAsyncFailsOnNull)
-{
-    EXPECT_THROW(uut_->contentAsync(data.convId, data.attId, nullptr),
-                 Util::AssertionFailed);
-}
-
 K_TEST_F(ApiDraftAttachments, contentAsyncCanBeCanceled)
 {
-    auto listener = std::make_shared<ContentListener>();
+    auto listener = Kullo::nn_make_shared<ContentListener>();
     auto task = uut_->contentAsync(data.convId, data.attId, listener);
     ASSERT_THAT(task, Not(IsNull()));
     EXPECT_NO_THROW(task->cancel());
@@ -529,7 +515,7 @@ K_TEST_F(ApiDraftAttachments, contentAsyncCanBeCanceled)
 
 K_TEST_F(ApiDraftAttachments, contentAsyncWorks)
 {
-    auto listener = std::make_shared<ContentListener>();
+    auto listener = Kullo::nn_make_shared<ContentListener>();
     auto task = uut_->contentAsync(data.convId, data.attId, listener);
 
     ASSERT_THAT(task->waitForMs(TestUtil::asyncTimeoutMs()), Eq(true));
@@ -540,26 +526,21 @@ K_TEST_F(ApiDraftAttachments, contentAsyncWorks)
 
 K_TEST_F(ApiDraftAttachments, saveToAsyncFailsOnNull)
 {
-    auto listener = std::make_shared<SaveToListener>();
-    EXPECT_THROW(uut_->saveToAsync(data.convId, data.attId, "", nullptr),
-                 Util::AssertionFailed);
+    auto listener = Kullo::nn_make_shared<SaveToListener>();
     EXPECT_THROW(uut_->saveToAsync(data.convId, data.attId, "", listener),
-                 Util::AssertionFailed);
-    EXPECT_THROW(uut_->saveToAsync(data.convId, data.attId, data.outpath, nullptr),
                  Util::AssertionFailed);
 }
 
 K_TEST_F(ApiDraftAttachments, saveToAsyncCanBeCanceled)
 {
-    auto listener = std::make_shared<SaveToListener>();
+    auto listener = Kullo::nn_make_shared<SaveToListener>();
     auto task = uut_->saveToAsync(data.convId, data.attId, data.outpath, listener);
-    ASSERT_THAT(task, Not(IsNull()));
     EXPECT_NO_THROW(task->cancel());
 }
 
 K_TEST_F(ApiDraftAttachments, saveToAsyncWorks)
 {
-    auto listener = std::make_shared<SaveToListener>();
+    auto listener = Kullo::nn_make_shared<SaveToListener>();
     auto task = uut_->saveToAsync(data.convId, data.attId, data.outpath, listener);
 
     ASSERT_THAT(TestUtil::waitAndCheck(task, listener->isFinished_),
@@ -580,7 +561,7 @@ K_TEST_F(ApiDraftAttachments, saveToAsyncWorksOnError)
 
     // Save to non-existing directory
     {
-        auto listener = std::make_shared<SaveToListener>();
+        auto listener = Kullo::nn_make_shared<SaveToListener>();
         auto task = uut_->saveToAsync(data.convId, data.attId, data.errorOutpath, listener);
 
         ASSERT_THAT(TestUtil::waitAndCheck(task, listener->hasError_),
@@ -647,9 +628,9 @@ K_TEST_F(ApiDraftAttachments, draftAttachmentAddedAndDraftRemoved)
 
 K_TEST_F(ApiDraftAttachments, DISABLED_idRangeWorks)
 {
-    auto addAsyncListener = std::make_shared<AddListener>();
-    auto contentListener = std::make_shared<ContentListener>();
-    auto saveToListener = std::make_shared<SaveToListener>();
+    auto addAsyncListener = Kullo::nn_make_shared<AddListener>();
+    auto contentListener = Kullo::nn_make_shared<ContentListener>();
+    auto saveToListener = Kullo::nn_make_shared<SaveToListener>();
 
     for (auto convId : TEST_IDS_VALID)
     {

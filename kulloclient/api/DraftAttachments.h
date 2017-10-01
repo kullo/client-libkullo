@@ -4,6 +4,7 @@
 #pragma once
 
 #include <cstdint>
+#include <kulloclient/nn.h>
 #include <memory>
 #include <string>
 #include <vector>
@@ -23,7 +24,7 @@ public:
     virtual std::vector<int64_t> allForDraft(int64_t convId) = 0;
 
     /** Adds a new attachment to a draft */
-    virtual std::shared_ptr<AsyncTask> addAsync(int64_t convId, const std::string & path, const std::string & mimeType, const std::shared_ptr<DraftAttachmentsAddListener> & listener) = 0;
+    virtual ::Kullo::nn_shared_ptr<AsyncTask> addAsync(int64_t convId, const std::string & path, const std::string & mimeType, const ::Kullo::nn_shared_ptr<DraftAttachmentsAddListener> & listener) = 0;
 
     /** Removes an attachment from a draft */
     virtual void remove(int64_t convId, int64_t attId) = 0;
@@ -39,13 +40,13 @@ public:
     virtual std::string hash(int64_t convId, int64_t attId) = 0;
 
     /** Gets the content of the attachment as a BLOB */
-    virtual std::shared_ptr<AsyncTask> contentAsync(int64_t convId, int64_t attId, const std::shared_ptr<DraftAttachmentsContentListener> & listener) = 0;
+    virtual ::Kullo::nn_shared_ptr<AsyncTask> contentAsync(int64_t convId, int64_t attId, const ::Kullo::nn_shared_ptr<DraftAttachmentsContentListener> & listener) = 0;
 
     /**
      * Saves the content of the attachment to a file. Path contains the absolute
      * path where the file should be saved, including the filename.
      */
-    virtual std::shared_ptr<AsyncTask> saveToAsync(int64_t convId, int64_t attId, const std::string & path, const std::shared_ptr<DraftAttachmentsSaveToListener> & listener) = 0;
+    virtual ::Kullo::nn_shared_ptr<AsyncTask> saveToAsync(int64_t convId, int64_t attId, const std::string & path, const ::Kullo::nn_shared_ptr<DraftAttachmentsSaveToListener> & listener) = 0;
 };
 
 } }  // namespace Kullo::Api

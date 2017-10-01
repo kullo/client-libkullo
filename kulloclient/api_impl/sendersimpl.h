@@ -25,7 +25,7 @@ public:
 
     std::string name(int64_t msgId) override;
 
-    std::shared_ptr<Api::Address> address(int64_t msgId) override;
+    boost::optional<Api::Address> address(int64_t msgId) override;
 
     std::string organization(int64_t msgId) override;
 

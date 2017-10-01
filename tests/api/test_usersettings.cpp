@@ -1,11 +1,10 @@
 /* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #include <kulloclient/api/UserSettings.h>
+#include <kulloclient/api_impl/Address.h>
 #include <kulloclient/api_impl/DateTime.h>
 #include <kulloclient/util/assert.h>
 
 #include "tests/api/apimodeltest.h"
-#include "tests/api/mock_address.h"
-#include "tests/api/mock_masterkey.h"
 
 using namespace testing;
 using namespace Kullo;
@@ -25,7 +24,7 @@ protected:
     ApiUserSettings()
     {
         makeSession();
-        uut = session_->userSettings();
+        uut = session_->userSettings().as_nullable();
     }
 
     std::shared_ptr<Api::UserSettings> uut;
@@ -33,12 +32,12 @@ protected:
 
 K_TEST_F(ApiUserSettings, addressWorks)
 {
-    EXPECT_THAT(uut->address()->isEqualTo(address_), Eq(true));
+    EXPECT_THAT(uut->address(), Eq(address_));
 }
 
 K_TEST_F(ApiUserSettings, masterKeyWorks)
 {
-    EXPECT_THAT(uut->masterKey()->isEqualTo(masterKey_), Eq(true));
+    EXPECT_THAT(uut->masterKey(), Eq(masterKey_));
 }
 
 K_TEST_F(ApiUserSettings, nameWorks)

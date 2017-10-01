@@ -3,7 +3,7 @@
 
 #include <smartsqlite/scopedtransaction.h>
 
-#include "kulloclient/api_impl/addressimpl.h"
+#include "kulloclient/api_impl/Address.h"
 #include "kulloclient/dao/avatardao.h"
 #include "kulloclient/db/exceptions.h"
 #include "kulloclient/util/assert.h"
@@ -35,14 +35,14 @@ std::string SendersImpl::name(int64_t msgId)
     return (iter != senders_.end()) ? iter->second.name(): "";
 }
 
-std::shared_ptr<Api::Address> SendersImpl::address(int64_t msgId)
+boost::optional<Api::Address> SendersImpl::address(int64_t msgId)
 {
     kulloAssert(msgId >= Kullo::ID_MIN && msgId <= Kullo::ID_MAX);
 
     auto iter = senders_.find(msgId);
     return (iter != senders_.end())
-            ? std::make_shared<AddressImpl>(iter->second.address())
-            : nullptr;
+            ? boost::make_optional<Api::Address>(iter->second.address())
+            : boost::none;
 }
 
 std::string SendersImpl::organization(int64_t msgId)

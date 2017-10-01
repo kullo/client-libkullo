@@ -2,7 +2,7 @@
 #include "tests/api/apimodeltest.h"
 
 #include <kulloclient/api/Senders.h>
-#include <kulloclient/api_impl/addressimpl.h>
+#include <kulloclient/api_impl/Address.h>
 #include <kulloclient/crypto/hasher.h>
 #include <kulloclient/dao/avatardao.h>
 #include <kulloclient/dao/messagedao.h>
@@ -20,7 +20,7 @@ public:
         data.msgId = 1;
         data.name = "Paula Example";
         auto address = Util::KulloAddress("paula#example.com");
-        data.address = std::make_shared<ApiImpl::AddressImpl>(address);
+        data.address = Api::Address(address);
         data.organization = "Example Corp.";
         data.avatarMimeType = "image/png";
         data.avatar = Util::to_vector("This is a fake avatar");
@@ -47,7 +47,7 @@ public:
         messageDao.save(Dao::CreateOld::No);
 
         makeSession();
-        uut = session_->senders();
+        uut = session_->senders().as_nullable();
     }
 
 protected:
@@ -55,7 +55,7 @@ protected:
     {
         int64_t msgId;
         std::string name;
-        std::shared_ptr<Api::Address> address;
+        boost::optional<Api::Address> address;
         std::string organization;
         std::string avatarMimeType;
         std::vector<uint8_t> avatar;
@@ -80,9 +80,9 @@ K_TEST_F(ApiSenders, nameWorks)
 
 K_TEST_F(ApiSenders, addressWorks)
 {
-    EXPECT_THAT(uut->address(data.msgId)->isEqualTo(data.address), Eq(true));
+    EXPECT_THAT(uut->address(data.msgId), Eq(data.address));
 
-    EXPECT_THAT(uut->address(42), IsNull());
+    EXPECT_THAT(uut->address(42), Eq(boost::none));
 }
 
 K_TEST_F(ApiSenders, organizationWorks)

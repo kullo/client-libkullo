@@ -36,7 +36,7 @@ std::shared_ptr<Api::TaskRunner> Registry::taskRunner()
 // implementation of static methods of Http::Registry
 namespace Http {
 void Registry::setHttpClientFactory(
-        const std::shared_ptr<HttpClientFactory> &factory)
+        const nn_shared_ptr<HttpClientFactory> &factory)
 {
     ::Kullo::Registry::setHttpClientFactory(factory);
 }

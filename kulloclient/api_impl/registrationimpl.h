@@ -20,12 +20,12 @@ public:
             std::unique_ptr<Crypto::PrivateKey> keypairEncryption,
             std::unique_ptr<Crypto::PrivateKey> keypairSignature);
 
-    std::shared_ptr<Api::AsyncTask> registerAccountAsync(
-            const std::shared_ptr<Api::Address> &address,
+    nn_shared_ptr<Api::AsyncTask> registerAccountAsync(
+            const Api::Address &address,
             const boost::optional<std::string> &acceptedTerms,
             const std::shared_ptr<Api::Challenge> &challenge,
             const std::string &challengeAnswer,
-            const std::shared_ptr<Api::RegistrationRegisterAccountListener> &listener
+            const nn_shared_ptr<Api::RegistrationRegisterAccountListener> &listener
             ) override;
 
 private:

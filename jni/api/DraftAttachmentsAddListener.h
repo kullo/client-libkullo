@@ -5,12 +5,13 @@
 
 #include "jni/support-lib/jni/djinni_support.hpp"
 #include "kulloclient/api/DraftAttachmentsAddListener.h"
+#include <kulloclient/nn.h>
 
 namespace JNI { namespace Kullo { namespace Api {
 
 class DraftAttachmentsAddListener final : ::djinni::JniInterface<::Kullo::Api::DraftAttachmentsAddListener, DraftAttachmentsAddListener> {
 public:
-    using CppType = std::shared_ptr<::Kullo::Api::DraftAttachmentsAddListener>;
+    using CppType = ::Kullo::nn_shared_ptr<::Kullo::Api::DraftAttachmentsAddListener>;
     using CppOptType = std::shared_ptr<::Kullo::Api::DraftAttachmentsAddListener>;
     using JniType = jobject;
 
@@ -18,7 +19,10 @@ public:
 
     ~DraftAttachmentsAddListener();
 
-    static CppType toCpp(JNIEnv* jniEnv, JniType j) { return ::djinni::JniClass<DraftAttachmentsAddListener>::get()._fromJava(jniEnv, j); }
+    static CppType toCpp(JNIEnv* jniEnv, JniType j) {
+        DJINNI_ASSERT_MSG(j, jniEnv, "DraftAttachmentsAddListener::fromCpp requires a non-null Java object");
+        return kulloForcedNn(::djinni::JniClass<DraftAttachmentsAddListener>::get()._fromJava(jniEnv, j));
+    };
     static ::djinni::LocalRef<JniType> fromCppOpt(JNIEnv* jniEnv, const CppOptType& c) { return {jniEnv, ::djinni::JniClass<DraftAttachmentsAddListener>::get()._toJava(jniEnv, c)}; }
     static ::djinni::LocalRef<JniType> fromCpp(JNIEnv* jniEnv, const CppType& c) { return fromCppOpt(jniEnv, c); }
 

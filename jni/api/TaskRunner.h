@@ -5,12 +5,13 @@
 
 #include "jni/support-lib/jni/djinni_support.hpp"
 #include "kulloclient/api/TaskRunner.h"
+#include <kulloclient/nn.h>
 
 namespace JNI { namespace Kullo { namespace Api {
 
 class TaskRunner final : ::djinni::JniInterface<::Kullo::Api::TaskRunner, TaskRunner> {
 public:
-    using CppType = std::shared_ptr<::Kullo::Api::TaskRunner>;
+    using CppType = ::Kullo::nn_shared_ptr<::Kullo::Api::TaskRunner>;
     using CppOptType = std::shared_ptr<::Kullo::Api::TaskRunner>;
     using JniType = jobject;
 
@@ -18,7 +19,10 @@ public:
 
     ~TaskRunner();
 
-    static CppType toCpp(JNIEnv* jniEnv, JniType j) { return ::djinni::JniClass<TaskRunner>::get()._fromJava(jniEnv, j); }
+    static CppType toCpp(JNIEnv* jniEnv, JniType j) {
+        DJINNI_ASSERT_MSG(j, jniEnv, "TaskRunner::fromCpp requires a non-null Java object");
+        return kulloForcedNn(::djinni::JniClass<TaskRunner>::get()._fromJava(jniEnv, j));
+    };
     static ::djinni::LocalRef<JniType> fromCppOpt(JNIEnv* jniEnv, const CppOptType& c) { return {jniEnv, ::djinni::JniClass<TaskRunner>::get()._toJava(jniEnv, c)}; }
     static ::djinni::LocalRef<JniType> fromCpp(JNIEnv* jniEnv, const CppType& c) { return fromCppOpt(jniEnv, c); }
 
@@ -33,7 +37,7 @@ private:
         JavaProxy(JniType j);
         ~JavaProxy();
 
-        void runTaskAsync(const std::shared_ptr<::Kullo::Api::Task> & task) override;
+        void runTaskAsync(const ::Kullo::nn_shared_ptr<::Kullo::Api::Task> & task) override;
 
     private:
         friend ::djinni::JniInterface<::Kullo::Api::TaskRunner, ::JNI::Kullo::Api::TaskRunner>;

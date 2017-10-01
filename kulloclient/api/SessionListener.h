@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <kulloclient/nn.h>
 #include <memory>
 
 namespace Kullo { namespace Api {
@@ -15,7 +16,7 @@ public:
     virtual ~SessionListener() {}
 
     /** event must be passed to Session.notify() from UI thread */
-    virtual void internalEvent(const std::shared_ptr<InternalEvent> & event) = 0;
+    virtual void internalEvent(const ::Kullo::nn_shared_ptr<InternalEvent> & event) = 0;
 };
 
 } }  // namespace Kullo::Api

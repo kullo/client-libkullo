@@ -23,7 +23,7 @@ public:
             std::shared_ptr<Api::SessionListener> sessionListener);
     ~SyncerImpl() override;
 
-    void setListener(const std::shared_ptr<Api::SyncerListener> &listener)
+    void setListener(const nn_shared_ptr<Api::SyncerListener> &listener)
         override;
     boost::optional<Api::DateTime> lastFullSync() override;
     void requestSync(Api::SyncMode mode) override;

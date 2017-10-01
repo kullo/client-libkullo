@@ -4,6 +4,7 @@
 #pragma once
 
 #include <cstdint>
+#include <kulloclient/nn.h>
 #include <memory>
 
 namespace Kullo { namespace Api {
@@ -22,7 +23,7 @@ public:
      * Called when key generation is done. Use registration to register an
      * account.
      */
-    virtual void finished(const std::shared_ptr<Registration> & registration) = 0;
+    virtual void finished(const ::Kullo::nn_shared_ptr<Registration> & registration) = 0;
 };
 
 } }  // namespace Kullo::Api

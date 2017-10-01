@@ -1,11 +1,11 @@
 /* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #include "kulloclient/api_impl/registrationregisteraccountworker.h"
 
-#include "kulloclient/api/Address.h"
 #include "kulloclient/api/AddressNotAvailableReason.h"
+#include "kulloclient/api_impl/Address.h"
 #include "kulloclient/api_impl/challengeimpl.h"
 #include "kulloclient/api_impl/exception_conversion.h"
-#include "kulloclient/api_impl/masterkeyimpl.h"
+#include "kulloclient/api_impl/MasterKey.h"
 #include "kulloclient/crypto/asymmetrickeyloader.h"
 #include "kulloclient/crypto/symmetriccryptor.h"
 #include "kulloclient/crypto/symmetrickeygenerator.h"
@@ -22,7 +22,7 @@ namespace Kullo {
 namespace ApiImpl {
 
 RegistrationRegisterAccountWorker::RegistrationRegisterAccountWorker(
-        std::shared_ptr<Api::Address> address,
+        const Api::Address &address,
         Crypto::SymmetricKey masterKey,
         Crypto::SymmetricKey privateDataKey,
         Crypto::PrivateKey keypairEncryption,
@@ -56,24 +56,24 @@ void RegistrationRegisterAccountWorker::work()
     try
     {
         auto challenge = accountsClient_.registerAccount(
-                    Util::KulloAddress(address_->toString()),
+                    Util::KulloAddress(address_.toString()),
                     encodeSymmKeys(),
                     encodeKeyPair(keypairEncryption_),
                     encodeKeyPair(keypairSignature_),
                     acceptedTerms_,
                     challenge_,
                     optionalChallengeAnswer);
-        auto masterKey = std::make_shared<MasterKeyImpl>(masterKey_.toVector());
 
         if (auto listener = Util::copyGuardedByMutex(listener_, mutex_))
         {
             if (challenge)
             {
-                auto apiChallenge =  std::make_shared<ChallengeImpl>(*challenge);
+                auto apiChallenge =  nn_make_shared<ChallengeImpl>(*challenge);
                 listener->challengeNeeded(address_, apiChallenge);
             }
             else
             {
+                auto masterKey = Api::MasterKey(Util::MasterKey(masterKey_.toVector()));
                 listener->finished(address_, masterKey);
             }
         }
@@ -127,7 +127,7 @@ Protocol::SymmetricKeys RegistrationRegisterAccountWorker::encodeSymmKeys()
 
     Protocol::SymmetricKeys result;
     result.loginKey = Crypto::SymmetricKeyGenerator().makeLoginKey(
-                Util::KulloAddress(address_->toString()),
+                Util::KulloAddress(address_.toString()),
                 Util::MasterKey(masterKey_.toVector())).toHex();
     result.privateDataKey = Crypto::SymmetricCryptor().encrypt(
                 privateDataKey_.toVector(),

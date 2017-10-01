@@ -4,15 +4,16 @@
 #pragma once
 
 #include <boost/optional.hpp>
+#include <kulloclient/nn.h>
 #include <memory>
 #include <string>
 
 namespace Kullo { namespace Api {
 
-class Address;
 class AsyncTask;
 class Challenge;
 class RegistrationRegisterAccountListener;
+struct Address;
 
 /** Can be obtained through Client.generateKeysAsync(). */
 class Registration {
@@ -32,7 +33,7 @@ public:
      *
      * If no challenge is needed, set challengeAnswer to ""
      */
-    virtual std::shared_ptr<AsyncTask> registerAccountAsync(const std::shared_ptr<Address> & address, const boost::optional<std::string> & acceptedTerms, const std::shared_ptr<Challenge> & challenge, const std::string & challengeAnswer, const std::shared_ptr<RegistrationRegisterAccountListener> & listener) = 0;
+    virtual ::Kullo::nn_shared_ptr<AsyncTask> registerAccountAsync(const Address & address, const boost::optional<std::string> & acceptedTerms, const std::shared_ptr<Challenge> & challenge, const std::string & challengeAnswer, const ::Kullo::nn_shared_ptr<RegistrationRegisterAccountListener> & listener) = 0;
 };
 
 } }  // namespace Kullo::Api

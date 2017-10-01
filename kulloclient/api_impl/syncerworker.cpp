@@ -140,60 +140,60 @@ void SyncerWorker::setupEvents()
     syncer_.events.conversationAdded =
             [this](id_type conversationId)
     {
-        sendEvent(std::make_shared<Event::ConversationAddedEvent>(
+        sendEvent(nn_make_shared<Event::ConversationAddedEvent>(
                       conversationId));
     };
 
     syncer_.events.conversationModified =
             [this](id_type conversationId)
     {
-        sendEvent(std::make_shared<Event::ConversationModifiedEvent>(
+        sendEvent(nn_make_shared<Event::ConversationModifiedEvent>(
                       conversationId));
     };
 
     syncer_.events.draftModified =
             [this](id_type conversationId)
     {
-        sendEvent(std::make_shared<Event::DraftModifiedEvent>(conversationId));
+        sendEvent(nn_make_shared<Event::DraftModifiedEvent>(conversationId));
     };
 
     syncer_.events.messageAdded =
             [this](id_type conversationId, id_type messageId)
     {
-        sendEvent(std::make_shared<Event::MessageAddedEvent>(conversationId, messageId));
+        sendEvent(nn_make_shared<Event::MessageAddedEvent>(conversationId, messageId));
     };
 
     syncer_.events.messageModified =
             [this](id_type conversationId, id_type messageId)
     {
-        sendEvent(std::make_shared<Event::MessageModifiedEvent>(conversationId, messageId));
+        sendEvent(nn_make_shared<Event::MessageModifiedEvent>(conversationId, messageId));
     };
 
     syncer_.events.messageDeleted =
             [this](id_type conversationId, id_type messageId)
     {
-        sendEvent(std::make_shared<Event::MessageRemovedEvent>(conversationId, messageId));
+        sendEvent(nn_make_shared<Event::MessageRemovedEvent>(conversationId, messageId));
     };
 
     syncer_.events.senderAdded =
             [this](id_type conversationId, id_type messageId)
     {
         K_UNUSED(conversationId);
-        sendEvent(std::make_shared<Event::SenderAddedEvent>(messageId));
+        sendEvent(nn_make_shared<Event::SenderAddedEvent>(messageId));
     };
 
     syncer_.events.messageAttachmentsDownloaded =
             [this](id_type conversationId, id_type messageId)
     {
         K_UNUSED(conversationId);
-        sendEvent(std::make_shared<Event::MessageAttachmentsDownloadedEvent>(
+        sendEvent(nn_make_shared<Event::MessageAttachmentsDownloadedEvent>(
                       messageId));
     };
 
     syncer_.events.draftAttachmentDeleted =
             [this](id_type conversationId, id_type attachmentId)
     {
-        sendEvent(std::make_shared<Event::DraftAttachmentRemovedEvent>(
+        sendEvent(nn_make_shared<Event::DraftAttachmentRemovedEvent>(
                       conversationId, attachmentId));
     };
 
@@ -216,7 +216,7 @@ void SyncerWorker::setupEvents()
     syncer_.events.profileModified =
             [this](const std::string &key)
     {
-        sendEvent(std::make_shared<Event::UserSettingModifiedEvent>(key));
+        sendEvent(nn_make_shared<Event::UserSettingModifiedEvent>(key));
     };
 
     syncer_.events.progressed =
@@ -231,7 +231,7 @@ void SyncerWorker::setupEvents()
 }
 
 void SyncerWorker::sendEvent(
-        const std::shared_ptr<Api::InternalEvent> &event)
+        const nn_shared_ptr<Api::InternalEvent> &event)
 {
     if (auto sessionListener = Util::copyGuardedByMutex(sessionListener_, mutex_))
     {

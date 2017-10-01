@@ -3,21 +3,19 @@
 
 #pragma once
 
-#include <memory>
-
 namespace Kullo { namespace Api {
 
-class Address;
 enum class NetworkError;
+struct Address;
 
 /** Listener used in Client.addressExistsAsync() */
 class ClientAddressExistsListener {
 public:
     virtual ~ClientAddressExistsListener() {}
 
-    virtual void finished(const std::shared_ptr<Address> & address, bool exists) = 0;
+    virtual void finished(const Address & address, bool exists) = 0;
 
-    virtual void error(const std::shared_ptr<Address> & address, NetworkError error) = 0;
+    virtual void error(const Address & address, NetworkError error) = 0;
 };
 
 } }  // namespace Kullo::Api

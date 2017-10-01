@@ -5,6 +5,7 @@
 #include <boost/optional.hpp>
 
 #include "kulloclient/api/RegistrationRegisterAccountListener.h"
+#include "kulloclient/api_impl/Address.h"
 #include "kulloclient/api_impl/worker.h"
 #include "kulloclient/crypto/privatekey.h"
 #include "kulloclient/crypto/symmetrickey.h"
@@ -17,7 +18,7 @@ class RegistrationRegisterAccountWorker : public Worker
 {
 public:
     RegistrationRegisterAccountWorker(
-            std::shared_ptr<Api::Address> address,
+            const Api::Address &address,
             Crypto::SymmetricKey masterKey,
             Crypto::SymmetricKey privateDataKey,
             Crypto::PrivateKey keypairEncryption,
@@ -36,7 +37,7 @@ private:
     Protocol::KeyPair encodeKeyPair(const Crypto::PrivateKey &privKey);
 
     // not synchronized, non-threadsafe stuff is only used from work()
-    std::shared_ptr<Api::Address> address_;
+    const Api::Address address_;
     Crypto::SymmetricKey masterKey_;
     Crypto::SymmetricKey privateDataKey_;
     Crypto::PrivateKey keypairEncryption_;

@@ -91,7 +91,7 @@ public:
         insertAttachment(data.msgId);
 
         makeSession();
-        uut = session_->messageAttachments();
+        uut = session_->messageAttachments().as_nullable();
     }
 
 protected:
@@ -180,15 +180,9 @@ K_TEST_F(ApiMessageAttachments, hashWorks)
     EXPECT_THAT(uut->hash(42, 0), StrEq(""));
 }
 
-K_TEST_F(ApiMessageAttachments, contentAsyncFailsOnNull)
-{
-    EXPECT_THROW(uut->contentAsync(data.msgId, data.attId, nullptr),
-                 Util::AssertionFailed);
-}
-
 K_TEST_F(ApiMessageAttachments, contentAsyncCanBeCanceled)
 {
-    auto listener = std::make_shared<ContentListener>();
+    auto listener = Kullo::nn_make_shared<ContentListener>();
     auto task = uut->contentAsync(data.msgId, data.attId, listener);
     ASSERT_THAT(task, Not(IsNull()));
     EXPECT_NO_THROW(task->cancel());
@@ -198,7 +192,7 @@ K_TEST_F(ApiMessageAttachments, contentAsyncWorks)
 {
     setContent();
 
-    auto listener = std::make_shared<ContentListener>();
+    auto listener = Kullo::nn_make_shared<ContentListener>();
     auto task = uut->contentAsync(data.msgId, data.attId, listener);
 
     ASSERT_THAT(task->waitForMs(TestUtil::asyncTimeoutMs()), Eq(true));
@@ -209,18 +203,14 @@ K_TEST_F(ApiMessageAttachments, contentAsyncWorks)
 
 K_TEST_F(ApiMessageAttachments, saveToAsyncFailsOnNull)
 {
-    auto listener = std::make_shared<SaveToListener>();
-    EXPECT_THROW(uut->saveToAsync(data.msgId, data.attId, "", nullptr),
-                 Util::AssertionFailed);
+    auto listener = Kullo::nn_make_shared<SaveToListener>();
     EXPECT_THROW(uut->saveToAsync(data.msgId, data.attId, "", listener),
-                 Util::AssertionFailed);
-    EXPECT_THROW(uut->saveToAsync(data.msgId, data.attId, data.outpath, nullptr),
                  Util::AssertionFailed);
 }
 
 K_TEST_F(ApiMessageAttachments, saveToAsyncCanBeCanceled)
 {
-    auto listener = std::make_shared<SaveToListener>();
+    auto listener = Kullo::nn_make_shared<SaveToListener>();
     auto task = uut->saveToAsync(data.msgId, data.attId, data.outpath, listener);
     ASSERT_THAT(task, Not(IsNull()));
     EXPECT_NO_THROW(task->cancel());
@@ -230,7 +220,7 @@ K_TEST_F(ApiMessageAttachments, saveToAsyncWorks)
 {
     setContent();
 
-    auto listener = std::make_shared<SaveToListener>();
+    auto listener = Kullo::nn_make_shared<SaveToListener>();
     auto task = uut->saveToAsync(data.msgId, data.attId, data.outpath, listener);
 
     ASSERT_THAT(TestUtil::waitAndCheck(task, listener->isFinished_),
@@ -252,7 +242,7 @@ K_TEST_F(ApiMessageAttachments, saveToAsyncWorksOnError)
 
     // Save to non-existing directory
     {
-        auto listener = std::make_shared<SaveToListener>();
+        auto listener = Kullo::nn_make_shared<SaveToListener>();
         auto task = uut->saveToAsync(data.msgId, data.attId, data.errorOutpath, listener);
 
         ASSERT_THAT(TestUtil::waitAndCheck(task, listener->hasError_),
@@ -300,8 +290,8 @@ K_TEST_F(ApiMessageAttachments, messageRemoved)
 
 K_TEST_F(ApiMessageAttachments, DISABLED_idRangeWorks)
 {
-    auto contentListener = std::make_shared<ContentListener>();
-    auto saveToListener = std::make_shared<SaveToListener>();
+    auto contentListener = Kullo::nn_make_shared<ContentListener>();
+    auto saveToListener = Kullo::nn_make_shared<SaveToListener>();
 
     for (auto msgId : TEST_IDS_VALID)
     {

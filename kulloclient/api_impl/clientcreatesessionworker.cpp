@@ -8,9 +8,7 @@
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
 
-#include "kulloclient/api/Address.h"
 #include "kulloclient/api/LocalError.h"
-#include "kulloclient/api/MasterKey.h"
 #include "kulloclient/api_impl/sessionimpl.h"
 #include "kulloclient/db/dbsession.h"
 #include "kulloclient/util/assert.h"
@@ -27,8 +25,8 @@ namespace Kullo {
 namespace ApiImpl {
 
 ClientCreateSessionWorker::ClientCreateSessionWorker(
-        const std::shared_ptr<Api::Address> &address,
-        const std::shared_ptr<Api::MasterKey> &masterKey,
+        const Api::Address &address,
+        const Api::MasterKey &masterKey,
         const std::string &dbFilePath,
         std::shared_ptr<Api::SessionListener> sessionListener,
         std::shared_ptr<Api::ClientCreateSessionListener> listener,
@@ -85,11 +83,11 @@ void ClientCreateSessionWorker::cancel()
     listener_.reset();
 }
 
-std::shared_ptr<Api::Session> ClientCreateSessionWorker::makeSession()
+nn_shared_ptr<Api::Session> ClientCreateSessionWorker::makeSession()
 {
     auto credentials = Util::Credentials(
-                std::make_shared<Util::KulloAddress>(address_->toString()),
-                std::make_shared<Util::MasterKey>(masterKey_->dataBlocks()));
+                std::make_shared<Util::KulloAddress>(address_.toString()),
+                std::make_shared<Util::MasterKey>(masterKey_.blocks));
     auto sessionConfig = Db::SessionConfig(dbFilePath_, credentials);
 
     auto dbSession = Db::makeSession(sessionConfig);
@@ -103,7 +101,7 @@ std::shared_ptr<Api::Session> ClientCreateSessionWorker::makeSession()
     }
     kulloAssert(Db::hasCurrentSchema(dbSession));
 
-    return std::make_shared<SessionImpl>(
+    return nn_make_shared<SessionImpl>(
                 sessionConfig, dbSession, sessionListener_, mainThread_);
 }
 

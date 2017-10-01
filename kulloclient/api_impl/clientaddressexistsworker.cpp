@@ -13,7 +13,7 @@ namespace Kullo {
 namespace ApiImpl {
 
 ClientAddressExistsWorker::ClientAddressExistsWorker(
-        std::shared_ptr<Api::Address> address,
+        const Api::Address &address,
         std::shared_ptr<Api::ClientAddressExistsListener> listener)
     : keysClient_(Registry::httpClientFactory()->createHttpClient())
     , address_(address)
@@ -29,7 +29,7 @@ void ClientAddressExistsWorker::work()
     try
     {
         keysClient_.getPublicKey(
-                    Util::KulloAddress(address_->toString()),
+                    Util::KulloAddress(address_.toString()),
                     Protocol::PublicKeysClient::LATEST_ENCRYPTION_PUBKEY);
 
         if (auto listener = Util::copyGuardedByMutex(listener_, mutex_))

@@ -11,13 +11,17 @@ set(source_files
     api/apitest.cpp
     api/clientgeneratekeyslistener.cpp
     api/test_address.cpp
+    api/test_addresshelpers.cpp
     api/test_client.cpp
     api/test_conversations.cpp
     api/test_datetime.cpp
     api/test_draftattachments.cpp
     api/test_drafts.cpp
+    api/test_internaladdressutils.cpp
     api/test_internaldatetimeutils.cpp
+    api/test_internalmasterkeyutils.cpp
     api/test_masterkey.cpp
+    api/test_masterkeyhelpers.cpp
     api/test_messageattachments.cpp
     api/test_messages.cpp
     api/test_registration.cpp
@@ -32,6 +36,7 @@ set(source_files
     codec/test_messagedecryptor.cpp
     codec/test_messageencoder.cpp
     codec/test_sizelimitingfilter.cpp
+    crypto/test_argon2.cpp
     crypto/test_decryptingfilter.cpp
     crypto/test_hasher.cpp
     crypto/test_hashverifyingfilter.cpp
@@ -69,6 +74,7 @@ set(source_files
     util/test_version.cpp
     dbtest.cpp
     kullotest.cpp
+    test_nn.cpp
 )
 
 if(TESTS_AS_STATIC_LIB)
@@ -102,6 +108,7 @@ endif()
 
 target_link_libraries(${target_name}
     # from this project
+    argon2
     kulloclient
 
     # from other projects in workspace

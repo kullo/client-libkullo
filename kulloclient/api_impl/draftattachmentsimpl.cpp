@@ -41,18 +41,17 @@ std::vector<int64_t> DraftAttachmentsImpl::allForDraft(int64_t convId)
     return attIds_[convId];
 }
 
-std::shared_ptr<Api::AsyncTask> DraftAttachmentsImpl::addAsync(
+nn_shared_ptr<Api::AsyncTask> DraftAttachmentsImpl::addAsync(
         int64_t convId,
         const std::string &path,
         const std::string &mimeType,
-        const std::shared_ptr<Api::DraftAttachmentsAddListener> &listener)
+        const nn_shared_ptr<Api::DraftAttachmentsAddListener> &listener)
 {
     kulloAssert(convId >= Kullo::ID_MIN && convId <= Kullo::ID_MAX);
     kulloAssert(!path.empty());
     kulloAssert(!mimeType.empty());
-    kulloAssert(listener);
 
-    return std::make_shared<AsyncTaskImpl>(
+    return nn_make_shared<AsyncTaskImpl>(
                 std::make_shared<DraftAttachmentsAddWorker>(
                     convId, path, mimeType, sessionData_->sessionConfig_,
                     sessionListener_, listener));
@@ -68,7 +67,7 @@ void DraftAttachmentsImpl::remove(int64_t convId, int64_t attId)
     if (!events.empty())
     {
         sessionListener_->internalEvent(
-                    std::make_shared<Event::SendApiEventsEvent>(events));
+                    nn_make_shared<Event::SendApiEventsEvent>(events));
     }
 }
 
@@ -127,32 +126,29 @@ std::string DraftAttachmentsImpl::hash(int64_t convId, int64_t attId)
     return daoIter != attachments_.end() ? daoIter->second.hash() : "";
 }
 
-std::shared_ptr<Api::AsyncTask> DraftAttachmentsImpl::contentAsync(
+nn_shared_ptr<Api::AsyncTask> DraftAttachmentsImpl::contentAsync(
         int64_t convId,
         int64_t attId,
-        const std::shared_ptr<Api::DraftAttachmentsContentListener> &listener)
+        const nn_shared_ptr<Api::DraftAttachmentsContentListener> &listener)
 {
     kulloAssert(convId >= Kullo::ID_MIN && convId <= Kullo::ID_MAX);
     kulloAssert(attId >= Kullo::ID_MIN && attId <= Kullo::ID_MAX);
-    kulloAssert(listener);
 
-    return std::make_shared<AsyncTaskImpl>(
+    return nn_make_shared<AsyncTaskImpl>(
                 std::make_shared<DraftAttachmentsContentWorker>(
                     convId, attId, sessionData_->sessionConfig_, listener));
 }
 
-std::shared_ptr<Api::AsyncTask> DraftAttachmentsImpl::saveToAsync(
-        int64_t convId,
+nn_shared_ptr<Api::AsyncTask> DraftAttachmentsImpl::saveToAsync(int64_t convId,
         int64_t attId,
         const std::string &path,
-        const std::shared_ptr<Api::DraftAttachmentsSaveToListener> &listener)
+        const nn_shared_ptr<Api::DraftAttachmentsSaveToListener> &listener)
 {
     kulloAssert(convId >= Kullo::ID_MIN && convId <= Kullo::ID_MAX);
     kulloAssert(attId >= Kullo::ID_MIN && attId <= Kullo::ID_MAX);
     kulloAssert(!path.empty());
-    kulloAssert(listener);
 
-    return std::make_shared<AsyncTaskImpl>(
+    return nn_make_shared<AsyncTaskImpl>(
                 std::make_shared<DraftAttachmentsSaveToWorker>(
                     convId, attId, path, sessionData_->sessionConfig_, listener));
 }

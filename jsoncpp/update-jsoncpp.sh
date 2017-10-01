@@ -1,5 +1,6 @@
 #!/bin/bash
-set -e
+set -o errexit -o nounset -o pipefail
+which shellcheck > /dev/null && (shellcheck -x "$0" || shellcheck "$0")
 
 if [[ $# -ne 1 ]]; then
     echo "Usage: $(basename "$0") JSONCPP_SOURCE_DIR"

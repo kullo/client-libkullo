@@ -28,10 +28,9 @@ SyncerImpl::~SyncerImpl()
     taskSyncerListener_->setParent(nullptr);
 }
 
-void SyncerImpl::setListener(
-        const std::shared_ptr<Api::SyncerListener> &listener)
+void SyncerImpl::setListener(const nn_shared_ptr<Api::SyncerListener> &listener)
 {
-    listener_ = listener;
+    listener_ = listener.as_nullable();
 }
 
 boost::optional<Api::DateTime> SyncerImpl::lastFullSync()

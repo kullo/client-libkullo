@@ -5,6 +5,7 @@
 
 #include "jni/support-lib/jni/djinni_support.hpp"
 #include "kulloclient/api/DraftPart.h"
+#include <kulloclient/nn.h>
 
 namespace JNI { namespace Kullo { namespace Api {
 

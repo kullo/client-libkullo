@@ -1,8 +1,9 @@
 /* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #pragma once
 
-#include <kulloclient/api/Address.h>
-#include <kulloclient/api/MasterKey.h>
+#include <kulloclient/kulloclient-forwards.h>
+#include <kulloclient/api_impl/Address.h>
+#include <kulloclient/api_impl/MasterKey.h>
 #include <kulloclient/util/stltaskrunner.h>
 
 #include "tests/kullotest.h"
@@ -14,9 +15,9 @@ public:
     ~ApiTest() override;
 
 protected:
-    std::shared_ptr<Kullo::Api::Address> address_;
-    std::shared_ptr<Kullo::Api::MasterKey> masterKey_;
+    const Kullo::Api::Address address_;
+    const Kullo::Api::MasterKey masterKey_;
 
 private:
-    std::shared_ptr<Kullo::Util::StlTaskRunner> taskRunner_;
+    Kullo::nn_shared_ptr<Kullo::Util::StlTaskRunner> taskRunner_;
 };

@@ -24,6 +24,6 @@ private:
 class FakeHttpClientFactory : public Kullo::Http::HttpClientFactory
 {
 public:
-    std::shared_ptr<Kullo::Http::HttpClient> createHttpClient() override;
+    Kullo::nn_shared_ptr<Kullo::Http::HttpClient> createHttpClient() override;
     std::unordered_map<std::string, std::string> versions() override;
 };

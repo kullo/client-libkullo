@@ -26,10 +26,11 @@ set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_CURRENT_LIST_DIR}/../compi
 include(CompilerSettings)
 include(KulloCommon)
 
+list(APPEND CMAKE_FIND_ROOT_PATH "${CMAKE_CURRENT_BINARY_DIR}/..")
 find_package(botan REQUIRED
     NO_MODULE
-    PATHS "${CMAKE_CURRENT_BINARY_DIR}/../bin-botan"
-    NO_DEFAULT_PATH
+    PATHS "/bin-botan"
+    ONLY_CMAKE_FIND_ROOT_PATH
 )
 
 ### BEGIN feature checks
@@ -67,6 +68,7 @@ endif()
 if(ANDROID)
     add_subdirectory("jni")
 endif()
+add_subdirectory("argon2")
 add_subdirectory("jsoncpp")
 add_subdirectory("kulloclient")
 add_subdirectory("nowide")

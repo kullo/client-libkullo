@@ -33,6 +33,7 @@ CJNIEXPORT void JNICALL Java_net_kullo_libkullo_api_Registry_setTaskRunner(JNIEn
 {
     try {
         DJINNI_FUNCTION_PROLOGUE0(jniEnv);
+        DJINNI_ASSERT_MSG(j_taskRunner, jniEnv, "Got unexpected null parameter 'taskRunner' to function net.kullo.libkullo.api.Registry#setTaskRunner(net.kullo.libkullo.api.TaskRunner taskRunner)");
         ::Kullo::Api::Registry::setTaskRunner(::JNI::Kullo::Api::TaskRunner::toCpp(jniEnv, j_taskRunner));
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, )
 }

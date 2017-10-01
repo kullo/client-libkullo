@@ -42,7 +42,7 @@ StlTaskRunner::~StlTaskRunner()
     }
 }
 
-void StlTaskRunner::runTaskAsync(const std::shared_ptr<Api::Task> &task)
+void StlTaskRunner::runTaskAsync(const nn_shared_ptr<Api::Task> &task)
 {
     if (state_ == StlTaskRunnerState::Inactive) return;
 

@@ -14,7 +14,7 @@ TaskRunner::JavaProxy::JavaProxy(JniType j) : Handle(::djinni::jniGetThreadEnv()
 
 TaskRunner::JavaProxy::~JavaProxy() = default;
 
-void TaskRunner::JavaProxy::runTaskAsync(const std::shared_ptr<::Kullo::Api::Task> & c_task) {
+void TaskRunner::JavaProxy::runTaskAsync(const ::Kullo::nn_shared_ptr<::Kullo::Api::Task> & c_task) {
     auto jniEnv = ::djinni::jniGetThreadEnv();
     ::djinni::JniLocalScope jscope(jniEnv, 10);
     const auto& data = ::djinni::JniClass<::JNI::Kullo::Api::TaskRunner>::get();

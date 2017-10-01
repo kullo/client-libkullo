@@ -5,15 +5,14 @@
 
 #include <boost/optional.hpp>
 #include <cstdint>
-#include <memory>
 #include <string>
 #include <vector>
 
 namespace Kullo { namespace Api {
 
-class Address;
-class MasterKey;
+struct Address;
 struct DateTime;
+struct MasterKey;
 
 /** Settings specific to the local user */
 class UserSettings {
@@ -21,9 +20,9 @@ public:
     virtual ~UserSettings() {}
 
     /** Kullo address (e.g. "john.doe#kullo.net") */
-    virtual std::shared_ptr<Address> address() = 0;
+    virtual Address address() = 0;
 
-    virtual std::shared_ptr<MasterKey> masterKey() = 0;
+    virtual MasterKey masterKey() = 0;
 
     /** Real name (e.g. "John Doe"). Defaults to "". */
     virtual std::string name() = 0;

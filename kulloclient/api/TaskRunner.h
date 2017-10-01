@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <kulloclient/nn.h>
 #include <memory>
 
 namespace Kullo { namespace Api {
@@ -17,7 +18,7 @@ public:
      * Runs the given task asynchronously (simplest case: in a new thread)
      * and returns immediately.
      */
-    virtual void runTaskAsync(const std::shared_ptr<Task> & task) = 0;
+    virtual void runTaskAsync(const ::Kullo::nn_shared_ptr<Task> & task) = 0;
 };
 
 } }  // namespace Kullo::Api

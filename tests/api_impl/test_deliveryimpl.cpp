@@ -85,45 +85,45 @@ K_TEST_F(ApiImplDelivery, operatorEquals)
 
 K_TEST_F(ApiImplDelivery, deliveryListsEqual)
 {
-    auto d1 = std::make_shared<ApiImpl::DeliveryImpl>(Util::Delivery(*data.adress1, Util::Delivery::State::unsent));
-    auto d2 = std::make_shared<ApiImpl::DeliveryImpl>(Util::Delivery(*data.adress1, Util::Delivery::State::delivered));
+    auto d1 = Kullo::nn_make_shared<ApiImpl::DeliveryImpl>(Util::Delivery(*data.adress1, Util::Delivery::State::unsent));
+    auto d2 = Kullo::nn_make_shared<ApiImpl::DeliveryImpl>(Util::Delivery(*data.adress1, Util::Delivery::State::delivered));
     auto d3_raw = Util::Delivery(*data.adress1, Util::Delivery::State::failed);
     d3_raw.reason = boost::make_optional<Util::Delivery::Reason>(Util::Delivery::Reason::doesnt_exist);
-    auto d3 = std::make_shared<ApiImpl::DeliveryImpl>(d3_raw);
+    auto d3 = Kullo::nn_make_shared<ApiImpl::DeliveryImpl>(d3_raw);
 
     {
-        auto l1 = std::vector<std::shared_ptr<Api::Delivery>>();
-        auto l2 = std::vector<std::shared_ptr<Api::Delivery>>();
+        auto l1 = std::vector<Kullo::nn_shared_ptr<Api::Delivery>>{};
+        auto l2 = std::vector<Kullo::nn_shared_ptr<Api::Delivery>>{};
         EXPECT_THAT(ApiImpl::DeliveryImpl::deliveryListsEqual(l1, l2), Eq(true));
     }
 
     {
-        auto l1 = std::vector<std::shared_ptr<Api::Delivery>>{ d1 };
-        auto l2 = std::vector<std::shared_ptr<Api::Delivery>>{ d1 };
+        auto l1 = std::vector<Kullo::nn_shared_ptr<Api::Delivery>>{ d1 };
+        auto l2 = std::vector<Kullo::nn_shared_ptr<Api::Delivery>>{ d1 };
         EXPECT_THAT(ApiImpl::DeliveryImpl::deliveryListsEqual(l1, l2), Eq(true));
     }
 
     {
-        auto l1 = std::vector<std::shared_ptr<Api::Delivery>>{ d1, d2 };
-        auto l2 = std::vector<std::shared_ptr<Api::Delivery>>{ d1, d2 };
+        auto l1 = std::vector<Kullo::nn_shared_ptr<Api::Delivery>>{ d1, d2 };
+        auto l2 = std::vector<Kullo::nn_shared_ptr<Api::Delivery>>{ d1, d2 };
         EXPECT_THAT(ApiImpl::DeliveryImpl::deliveryListsEqual(l1, l2), Eq(true));
     }
 
     {
-        auto l1 = std::vector<std::shared_ptr<Api::Delivery>>{ d1, d2, d3 };
-        auto l2 = std::vector<std::shared_ptr<Api::Delivery>>{ d1, d2, d3 };
+        auto l1 = std::vector<Kullo::nn_shared_ptr<Api::Delivery>>{ d1, d2, d3 };
+        auto l2 = std::vector<Kullo::nn_shared_ptr<Api::Delivery>>{ d1, d2, d3 };
         EXPECT_THAT(ApiImpl::DeliveryImpl::deliveryListsEqual(l1, l2), Eq(true));
     }
 
     {
-        auto l1 = std::vector<std::shared_ptr<Api::Delivery>>{ d1 };
-        auto l2 = std::vector<std::shared_ptr<Api::Delivery>>{ d2 };
+        auto l1 = std::vector<Kullo::nn_shared_ptr<Api::Delivery>>{ d1 };
+        auto l2 = std::vector<Kullo::nn_shared_ptr<Api::Delivery>>{ d2 };
         EXPECT_THAT(ApiImpl::DeliveryImpl::deliveryListsEqual(l1, l2), Eq(false));
     }
 
     {
-        auto l1 = std::vector<std::shared_ptr<Api::Delivery>>{ d1, d2 };
-        auto l2 = std::vector<std::shared_ptr<Api::Delivery>>{ d2, d1 };
+        auto l1 = std::vector<Kullo::nn_shared_ptr<Api::Delivery>>{ d1, d2 };
+        auto l2 = std::vector<Kullo::nn_shared_ptr<Api::Delivery>>{ d2, d1 };
         EXPECT_THAT(ApiImpl::DeliveryImpl::deliveryListsEqual(l1, l2), Eq(false));
     }
 }

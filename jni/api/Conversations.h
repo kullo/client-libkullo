@@ -5,12 +5,13 @@
 
 #include "jni/support-lib/jni/djinni_support.hpp"
 #include "kulloclient/api/Conversations.h"
+#include <kulloclient/nn.h>
 
 namespace JNI { namespace Kullo { namespace Api {
 
 class Conversations final : ::djinni::JniInterface<::Kullo::Api::Conversations, Conversations> {
 public:
-    using CppType = std::shared_ptr<::Kullo::Api::Conversations>;
+    using CppType = ::Kullo::nn_shared_ptr<::Kullo::Api::Conversations>;
     using CppOptType = std::shared_ptr<::Kullo::Api::Conversations>;
     using JniType = jobject;
 
@@ -18,7 +19,10 @@ public:
 
     ~Conversations();
 
-    static CppType toCpp(JNIEnv* jniEnv, JniType j) { return ::djinni::JniClass<Conversations>::get()._fromJava(jniEnv, j); }
+    static CppType toCpp(JNIEnv* jniEnv, JniType j) {
+        DJINNI_ASSERT_MSG(j, jniEnv, "Conversations::fromCpp requires a non-null Java object");
+        return kulloForcedNn(::djinni::JniClass<Conversations>::get()._fromJava(jniEnv, j));
+    };
     static ::djinni::LocalRef<JniType> fromCppOpt(JNIEnv* jniEnv, const CppOptType& c) { return {jniEnv, ::djinni::JniClass<Conversations>::get()._toJava(jniEnv, c)}; }
     static ::djinni::LocalRef<JniType> fromCpp(JNIEnv* jniEnv, const CppType& c) { return fromCppOpt(jniEnv, c); }
 

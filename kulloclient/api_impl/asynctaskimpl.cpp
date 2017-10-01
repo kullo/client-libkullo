@@ -17,7 +17,7 @@ AsyncTaskImpl::AsyncTaskImpl(std::shared_ptr<Worker> worker)
     kulloAssert(worker);
 
     Registry::taskRunner()->runTaskAsync(
-                std::make_shared<TaskImpl>(
+                nn_make_shared<TaskImpl>(
                     // Capture worker by value (which creates a copy, increasing
                     // the reference count of the shared_ptr) to make it live at
                     // least as long as the worker thread is running. If there's

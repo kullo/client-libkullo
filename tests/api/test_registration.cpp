@@ -1,7 +1,6 @@
 /* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #include "tests/api/apitest.h"
 
-#include <kulloclient/api/Address.h>
 #include <kulloclient/api/AddressNotAvailableReason.h>
 #include <kulloclient/api/AsyncTask.h>
 #include <kulloclient/api/ChallengeType.h>
@@ -9,6 +8,7 @@
 #include <kulloclient/api/NetworkError.h>
 #include <kulloclient/api/Registration.h>
 #include <kulloclient/api/RegistrationRegisterAccountListener.h>
+#include <kulloclient/api_impl/Address.h>
 #include <kulloclient/api_impl/debug.h>
 #include <kulloclient/util/assert.h>
 #include <kulloclient/registry.h>
@@ -34,16 +34,17 @@ class RegisterAccountListener :
 {
 public:
     void challengeNeeded(
-            const std::shared_ptr<Api::Address> &address,
-            const std::shared_ptr<Api::Challenge> &challenge) override
+            const Api::Address &address,
+            const Kullo::nn_shared_ptr<Api::Challenge> &challenge) override
     {
         callback_ = CallbackType::challengeNeeded;
         address_ = address;
-        challenge_ = challenge;
+        challenge_ = challenge.as_nullable();
     }
 
-    void addressNotAvailable(const std::shared_ptr<Api::Address> &address,
-                             Api::AddressNotAvailableReason reason) override
+    void addressNotAvailable(
+            const Api::Address &address,
+            Api::AddressNotAvailableReason reason) override
     {
         callback_ = CallbackType::addressNotAvailable;
         address_ = address;
@@ -51,8 +52,8 @@ public:
     }
 
     void finished(
-            const std::shared_ptr<Api::Address> &address,
-            const std::shared_ptr<Api::MasterKey> &masterKey) override
+            const Api::Address &address,
+            const Api::MasterKey &masterKey) override
     {
         callback_ = CallbackType::finished;
         address_ = address;
@@ -60,12 +61,11 @@ public:
     }
 
     void error(
-            const std::shared_ptr<Api::Address> &address,
+            const Api::Address &address,
             Api::NetworkError error) override
     {
-        kulloAssert(address);
         Log.w() << "RegisterAccountListener::error with "
-                << "address = " << address->toString() << ", "
+                << "address = " << address << ", "
                 << "error = " << error;
 
         callback_ = CallbackType::error;
@@ -73,9 +73,9 @@ public:
     }
 
     CallbackType callback_;
-    std::shared_ptr<Api::Address> address_;
+    boost::optional<Api::Address> address_;
     std::shared_ptr<Api::Challenge> challenge_;
-    std::shared_ptr<Api::MasterKey> masterKey_;
+    boost::optional<Api::MasterKey> masterKey_;
     Api::AddressNotAvailableReason reason_;
 };
 }
@@ -90,7 +90,7 @@ public:
         auto httpClientFactory = std::make_shared<FakeHttpClientFactory>();
         Kullo::Registry::setHttpClientFactory(httpClientFactory);
 
-        auto listener = std::make_shared<ClientGenerateKeysListener>();
+        auto listener = Kullo::nn_make_shared<ClientGenerateKeysListener>();
         auto task = Api::Client::create()->generateKeysAsync(listener);
         kulloAssert(task->waitForMs(TestUtil::slowTimeoutMs()));
         uut = listener->registration_;
@@ -99,11 +99,9 @@ public:
 protected:
     void reset()
     {
-        address = Api::Address::create("exists#example.com");
         registerAccountListener = std::make_shared<RegisterAccountListener>();
     }
 
-    std::shared_ptr<Api::Address> address;
     std::shared_ptr<RegisterAccountListener> registerAccountListener;
     std::shared_ptr<Api::Registration> uut;
 };
@@ -113,21 +111,11 @@ K_TEST_F(ApiRegistration, DISABLED_registerAccountAsyncWorks)
 {
     // put everything in a single test because generating the keys is so slow
 
-    // FailsOnNull
-    {
-        // null in third arg (challenge) is allowed
-        EXPECT_THROW(uut->registerAccountAsync(nullptr, boost::none, nullptr, "", nullptr),
-                     Util::AssertionFailed);
-        EXPECT_THROW(uut->registerAccountAsync(address, boost::none, nullptr, "", nullptr),
-                     Util::AssertionFailed);
-        EXPECT_THROW(uut->registerAccountAsync(nullptr, boost::none, nullptr, "", registerAccountListener),
-                     Util::AssertionFailed);
-    }
-    reset();
-
     // CanBeCanceled
     {
-        auto task = uut->registerAccountAsync(address, boost::none, nullptr, "", registerAccountListener);
+        auto address = Api::Address("exists#example.com");
+        auto task = uut->registerAccountAsync(
+                    address, boost::none, nullptr, "", kulloForcedNn(registerAccountListener));
         ASSERT_THAT(task, Not(IsNull()));
         EXPECT_NO_THROW(task->cancel());
     }
@@ -135,8 +123,9 @@ K_TEST_F(ApiRegistration, DISABLED_registerAccountAsyncWorks)
 
     // AddressBlocked
     {
-        address = Api::Address::create("blocked#example.com");
-        auto task = uut->registerAccountAsync(address, boost::none, nullptr, "", registerAccountListener);
+        auto address = Api::Address("blocked#example.com");
+        auto task = uut->registerAccountAsync(
+                    address, boost::none, nullptr, "", kulloForcedNn(registerAccountListener));
         ASSERT_THAT(task->waitForMs(TestUtil::asyncTimeoutMs()), Eq(true));
         EXPECT_THAT(registerAccountListener->callback_, Eq(CallbackType::addressNotAvailable));
         EXPECT_THAT(registerAccountListener->address_, Eq(address));
@@ -146,7 +135,9 @@ K_TEST_F(ApiRegistration, DISABLED_registerAccountAsyncWorks)
 
     // AddressExists
     {
-        auto task = uut->registerAccountAsync(address, boost::none, nullptr, "", registerAccountListener);
+        auto address = Api::Address("exists#example.com");
+        auto task = uut->registerAccountAsync(
+                    address, boost::none, nullptr, "", kulloForcedNn(registerAccountListener));
         ASSERT_THAT(task->waitForMs(TestUtil::asyncTimeoutMs()), Eq(true));
         EXPECT_THAT(registerAccountListener->callback_, Eq(CallbackType::addressNotAvailable));
         EXPECT_THAT(registerAccountListener->address_, Eq(address));
@@ -156,21 +147,23 @@ K_TEST_F(ApiRegistration, DISABLED_registerAccountAsyncWorks)
 
     // WorksWithoutChallenge
     {
-        auto address = Api::Address::create("nochallenge#example.com");
-        auto task = uut->registerAccountAsync(address, boost::none, nullptr, "", registerAccountListener);
+        auto address = Api::Address("nochallenge#example.com");
+        auto task = uut->registerAccountAsync(
+                    address, boost::none, nullptr, "", kulloForcedNn(registerAccountListener));
         ASSERT_THAT(task->waitForMs(TestUtil::asyncTimeoutMs()), Eq(true));
         EXPECT_THAT(registerAccountListener->callback_, Eq(CallbackType::finished));
         EXPECT_THAT(registerAccountListener->address_, Eq(address));
-        EXPECT_THAT(registerAccountListener->masterKey_, Not(IsNull()));
+        EXPECT_THAT(registerAccountListener->masterKey_, Ne(boost::none));
     }
     reset();
 
     // WorksWithChallenge
     {
-        auto address = Api::Address::create("withchallenge#example.com");
+        auto address = Api::Address("withchallenge#example.com");
 
         // get challenge
-        auto task = uut->registerAccountAsync(address, boost::none, nullptr, "", registerAccountListener);
+        auto task = uut->registerAccountAsync(
+                    address, boost::none, nullptr, "", kulloForcedNn(registerAccountListener));
         ASSERT_THAT(task->waitForMs(TestUtil::asyncTimeoutMs()), Eq(true));
         EXPECT_THAT(registerAccountListener->callback_, Eq(CallbackType::challengeNeeded));
         EXPECT_THAT(registerAccountListener->address_, Eq(address));
@@ -180,10 +173,11 @@ K_TEST_F(ApiRegistration, DISABLED_registerAccountAsyncWorks)
         reset();
 
         // register account
-        task = uut->registerAccountAsync(address, boost::none, challenge, "42", registerAccountListener);
+        task = uut->registerAccountAsync(
+                    address, boost::none, challenge, "42", kulloForcedNn(registerAccountListener));
         ASSERT_THAT(task->waitForMs(TestUtil::asyncTimeoutMs()), Eq(true));
         EXPECT_THAT(registerAccountListener->callback_, Eq(CallbackType::finished));
         EXPECT_THAT(registerAccountListener->address_, Eq(address));
-        EXPECT_THAT(registerAccountListener->masterKey_, Not(IsNull()));
+        EXPECT_THAT(registerAccountListener->masterKey_, Ne(boost::none));
     }
 }

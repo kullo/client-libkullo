@@ -16,6 +16,11 @@ SymmetricKey::SymmetricKey(const std::string &hexStr)
 {
 }
 
+SymmetricKey::SymmetricKey(const std::vector<unsigned char> &raw)
+    : p(std::make_shared<SymmetricKeyImpl>(Botan::SymmetricKey(raw)))
+{
+}
+
 SymmetricKey::SymmetricKey(std::shared_ptr<SymmetricKeyImpl> priv)
     : p(std::move(priv))
 {

@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <kulloclient/nn.h>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -15,7 +16,7 @@ class HttpClientFactory {
 public:
     virtual ~HttpClientFactory() {}
 
-    virtual std::shared_ptr<HttpClient> createHttpClient() = 0;
+    virtual ::Kullo::nn_shared_ptr<HttpClient> createHttpClient() = 0;
 
     /** Returns pairs of <library name, version number> for the libraries used. */
     virtual std::unordered_map<std::string, std::string> versions() = 0;

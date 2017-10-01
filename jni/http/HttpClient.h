@@ -5,12 +5,13 @@
 
 #include "jni/support-lib/jni/djinni_support.hpp"
 #include "kulloclient/http/HttpClient.h"
+#include <kulloclient/nn.h>
 
 namespace JNI { namespace Kullo { namespace Http {
 
 class HttpClient final : ::djinni::JniInterface<::Kullo::Http::HttpClient, HttpClient> {
 public:
-    using CppType = std::shared_ptr<::Kullo::Http::HttpClient>;
+    using CppType = ::Kullo::nn_shared_ptr<::Kullo::Http::HttpClient>;
     using CppOptType = std::shared_ptr<::Kullo::Http::HttpClient>;
     using JniType = jobject;
 
@@ -18,7 +19,10 @@ public:
 
     ~HttpClient();
 
-    static CppType toCpp(JNIEnv* jniEnv, JniType j) { return ::djinni::JniClass<HttpClient>::get()._fromJava(jniEnv, j); }
+    static CppType toCpp(JNIEnv* jniEnv, JniType j) {
+        DJINNI_ASSERT_MSG(j, jniEnv, "HttpClient::fromCpp requires a non-null Java object");
+        return kulloForcedNn(::djinni::JniClass<HttpClient>::get()._fromJava(jniEnv, j));
+    };
     static ::djinni::LocalRef<JniType> fromCppOpt(JNIEnv* jniEnv, const CppOptType& c) { return {jniEnv, ::djinni::JniClass<HttpClient>::get()._toJava(jniEnv, c)}; }
     static ::djinni::LocalRef<JniType> fromCpp(JNIEnv* jniEnv, const CppType& c) { return fromCppOpt(jniEnv, c); }
 

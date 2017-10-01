@@ -27,6 +27,7 @@ CJNIEXPORT void JNICALL Java_net_kullo_libkullo_api_Syncer_00024CppProxy_native_
     try {
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
         const auto& ref = ::djinni::objectFromHandleAddress<::Kullo::Api::Syncer>(nativeRef);
+        DJINNI_ASSERT_MSG(j_listener, jniEnv, "Got unexpected null parameter 'listener' to function net.kullo.libkullo.api.Syncer#setListener(net.kullo.libkullo.api.SyncerListener listener)");
         ref->setListener(::JNI::Kullo::Api::SyncerListener::toCpp(jniEnv, j_listener));
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, )
 }

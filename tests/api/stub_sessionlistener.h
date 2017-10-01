@@ -15,7 +15,7 @@ class StubSessionListener : public Kullo::Api::SessionListener
 {
 public:
     inline void internalEvent(
-            const std::shared_ptr<Kullo::Api::InternalEvent> &event) override
+            const Kullo::nn_shared_ptr<Kullo::Api::InternalEvent> &event) override
     {
         std::lock_guard<std::recursive_mutex> lock(mutex_); K_RAII(lock);
 

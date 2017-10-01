@@ -12,13 +12,15 @@ kullo_add_simple_library(
     ${http_cpp_source_files}
     ${apple_files}
     registry.cpp
-    api_impl/addressimpl.cpp
-    api_impl/api_Address.cpp
-    api_impl/api_Client.cpp
-    api_impl/api_Conversations.cpp
-    api_impl/api_InternalDateTimeUtils.cpp
-    api_impl/api_MasterKey.cpp
-    api_impl/api_Registry.cpp
+    api/impl_static/AddressHelpers.cpp
+    api/impl_static/Client.cpp
+    api/impl_static/Conversations.cpp
+    api/impl_static/InternalAddressUtils.cpp
+    api/impl_static/InternalDateTimeUtils.cpp
+    api/impl_static/InternalMasterKeyUtils.cpp
+    api/impl_static/MasterKeyHelpers.cpp
+    api/impl_static/Registry.cpp
+    api_impl/Address.cpp
     api_impl/asynctaskimpl.cpp
     api_impl/attachmentscontentworker.cpp
     api_impl/attachmentssavetoworker.cpp
@@ -40,7 +42,7 @@ kullo_add_simple_library(
     api_impl/event.cpp
     api_impl/exception_conversion.cpp
     api_impl/logfunctionwrapper.cpp
-    api_impl/masterkeyimpl.cpp
+    api_impl/MasterKey.cpp
     api_impl/messageattachmentscontentworker.cpp
     api_impl/messageattachmentsimpl.cpp
     api_impl/messageattachmentssavetoworker.cpp
@@ -78,6 +80,7 @@ kullo_add_simple_library(
     crypto/hashverifyingfilter.cpp
     crypto/hkdf.cpp
     crypto/info.cpp
+    crypto/pbkdf.cpp
     crypto/privatekey.cpp
     crypto/privatekeyimpl.cpp
     crypto/publickey.cpp
@@ -158,6 +161,7 @@ kullo_get_target_name(target_name)
 target_link_libraries(${target_name}
     PUBLIC
         # from this project
+        argon2
         botan
         jsoncpp
         nowide
@@ -171,7 +175,6 @@ if(WIN32)
     # use boost::regex on Windows because MSVC's implementation gave us problems
     target_link_libraries(${target_name} PUBLIC boost_regex)
 endif()
-
 if (APPLE)
     find_library(CORE_FOUNDATION CoreFoundation)
     if (NOT CORE_FOUNDATION)

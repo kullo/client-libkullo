@@ -5,12 +5,13 @@
 
 #include "jni/support-lib/jni/djinni_support.hpp"
 #include "kulloclient/api/Delivery.h"
+#include <kulloclient/nn.h>
 
 namespace JNI { namespace Kullo { namespace Api {
 
 class Delivery final : ::djinni::JniInterface<::Kullo::Api::Delivery, Delivery> {
 public:
-    using CppType = std::shared_ptr<::Kullo::Api::Delivery>;
+    using CppType = ::Kullo::nn_shared_ptr<::Kullo::Api::Delivery>;
     using CppOptType = std::shared_ptr<::Kullo::Api::Delivery>;
     using JniType = jobject;
 
@@ -18,7 +19,10 @@ public:
 
     ~Delivery();
 
-    static CppType toCpp(JNIEnv* jniEnv, JniType j) { return ::djinni::JniClass<Delivery>::get()._fromJava(jniEnv, j); }
+    static CppType toCpp(JNIEnv* jniEnv, JniType j) {
+        DJINNI_ASSERT_MSG(j, jniEnv, "Delivery::fromCpp requires a non-null Java object");
+        return kulloForcedNn(::djinni::JniClass<Delivery>::get()._fromJava(jniEnv, j));
+    };
     static ::djinni::LocalRef<JniType> fromCppOpt(JNIEnv* jniEnv, const CppOptType& c) { return {jniEnv, ::djinni::JniClass<Delivery>::get()._toJava(jniEnv, c)}; }
     static ::djinni::LocalRef<JniType> fromCpp(JNIEnv* jniEnv, const CppType& c) { return fromCppOpt(jniEnv, c); }
 

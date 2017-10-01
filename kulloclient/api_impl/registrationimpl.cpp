@@ -20,18 +20,16 @@ RegistrationImpl::RegistrationImpl(
     , keypairSignature_(std::move(keypairSignature))
 {}
 
-std::shared_ptr<Api::AsyncTask> RegistrationImpl::registerAccountAsync(
-        const std::shared_ptr<Api::Address> &address,
+nn_shared_ptr<Api::AsyncTask> RegistrationImpl::registerAccountAsync(
+        const Api::Address &address,
         const boost::optional<std::string> &acceptedTerms,
         const std::shared_ptr<Api::Challenge> &challenge,
         const std::string &challengeAnswer,
-        const std::shared_ptr<Api::RegistrationRegisterAccountListener> &listener)
+        const nn_shared_ptr<Api::RegistrationRegisterAccountListener> &listener)
 {
-    kulloAssert(address);
-    kulloAssert(listener);
     kulloAssert(!acceptedTerms || !acceptedTerms->empty()); // disallow empty string
 
-    return std::make_shared<AsyncTaskImpl>(
+    return nn_make_shared<AsyncTaskImpl>(
         std::make_shared<RegistrationRegisterAccountWorker>(
                     address,
                     *masterKey_,

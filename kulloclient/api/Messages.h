@@ -5,16 +5,17 @@
 
 #include <boost/optional.hpp>
 #include <cstdint>
+#include <kulloclient/nn.h>
 #include <memory>
 #include <string>
 #include <vector>
 
 namespace Kullo { namespace Api {
 
-class Address;
 class AsyncTask;
 class Delivery;
 class MessagesSearchListener;
+struct Address;
 struct DateTime;
 struct SenderPredicate;
 
@@ -29,14 +30,14 @@ public:
      * Returns the message id of the latest record for the given sender address.
      * Returns -1 for addresses without a sender record.
      */
-    virtual int64_t latestForSender(const std::shared_ptr<Address> & address) = 0;
+    virtual int64_t latestForSender(const Address & address) = 0;
 
     /** Deletes a message */
     virtual void remove(int64_t msgId) = 0;
 
     virtual int64_t conversation(int64_t msgId) = 0;
 
-    virtual std::vector<std::shared_ptr<Delivery>> deliveryState(int64_t msgId) = 0;
+    virtual std::vector<::Kullo::nn_shared_ptr<Delivery>> deliveryState(int64_t msgId) = 0;
 
     virtual bool isRead(int64_t msgId) = 0;
 
@@ -84,7 +85,7 @@ public:
      * boundary: boundary used in result highlighting; auto-generated if unset
      * limitResults: The maximum number of results to return.
      */
-    virtual std::shared_ptr<AsyncTask> searchAsync(const std::string & searchText, int64_t convId, const boost::optional<SenderPredicate> & sender, int32_t limitResults, const boost::optional<std::string> & boundary, const std::shared_ptr<MessagesSearchListener> & listener) = 0;
+    virtual ::Kullo::nn_shared_ptr<AsyncTask> searchAsync(const std::string & searchText, int64_t convId, const boost::optional<SenderPredicate> & sender, int32_t limitResults, const boost::optional<std::string> & boundary, const ::Kullo::nn_shared_ptr<MessagesSearchListener> & listener) = 0;
 };
 
 } }  // namespace Kullo::Api

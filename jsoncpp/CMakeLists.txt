@@ -12,6 +12,8 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL GNU)
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL Clang)
     target_compile_options(${target_name}
         PRIVATE
+            -Wno-unknown-warning-option
+
             -Wno-covered-switch-default
             -Wno-deprecated
             -Wno-disabled-macro-expansion
@@ -22,7 +24,9 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL Clang)
             -Wno-missing-variable-declarations
             -Wno-old-style-cast
             -Wno-sign-conversion
+            -Wno-signed-enum-bitfield
             -Wno-switch-enum
             -Wno-unused-macros
+            -Wno-unreachable-code
     )
 endif()

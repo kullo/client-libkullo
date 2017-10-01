@@ -4,14 +4,13 @@
 #include <algorithm>
 #include <unordered_set>
 
-#include "kulloclient/api/Address.h"
-#include "kulloclient/api/MasterKey.h"
 #include "kulloclient/api/PushToken.h"
 #include "kulloclient/api_impl/asynctaskimpl.h"
 #include "kulloclient/api_impl/conversationsimpl.h"
 #include "kulloclient/api_impl/draftsimpl.h"
 #include "kulloclient/api_impl/draftattachmentsimpl.h"
 #include "kulloclient/api_impl/event.h"
+#include "kulloclient/api_impl/MasterKey.h"
 #include "kulloclient/api_impl/messagesimpl.h"
 #include "kulloclient/api_impl/messageattachmentsimpl.h"
 #include "kulloclient/api_impl/sendersimpl.h"
@@ -60,89 +59,87 @@ SessionImpl::SessionImpl(
     , removalEventDispatcher_(make_unique<RemovalEventDispatcher>(*this))
 {}
 
-std::shared_ptr<Api::UserSettings> SessionImpl::userSettings()
+nn_shared_ptr<Api::UserSettings> SessionImpl::userSettings()
 {
     if (mainThread_ && *mainThread_ != std::this_thread::get_id())
     {
         Log.w() << "Called userSettings() from non-main thread";
     }
-    return sessionData_->userSettings_;
+    return kulloForcedNn(sessionData_->userSettings_);
 }
 
-std::shared_ptr<Api::Conversations> SessionImpl::conversations()
+nn_shared_ptr<Api::Conversations> SessionImpl::conversations()
 {
     if (mainThread_ && *mainThread_ != std::this_thread::get_id())
     {
         Log.w() << "Called conversations() from non-main thread";
     }
-    return conversations_;
+    return kulloForcedNn(conversations_);
 }
 
-std::shared_ptr<Api::Messages> SessionImpl::messages()
+nn_shared_ptr<Api::Messages> SessionImpl::messages()
 {
     if (mainThread_ && *mainThread_ != std::this_thread::get_id())
     {
         Log.w() << "Called messages() from non-main thread";
     }
-    return messages_;
+    return kulloForcedNn(messages_);
 }
 
-std::shared_ptr<Api::MessageAttachments> SessionImpl::messageAttachments()
+nn_shared_ptr<Api::MessageAttachments> SessionImpl::messageAttachments()
 {
     if (mainThread_ && *mainThread_ != std::this_thread::get_id())
     {
         Log.w() << "Called messageAttachments() from non-main thread";
     }
-    return messageAttachments_;
+    return kulloForcedNn(messageAttachments_);
 }
 
-std::shared_ptr<Api::Senders> SessionImpl::senders()
+nn_shared_ptr<Api::Senders> SessionImpl::senders()
 {
     if (mainThread_ && *mainThread_ != std::this_thread::get_id())
     {
         Log.w() << "Called senders() from non-main thread";
     }
-    return senders_;
+    return kulloForcedNn(senders_);
 }
 
-std::shared_ptr<Api::Drafts> SessionImpl::drafts()
+nn_shared_ptr<Api::Drafts> SessionImpl::drafts()
 {
     if (mainThread_ && *mainThread_ != std::this_thread::get_id())
     {
         Log.w() << "Called drafts() from non-main thread";
     }
-    return drafts_;
+    return kulloForcedNn(drafts_);
 }
 
-std::shared_ptr<Api::DraftAttachments> SessionImpl::draftAttachments()
+nn_shared_ptr<Api::DraftAttachments> SessionImpl::draftAttachments()
 {
     if (mainThread_ && *mainThread_ != std::this_thread::get_id())
     {
         Log.w() << "Called draftAttachments() from non-main thread";
     }
-    return draftAttachments_;
+    return kulloForcedNn(draftAttachments_);
 }
 
-std::shared_ptr<Api::Syncer> SessionImpl::syncer()
+nn_shared_ptr<Api::Syncer> SessionImpl::syncer()
 {
-    return syncer_;
+    return kulloForcedNn(syncer_);
 }
 
-std::shared_ptr<Api::AsyncTask> SessionImpl::accountInfoAsync(
-        const std::shared_ptr<Api::SessionAccountInfoListener> &listener)
+nn_shared_ptr<Api::AsyncTask> SessionImpl::accountInfoAsync(
+        const nn_shared_ptr<Api::SessionAccountInfoListener> &listener)
 {
     if (mainThread_ && *mainThread_ != std::this_thread::get_id())
     {
         Log.w() << "Called accountInfoAsync() from non-main thread";
     }
 
-    kulloAssert(listener);
-
     auto &userSettings = sessionData_->userSettings_;
-    auto address = Util::KulloAddress(userSettings->address()->toString());
-    auto masterKey = Util::MasterKey(userSettings->masterKey()->dataBlocks());
+    auto address = Util::KulloAddress(userSettings->address().toString());
+    auto masterKey = Util::MasterKey(userSettings->masterKey().blocks);
 
-    return std::make_shared<AsyncTaskImpl>(
+    return nn_make_shared<AsyncTaskImpl>(
         std::make_shared<SessionAccountInfoWorker>(
                     address, masterKey, listener));
 }
@@ -159,7 +156,7 @@ void validateToken(const Api::PushToken &token)
 
 }
 
-std::shared_ptr<Api::AsyncTask> SessionImpl::registerPushToken(
+nn_shared_ptr<Api::AsyncTask> SessionImpl::registerPushToken(
         const Api::PushToken &token)
 {
     if (mainThread_ && *mainThread_ != std::this_thread::get_id())
@@ -170,16 +167,16 @@ std::shared_ptr<Api::AsyncTask> SessionImpl::registerPushToken(
     validateToken(token);
 
     auto &userSettings = sessionData_->userSettings_;
-    auto address = Util::KulloAddress(userSettings->address()->toString());
-    auto masterKey = Util::MasterKey(userSettings->masterKey()->dataBlocks());
+    auto address = Util::KulloAddress(userSettings->address().toString());
+    auto masterKey = Util::MasterKey(userSettings->masterKey().blocks);
 
-    return std::make_shared<AsyncTaskImpl>(
+    return nn_make_shared<AsyncTaskImpl>(
         std::make_shared<SessionRegisterPushTokenWorker>(
                     address, masterKey,
                     SessionRegisterPushTokenWorker::Add, token));
 }
 
-std::shared_ptr<Api::AsyncTask> SessionImpl::unregisterPushToken(
+nn_shared_ptr<Api::AsyncTask> SessionImpl::unregisterPushToken(
         const Api::PushToken &token)
 {
     if (mainThread_ && *mainThread_ != std::this_thread::get_id())
@@ -190,26 +187,23 @@ std::shared_ptr<Api::AsyncTask> SessionImpl::unregisterPushToken(
     validateToken(token);
 
     auto &userSettings = sessionData_->userSettings_;
-    auto address = Util::KulloAddress(userSettings->address()->toString());
-    auto masterKey = Util::MasterKey(userSettings->masterKey()->dataBlocks());
+    auto address = Util::KulloAddress(userSettings->address().toString());
+    auto masterKey = Util::MasterKey(userSettings->masterKey().blocks);
 
-    return std::make_shared<AsyncTaskImpl>(
+    return nn_make_shared<AsyncTaskImpl>(
         std::make_shared<SessionRegisterPushTokenWorker>(
                     address, masterKey,
                     SessionRegisterPushTokenWorker::Remove, token));
 }
 
-std::vector<Api::Event> SessionImpl::notify(
-        const std::shared_ptr<Api::InternalEvent> &internalEvent)
+std::vector<Api::Event> SessionImpl::notify(const nn_shared_ptr<Api::InternalEvent> &internalEvent)
 {
     if (mainThread_ && *mainThread_ != std::this_thread::get_id())
     {
         Log.w() << "Called notify() from non-main thread";
     }
 
-    kulloAssert(internalEvent);
-
-    auto event = std::dynamic_pointer_cast<Event::Event>(internalEvent);
+    auto event = std::dynamic_pointer_cast<Event::Event>(internalEvent.as_nullable());
     kulloAssert(event);
     auto apiEventSet = event->notify(*this);
     auto apiEventVector = std::vector<Api::Event>(

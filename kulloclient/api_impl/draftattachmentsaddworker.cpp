@@ -121,7 +121,7 @@ void DraftAttachmentsAddWorker::work()
             if (auto sessionListener = Util::copyGuardedByMutex(sessionListener_, mutex_))
             {
                 sessionListener->internalEvent(
-                            std::make_shared<Event::DraftAttachmentAddedEvent>(
+                            nn_make_shared<Event::DraftAttachmentAddedEvent>(
                                 Data::DraftAttachment(convId_, attachmentId)));
             }
         }

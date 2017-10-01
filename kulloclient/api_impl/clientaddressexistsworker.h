@@ -3,8 +3,8 @@
 
 #include <memory>
 
-#include "kulloclient/api/Address.h"
 #include "kulloclient/api/ClientAddressExistsListener.h"
+#include "kulloclient/api_impl/Address.h"
 #include "kulloclient/api_impl/worker.h"
 #include "kulloclient/protocol/publickeysclient.h"
 
@@ -15,8 +15,8 @@ class ClientAddressExistsWorker : public Worker
 {
 public:
     ClientAddressExistsWorker(
-        std::shared_ptr<Api::Address> address,
-        std::shared_ptr<Api::ClientAddressExistsListener> listener);
+            const Api::Address &address,
+            std::shared_ptr<Api::ClientAddressExistsListener> listener);
 
     void work() override;
     void cancel() override;
@@ -24,7 +24,7 @@ public:
 private:
     // not synchronized, non-threadsafe stuff is only used from work()
     Protocol::PublicKeysClient keysClient_;
-    std::shared_ptr<Api::Address> address_;
+    const Api::Address address_;
 
     // all uses must be synchronized
     std::shared_ptr<Api::ClientAddressExistsListener> listener_;

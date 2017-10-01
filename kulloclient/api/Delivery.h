@@ -4,13 +4,12 @@
 #pragma once
 
 #include <boost/optional.hpp>
-#include <memory>
 
 namespace Kullo { namespace Api {
 
-class Address;
 enum class DeliveryReason;
 enum class DeliveryState;
+struct Address;
 struct DateTime;
 
 /** Delivery information for a single recipient. */
@@ -18,7 +17,7 @@ class Delivery {
 public:
     virtual ~Delivery() {}
 
-    virtual std::shared_ptr<Address> recipient() = 0;
+    virtual Address recipient() = 0;
 
     virtual DeliveryState state() = 0;
 

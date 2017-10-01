@@ -1,9 +1,9 @@
 /* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
 #include "tests/api/apimodeltest.h"
 
-#include <kulloclient/api/Address.h>
 #include <kulloclient/api/Conversations.h>
 #include <kulloclient/api/Messages.h>
+#include <kulloclient/api_impl/Address.h>
 #include "kulloclient/api_impl/DateTime.h"
 #include <kulloclient/api_impl/conversationsimpl.h>
 #include <kulloclient/api_impl/event.h>
@@ -115,7 +115,7 @@ public:
         }
 
         makeSession();
-        uut_ = session_->conversations();
+        uut_ = session_->conversations().as_nullable();
     }
 
 protected:
@@ -158,42 +158,42 @@ K_TEST_F(ApiConversations, allWorks)
 
 K_TEST_F(ApiConversations, getWorks)
 {
-    std::unordered_set<std::shared_ptr<Api::Address>> participants;
-    participants.emplace(Api::Address::create(data_.participant1));
-    participants.emplace(Api::Address::create(data_.participant2));
+    std::unordered_set<Api::Address> participants;
+    participants.emplace(Api::Address(data_.participant1));
+    participants.emplace(Api::Address(data_.participant2));
     EXPECT_THAT(uut_->get(participants), Eq(data_.id));
 
-    participants.emplace(Api::Address::create("nosuchuser#example.com"));
+    participants.emplace(Api::Address("nosuchuser#example.com"));
     EXPECT_THAT(uut_->get(participants), Eq(-1));
 }
 
 K_TEST_F(ApiConversations, getWorksWithDuplicateAddresses)
 {
-    std::unordered_set<std::shared_ptr<Api::Address>> participants;
-    participants.emplace(Api::Address::create(data_.participant1));
-    participants.emplace(Api::Address::create(data_.participant1));
-    participants.emplace(Api::Address::create(data_.participant2));
+    std::unordered_set<Api::Address> participants;
+    participants.emplace(Api::Address(data_.participant1));
+    participants.emplace(Api::Address(data_.participant1));
+    participants.emplace(Api::Address(data_.participant2));
     EXPECT_THAT(uut_->get(participants), Eq(data_.id));
 
-    participants.emplace(Api::Address::create("nosuchuser#example.com"));
+    participants.emplace(Api::Address("nosuchuser#example.com"));
     EXPECT_THAT(uut_->get(participants), Eq(-1));
 }
 
 K_TEST_F(ApiConversations, addReturnsExistingConversation)
 {
-    std::unordered_set<std::shared_ptr<Api::Address>> participants;
-    participants.emplace(Api::Address::create(data_.participant1));
-    participants.emplace(Api::Address::create(data_.participant2));
+    std::unordered_set<Api::Address> participants;
+    participants.emplace(Api::Address(data_.participant1));
+    participants.emplace(Api::Address(data_.participant2));
 
     EXPECT_THAT(uut_->add(participants), Eq(data_.id));
 }
 
 K_TEST_F(ApiConversations, addWorksWithDuplicateAddresses)
 {
-    std::unordered_set<std::shared_ptr<Api::Address>> participants;
-    participants.emplace(Api::Address::create(data_.participant1));
-    participants.emplace(Api::Address::create(data_.participant1));
-    participants.emplace(Api::Address::create(data_.participant2));
+    std::unordered_set<Api::Address> participants;
+    participants.emplace(Api::Address(data_.participant1));
+    participants.emplace(Api::Address(data_.participant1));
+    participants.emplace(Api::Address(data_.participant2));
     auto convId = uut_->add(participants);
 
     // must not create new conversation but return existing with {part1, part2}
@@ -202,10 +202,10 @@ K_TEST_F(ApiConversations, addWorksWithDuplicateAddresses)
 
 K_TEST_F(ApiConversations, addReturnsNewConversation)
 {
-    std::unordered_set<std::shared_ptr<Api::Address>> participants;
-    participants.emplace(Api::Address::create(data_.participant1));
-    participants.emplace(Api::Address::create(data_.participant2));
-    participants.emplace(Api::Address::create("nosuchuser#example.com"));
+    std::unordered_set<Api::Address> participants;
+    participants.emplace(Api::Address(data_.participant1));
+    participants.emplace(Api::Address(data_.participant2));
+    participants.emplace(Api::Address("nosuchuser#example.com"));
     auto convId = uut_->add(participants);
 
     EXPECT_THAT(convId, Ge(0));
@@ -214,9 +214,9 @@ K_TEST_F(ApiConversations, addReturnsNewConversation)
 
 K_TEST_F(ApiConversations, addStoresToMemoryAndDatabase)
 {
-    std::unordered_set<std::shared_ptr<Api::Address>> participants;
-    participants.emplace(Api::Address::create("local-new-guy1#example.com"));
-    participants.emplace(Api::Address::create("local-new-guy2#example.com"));
+    std::unordered_set<Api::Address> participants;
+    participants.emplace(Api::Address("local-new-guy1#example.com"));
+    participants.emplace(Api::Address("local-new-guy2#example.com"));
 
     auto convId = uut_->add(participants);
 
@@ -233,9 +233,9 @@ K_TEST_F(ApiConversations, addStoresToMemoryAndDatabase)
 
 K_TEST_F(ApiConversations, addEmitsEvent)
 {
-    std::unordered_set<std::shared_ptr<Api::Address>> participants;
-    participants.emplace(Api::Address::create("local-new-guy1#example.com"));
-    participants.emplace(Api::Address::create("local-new-guy2#example.com"));
+    std::unordered_set<Api::Address> participants;
+    participants.emplace(Api::Address("local-new-guy1#example.com"));
+    participants.emplace(Api::Address("local-new-guy2#example.com"));
 
     auto addedConvId = uut_->add(participants);
 
@@ -258,19 +258,19 @@ K_TEST_F(ApiConversations, addEmitsEvent)
 
 K_TEST_F(ApiConversations, addDoesntAcceptCurrentUser)
 {
-    const auto currentUserAddressString = address_->toString();
+    const auto currentUserAddressString = address_.toString();
 
-    std::unordered_set<std::shared_ptr<Api::Address>> participants1;
-    participants1.emplace(Api::Address::create(currentUserAddressString));
+    std::unordered_set<Api::Address> participants1;
+    participants1.emplace(Api::Address(currentUserAddressString));
 
-    std::unordered_set<std::shared_ptr<Api::Address>> participants2;
-    participants2.emplace(Api::Address::create("local-new-guy1#example.com"));
-    participants2.emplace(Api::Address::create(currentUserAddressString));
+    std::unordered_set<Api::Address> participants2;
+    participants2.emplace(Api::Address("local-new-guy1#example.com"));
+    participants2.emplace(Api::Address(currentUserAddressString));
 
-    std::unordered_set<std::shared_ptr<Api::Address>> participants3;
-    participants3.emplace(Api::Address::create("local-new-guy1#example.com"));
-    participants3.emplace(Api::Address::create(currentUserAddressString));
-    participants3.emplace(Api::Address::create("local-new-guy2#example.com"));
+    std::unordered_set<Api::Address> participants3;
+    participants3.emplace(Api::Address("local-new-guy1#example.com"));
+    participants3.emplace(Api::Address(currentUserAddressString));
+    participants3.emplace(Api::Address("local-new-guy2#example.com"));
 
     EXPECT_THROW(uut_->add(participants1), Util::AssertionFailed);
     EXPECT_THROW(uut_->add(participants2), Util::AssertionFailed);
@@ -319,8 +319,8 @@ K_TEST_F(ApiConversations, participantsWorks)
     bool found1 = false, found2 = false;
     for (auto &part : participants)
     {
-        found1 = found1 || (part->toString() == data_.participant1);
-        found2 = found2 || (part->toString() == data_.participant2);
+        found1 = found1 || (part.toString() == data_.participant1);
+        found2 = found2 || (part.toString() == data_.participant2);
     }
     EXPECT_THAT(found1, Eq(true));
     EXPECT_THAT(found2, Eq(true));
@@ -441,7 +441,7 @@ K_TEST_F(ApiConversations, latestMessageTimestampChangedEventFromAdding)
         dao.setDateSent(Api::DateTime(2014, 7, 23, 16, 06, 00, 120).toString());
         dao.setDateReceived(Api::DateTime(2014, 7, 23, 16, 06, 00, 120).toString());
         dao.save(Dao::CreateOld::No);
-        sessionListener_->internalEvent(std::make_shared<Event::ConversationModifiedEvent>(data_.id));
+        sessionListener_->internalEvent(Kullo::nn_make_shared<Event::ConversationModifiedEvent>(data_.id));
     }
 
     {
@@ -460,7 +460,7 @@ K_TEST_F(ApiConversations, latestMessageTimestampChangedEventFromAdding)
         dao.setDateSent(Api::DateTime(2018, 7, 23, 16, 06, 00, 120).toString());
         dao.setDateReceived(Api::DateTime(2018, 7, 23, 16, 06, 00, 120).toString());
         dao.save(Dao::CreateOld::No);
-        sessionListener_->internalEvent(std::make_shared<Event::ConversationModifiedEvent>(data_.id));
+        sessionListener_->internalEvent(Kullo::nn_make_shared<Event::ConversationModifiedEvent>(data_.id));
     }
     {
         auto events = sessionListener_->externalEvents(Api::EventType::ConversationLatestMessageTimestampChanged);

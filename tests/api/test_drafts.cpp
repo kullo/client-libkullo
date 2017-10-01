@@ -28,7 +28,7 @@ public:
         dao.save();
 
         makeSession();
-        uut = session_->drafts();
+        uut = session_->drafts().as_nullable();
     }
 
 protected:

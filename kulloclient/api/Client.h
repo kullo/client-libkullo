@@ -3,20 +3,21 @@
 
 #pragma once
 
+#include <kulloclient/nn.h>
 #include <memory>
 #include <string>
 #include <unordered_map>
 
 namespace Kullo { namespace Api {
 
-class Address;
 class AsyncTask;
 class ClientAddressExistsListener;
 class ClientCheckCredentialsListener;
 class ClientCreateSessionListener;
 class ClientGenerateKeysListener;
-class MasterKey;
 class SessionListener;
+struct Address;
+struct MasterKey;
 
 /** A Client is the entry point to most of libkullo. */
 class Client {
@@ -37,7 +38,7 @@ public:
     static std::string const SQLITE;
 
     /** Create a new Client instance. You will most probably only need one. */
-    static std::shared_ptr<Client> create();
+    static ::Kullo::nn_shared_ptr<Client> create();
 
     /**
      * Opens a session for the given user. dbFilePath is the absolute path to the
@@ -47,16 +48,16 @@ public:
      *
      * Attention: Don't ever re-use the same DB file for multiple accounts!
      */
-    virtual std::shared_ptr<AsyncTask> createSessionAsync(const std::shared_ptr<Address> & address, const std::shared_ptr<MasterKey> & masterKey, const std::string & dbFilePath, const std::shared_ptr<SessionListener> & sessionListener, const std::shared_ptr<ClientCreateSessionListener> & listener) = 0;
+    virtual ::Kullo::nn_shared_ptr<AsyncTask> createSessionAsync(const Address & address, const MasterKey & masterKey, const std::string & dbFilePath, const ::Kullo::nn_shared_ptr<SessionListener> & sessionListener, const ::Kullo::nn_shared_ptr<ClientCreateSessionListener> & listener) = 0;
 
     /** Check whether an address exists. */
-    virtual std::shared_ptr<AsyncTask> addressExistsAsync(const std::shared_ptr<Address> & address, const std::shared_ptr<ClientAddressExistsListener> & listener) = 0;
+    virtual ::Kullo::nn_shared_ptr<AsyncTask> addressExistsAsync(const Address & address, const ::Kullo::nn_shared_ptr<ClientAddressExistsListener> & listener) = 0;
 
     /** Check whether the master key is valid for the given address. */
-    virtual std::shared_ptr<AsyncTask> checkCredentialsAsync(const std::shared_ptr<Address> & address, const std::shared_ptr<MasterKey> & masterKey, const std::shared_ptr<ClientCheckCredentialsListener> & listener) = 0;
+    virtual ::Kullo::nn_shared_ptr<AsyncTask> checkCredentialsAsync(const Address & address, const MasterKey & masterKey, const ::Kullo::nn_shared_ptr<ClientCheckCredentialsListener> & listener) = 0;
 
     /** Generate new keys, which is the first step to registering an account. */
-    virtual std::shared_ptr<AsyncTask> generateKeysAsync(const std::shared_ptr<ClientGenerateKeysListener> & listener) = 0;
+    virtual ::Kullo::nn_shared_ptr<AsyncTask> generateKeysAsync(const ::Kullo::nn_shared_ptr<ClientGenerateKeysListener> & listener) = 0;
 
     /** Returns pairs of <library name, version number> for the libraries used. */
     virtual std::unordered_map<std::string, std::string> versions() = 0;

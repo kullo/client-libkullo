@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <kulloclient/nn.h>
 #include <memory>
 #include <vector>
 
@@ -26,30 +27,30 @@ class Session {
 public:
     virtual ~Session() {}
 
-    virtual std::shared_ptr<UserSettings> userSettings() = 0;
+    virtual ::Kullo::nn_shared_ptr<UserSettings> userSettings() = 0;
 
-    virtual std::shared_ptr<Conversations> conversations() = 0;
+    virtual ::Kullo::nn_shared_ptr<Conversations> conversations() = 0;
 
-    virtual std::shared_ptr<Messages> messages() = 0;
+    virtual ::Kullo::nn_shared_ptr<Messages> messages() = 0;
 
-    virtual std::shared_ptr<MessageAttachments> messageAttachments() = 0;
+    virtual ::Kullo::nn_shared_ptr<MessageAttachments> messageAttachments() = 0;
 
-    virtual std::shared_ptr<Senders> senders() = 0;
+    virtual ::Kullo::nn_shared_ptr<Senders> senders() = 0;
 
-    virtual std::shared_ptr<Drafts> drafts() = 0;
+    virtual ::Kullo::nn_shared_ptr<Drafts> drafts() = 0;
 
-    virtual std::shared_ptr<DraftAttachments> draftAttachments() = 0;
+    virtual ::Kullo::nn_shared_ptr<DraftAttachments> draftAttachments() = 0;
 
-    virtual std::shared_ptr<Syncer> syncer() = 0;
+    virtual ::Kullo::nn_shared_ptr<Syncer> syncer() = 0;
 
-    virtual std::shared_ptr<AsyncTask> accountInfoAsync(const std::shared_ptr<SessionAccountInfoListener> & listener) = 0;
+    virtual ::Kullo::nn_shared_ptr<AsyncTask> accountInfoAsync(const ::Kullo::nn_shared_ptr<SessionAccountInfoListener> & listener) = 0;
 
-    virtual std::shared_ptr<AsyncTask> registerPushToken(const PushToken & token) = 0;
+    virtual ::Kullo::nn_shared_ptr<AsyncTask> registerPushToken(const PushToken & token) = 0;
 
-    virtual std::shared_ptr<AsyncTask> unregisterPushToken(const PushToken & token) = 0;
+    virtual ::Kullo::nn_shared_ptr<AsyncTask> unregisterPushToken(const PushToken & token) = 0;
 
     /** Notify the session of events. Only call this from the UI thread! */
-    virtual std::vector<Event> notify(const std::shared_ptr<InternalEvent> & internalEvent) = 0;
+    virtual std::vector<Event> notify(const ::Kullo::nn_shared_ptr<InternalEvent> & internalEvent) = 0;
 };
 
 } }  // namespace Kullo::Api

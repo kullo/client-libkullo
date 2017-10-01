@@ -28,6 +28,7 @@ CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_Registration_00024CppProx
     try {
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
         const auto& ref = ::djinni::objectFromHandleAddress<::Kullo::Api::Registration>(nativeRef);
+        DJINNI_ASSERT_MSG(j_listener, jniEnv, "Got unexpected null parameter 'listener' to function net.kullo.libkullo.api.Registration#registerAccountAsync(net.kullo.libkullo.api.Address address, String acceptedTerms, net.kullo.libkullo.api.Challenge challenge, String challengeAnswer, net.kullo.libkullo.api.RegistrationRegisterAccountListener listener)");
         auto r = ref->registerAccountAsync(::JNI::Kullo::Api::Address::toCpp(jniEnv, j_address),
                                            ::djinni::Optional<boost::optional, ::djinni::String>::toCpp(jniEnv, j_acceptedTerms),
                                            ::djinni::Optional<boost::optional, ::JNI::Kullo::Api::Challenge>::toCpp(jniEnv, j_challenge),

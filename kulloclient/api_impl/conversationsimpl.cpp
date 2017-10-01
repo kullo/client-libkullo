@@ -5,8 +5,8 @@
 #include <boost/optional.hpp>
 #include <smartsqlite/scopedtransaction.h>
 
+#include "kulloclient/api_impl/Address.h"
 #include "kulloclient/api_impl/DateTime.h"
-#include "kulloclient/api_impl/addressimpl.h"
 #include "kulloclient/api_impl/debug.h"
 #include "kulloclient/db/exceptions.h"
 #include "kulloclient/event/conversationaddedevent.h"
@@ -43,16 +43,14 @@ std::vector<int64_t> ConversationsImpl::all()
     return result;
 }
 
-int64_t ConversationsImpl::get(
-        const std::unordered_set<std::shared_ptr<Api::Address>> &participants)
+int64_t ConversationsImpl::get(const std::unordered_set<Api::Address> &participants)
 {
     kulloAssert(participants.size());
 
     return get(participantsToString(participants));
 }
 
-int64_t ConversationsImpl::add(
-        const std::unordered_set<std::shared_ptr<Api::Address>> &participants)
+int64_t ConversationsImpl::add(const std::unordered_set<Api::Address> &participants)
 {
     kulloAssert(participants.size());
 
@@ -60,7 +58,7 @@ int64_t ConversationsImpl::add(
     const auto currentUserAddress = sessionData_->userSettings_->address();
     for (const auto &participant : participants)
     {
-        kulloAssert(!participant->isEqualTo(currentUserAddress));
+        kulloAssert(participant != currentUserAddress);
     }
 
     auto partString = participantsToString(participants);
@@ -76,7 +74,7 @@ int64_t ConversationsImpl::add(
         convId = dao.id();
 
         sessionListener_->internalEvent(
-                    std::make_shared<Event::ConversationAddedEvent>(convId));
+                    nn_make_shared<Event::ConversationAddedEvent>(convId));
     }
     return convId;
 }
@@ -88,23 +86,22 @@ void ConversationsImpl::triggerRemoval(int64_t convId)
     if (daoIter != conversations_.end())
     {
         sessionListener_->internalEvent(
-                    std::make_shared<Event::ConversationWillBeRemovedEvent>(convId));
+                    nn_make_shared<Event::ConversationWillBeRemovedEvent>(convId));
     }
 }
 
-std::unordered_set<std::shared_ptr<Api::Address>> ConversationsImpl::participants(
-        int64_t convId)
+std::unordered_set<Api::Address> ConversationsImpl::participants(int64_t convId)
 {
     kulloAssert(convId >= Kullo::ID_MIN && convId <= Kullo::ID_MAX);
 
-    std::unordered_set<std::shared_ptr<Api::Address>> participants;
+    std::unordered_set<Api::Address> participants;
 
     auto iter = conversations_.find(convId);
     if (iter != conversations_.end())
     {
         for (const auto &part : iter->second.participantsList())
         {
-            participants.emplace(std::make_shared<AddressImpl>(part));
+            participants.emplace(Api::Address(part));
         }
     }
     return participants;
@@ -290,11 +287,10 @@ Event::ApiEvents ConversationsImpl::conversationWillBeRemoved(int64_t convId)
     return result;
 }
 
-std::string ConversationsImpl::participantsToString(
-        const std::unordered_set<std::shared_ptr<Api::Address>> &participants)
+std::string ConversationsImpl::participantsToString(const std::unordered_set<Api::Address> &participants)
 {
     std::vector<std::string> partVec;
-    for (const auto &part : participants) partVec.push_back(part->toString());
+    for (const auto &part : participants) partVec.push_back(part.toString());
 
     // Sort and deduplicate addresses.
     // For unique(), the container must be sorted first!

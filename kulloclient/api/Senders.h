@@ -5,13 +5,12 @@
 
 #include <boost/optional.hpp>
 #include <cstdint>
-#include <memory>
 #include <string>
 #include <vector>
 
 namespace Kullo { namespace Api {
 
-class Address;
+struct Address;
 
 class Senders {
 public:
@@ -20,7 +19,7 @@ public:
     virtual std::string name(int64_t msgId) = 0;
 
     /** Returns null if the msgId is invalid */
-    virtual std::shared_ptr<Address> address(int64_t msgId) = 0;
+    virtual boost::optional<Address> address(int64_t msgId) = 0;
 
     virtual std::string organization(int64_t msgId) = 0;
 

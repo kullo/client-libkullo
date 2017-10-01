@@ -14,12 +14,12 @@ namespace Kullo {
 namespace ApiImpl {
 
 ClientCheckCredentialsWorker::ClientCheckCredentialsWorker(
-        std::shared_ptr<Api::Address> address,
-        std::shared_ptr<Api::MasterKey> masterKey,
+        const Api::Address &address,
+        const Api::MasterKey &masterKey,
         std::shared_ptr<Api::ClientCheckCredentialsListener> listener)
     : messagesClient_(
-          Util::KulloAddress(address->toString()),
-          Util::MasterKey(masterKey->dataBlocks()),
+          Util::KulloAddress(address.toString()),
+          Util::MasterKey(masterKey.blocks),
           Registry::httpClientFactory()->createHttpClient())
     , address_(address)
     , masterKey_(masterKey)

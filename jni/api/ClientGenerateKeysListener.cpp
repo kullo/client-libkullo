@@ -23,7 +23,7 @@ void ClientGenerateKeysListener::JavaProxy::progress(int8_t c_progress) {
                            ::djinni::get(::djinni::I8::fromCpp(jniEnv, c_progress)));
     ::djinni::jniExceptionCheck(jniEnv);
 }
-void ClientGenerateKeysListener::JavaProxy::finished(const std::shared_ptr<::Kullo::Api::Registration> & c_registration) {
+void ClientGenerateKeysListener::JavaProxy::finished(const ::Kullo::nn_shared_ptr<::Kullo::Api::Registration> & c_registration) {
     auto jniEnv = ::djinni::jniGetThreadEnv();
     ::djinni::JniLocalScope jscope(jniEnv, 10);
     const auto& data = ::djinni::JniClass<::JNI::Kullo::Api::ClientGenerateKeysListener>::get();

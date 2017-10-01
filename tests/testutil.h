@@ -12,6 +12,7 @@
 
 #include <kulloclient/api/AsyncTask.h>
 #include <kulloclient/util/assert.h>
+#include <kulloclient/nn.h>
 
 class TestUtil
 {
@@ -30,14 +31,14 @@ public:
 
     template <class T = Kullo::Api::AsyncTask>
     static WaitAndCheckResult waitAndCheck(
-            std::shared_ptr<T> task, const bool &flag)
+            Kullo::nn_shared_ptr<T> task, const bool &flag)
     {
         return doWaitAndCheck<T>(task, flag, asyncTimeoutMs_);
     }
 
     template <class T = Kullo::Api::AsyncTask>
     static WaitAndCheckResult waitAndCheckSlow(
-            std::shared_ptr<T> task, const bool &flag)
+            Kullo::nn_shared_ptr<T> task, const bool &flag)
     {
         return doWaitAndCheck<T>(task, flag, slowTimeoutMs_);
     }
@@ -95,7 +96,7 @@ public:
 private:
     template <class T = Kullo::Api::AsyncTask>
     static WaitAndCheckResult doWaitAndCheck(
-            std::shared_ptr<T> task,
+            Kullo::nn_shared_ptr<T> task,
             const bool &flag,
             int32_t timeout)
     {

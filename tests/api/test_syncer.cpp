@@ -62,7 +62,7 @@ protected:
         Registry::setHttpClientFactory(httpClientFactory);
 
         makeSession();
-        uut_ = session_->syncer();
+        uut_ = session_->syncer().as_nullable();
     }
 
     std::shared_ptr<Api::Syncer> uut_;
@@ -70,11 +70,11 @@ protected:
 
 K_TEST_F(ApiSyncer, progressWorks)
 {
-    auto listener = std::make_shared<CountingSyncListener>();
+    auto listener = Kullo::nn_make_shared<CountingSyncListener>();
     uut_->setListener(listener);
     uut_->requestSync(Api::SyncMode::WithoutAttachments);
 
-    ASSERT_THAT(TestUtil::waitAndCheck(uut_, listener->isFinished_),
+    ASSERT_THAT(TestUtil::waitAndCheck(kulloForcedNn(uut_), listener->isFinished_),
                 Eq(TestUtil::OK));
 
     EXPECT_THAT(listener->countProgressed_, Ge(1));
@@ -86,11 +86,11 @@ K_TEST_F(ApiSyncer, lastFullSyncWorks)
 
     auto start = Api::DateTime::nowUtc();
 
-    auto listener = std::make_shared<CountingSyncListener>();
+    auto listener = Kullo::nn_make_shared<CountingSyncListener>();
     uut_->setListener(listener);
     uut_->requestSync(Api::SyncMode::WithoutAttachments);
 
-    ASSERT_THAT(TestUtil::waitAndCheck(uut_, listener->isFinished_),
+    ASSERT_THAT(TestUtil::waitAndCheck(kulloForcedNn(uut_), listener->isFinished_),
                 Eq(TestUtil::OK));
 
     auto stop = Api::DateTime::nowUtc();

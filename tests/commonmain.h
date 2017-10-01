@@ -20,6 +20,7 @@ std::string getExeDir(const char *arg0)
     return fs::system_complete(arg0).parent_path().string();
 }
 
+#ifndef __ANDROID__
 std::string getUsername()
 {
     const char *username =
@@ -30,6 +31,7 @@ std::string getUsername()
     #endif
     return (username) ? username : "unknown_user";
 }
+#endif
 
 std::string getDefaultTempPath()
 {

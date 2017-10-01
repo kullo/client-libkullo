@@ -4,29 +4,30 @@
 #pragma once
 
 #include "jni/support-lib/jni/djinni_support.hpp"
-#include "kulloclient/api/MasterKey.h"
+#include "kulloclient/api_impl/MasterKey.h"
+#include <kulloclient/nn.h>
 
 namespace JNI { namespace Kullo { namespace Api {
 
-class MasterKey final : ::djinni::JniInterface<::Kullo::Api::MasterKey, MasterKey> {
+class MasterKey final {
 public:
-    using CppType = std::shared_ptr<::Kullo::Api::MasterKey>;
-    using CppOptType = std::shared_ptr<::Kullo::Api::MasterKey>;
+    using CppType = ::Kullo::Api::MasterKey;
     using JniType = jobject;
 
     using Boxed = MasterKey;
 
     ~MasterKey();
 
-    static CppType toCpp(JNIEnv* jniEnv, JniType j) { return ::djinni::JniClass<MasterKey>::get()._fromJava(jniEnv, j); }
-    static ::djinni::LocalRef<JniType> fromCppOpt(JNIEnv* jniEnv, const CppOptType& c) { return {jniEnv, ::djinni::JniClass<MasterKey>::get()._toJava(jniEnv, c)}; }
-    static ::djinni::LocalRef<JniType> fromCpp(JNIEnv* jniEnv, const CppType& c) { return fromCppOpt(jniEnv, c); }
+    static CppType toCpp(JNIEnv* jniEnv, JniType j);
+    static ::djinni::LocalRef<JniType> fromCpp(JNIEnv* jniEnv, const CppType& c);
 
 private:
     MasterKey();
     friend ::djinni::JniClass<MasterKey>;
-    friend ::djinni::JniInterface<::Kullo::Api::MasterKey, MasterKey>;
 
+    const ::djinni::GlobalRef<jclass> clazz { ::djinni::jniFindClass("net/kullo/libkullo/api/MasterKey") };
+    const jmethodID jconstructor { ::djinni::jniGetMethodID(clazz.get(), "<init>", "(Ljava/util/ArrayList;)V") };
+    const jfieldID field_blocks { ::djinni::jniGetFieldID(clazz.get(), "blocks", "Ljava/util/ArrayList;") };
 };
 
 } } }  // namespace JNI::Kullo::Api

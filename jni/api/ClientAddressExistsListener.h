@@ -5,12 +5,13 @@
 
 #include "jni/support-lib/jni/djinni_support.hpp"
 #include "kulloclient/api/ClientAddressExistsListener.h"
+#include <kulloclient/nn.h>
 
 namespace JNI { namespace Kullo { namespace Api {
 
 class ClientAddressExistsListener final : ::djinni::JniInterface<::Kullo::Api::ClientAddressExistsListener, ClientAddressExistsListener> {
 public:
-    using CppType = std::shared_ptr<::Kullo::Api::ClientAddressExistsListener>;
+    using CppType = ::Kullo::nn_shared_ptr<::Kullo::Api::ClientAddressExistsListener>;
     using CppOptType = std::shared_ptr<::Kullo::Api::ClientAddressExistsListener>;
     using JniType = jobject;
 
@@ -18,7 +19,10 @@ public:
 
     ~ClientAddressExistsListener();
 
-    static CppType toCpp(JNIEnv* jniEnv, JniType j) { return ::djinni::JniClass<ClientAddressExistsListener>::get()._fromJava(jniEnv, j); }
+    static CppType toCpp(JNIEnv* jniEnv, JniType j) {
+        DJINNI_ASSERT_MSG(j, jniEnv, "ClientAddressExistsListener::fromCpp requires a non-null Java object");
+        return kulloForcedNn(::djinni::JniClass<ClientAddressExistsListener>::get()._fromJava(jniEnv, j));
+    };
     static ::djinni::LocalRef<JniType> fromCppOpt(JNIEnv* jniEnv, const CppOptType& c) { return {jniEnv, ::djinni::JniClass<ClientAddressExistsListener>::get()._toJava(jniEnv, c)}; }
     static ::djinni::LocalRef<JniType> fromCpp(JNIEnv* jniEnv, const CppType& c) { return fromCppOpt(jniEnv, c); }
 
@@ -33,8 +37,8 @@ private:
         JavaProxy(JniType j);
         ~JavaProxy();
 
-        void finished(const std::shared_ptr<::Kullo::Api::Address> & address, bool exists) override;
-        void error(const std::shared_ptr<::Kullo::Api::Address> & address, ::Kullo::Api::NetworkError error) override;
+        void finished(const ::Kullo::Api::Address & address, bool exists) override;
+        void error(const ::Kullo::Api::Address & address, ::Kullo::Api::NetworkError error) override;
 
     private:
         friend ::djinni::JniInterface<::Kullo::Api::ClientAddressExistsListener, ::JNI::Kullo::Api::ClientAddressExistsListener>;

@@ -6,9 +6,9 @@
 namespace Kullo {
 namespace Api {
 
-std::shared_ptr<Client> Client::create()
+nn_shared_ptr<Client> Client::create()
 {
-    return std::make_shared<ApiImpl::ClientImpl>();
+    return nn_make_shared<ApiImpl::ClientImpl>();
 }
 
 }

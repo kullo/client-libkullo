@@ -33,7 +33,7 @@ protected:
 
 private:
     void setupEvents();
-    void sendEvent(const std::shared_ptr<Api::InternalEvent> &event);
+    void sendEvent(const nn_shared_ptr<Api::InternalEvent> &event);
     std::shared_ptr<Api::SyncerListener> safeListener();
 
     // all uses must be synchronized

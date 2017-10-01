@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <smartsqlite/scopedtransaction.h>
 
-#include "kulloclient/api/Address.h"
+#include "kulloclient/api_impl/Address.h"
 #include "kulloclient/api_impl/asynctaskimpl.h"
 #include "kulloclient/api_impl/DateTime.h"
 #include "kulloclient/api_impl/deliveryimpl.h"
@@ -40,7 +40,7 @@ MessagesImpl::MessagesImpl(
     for (auto &record : deliveryRecords)
     {
         delivery_[record.first].emplace_back(
-                    std::make_shared<DeliveryImpl>(std::move(record.second)));
+                    nn_make_shared<DeliveryImpl>(std::move(record.second)));
     }
 }
 
@@ -51,10 +51,9 @@ std::vector<int64_t> MessagesImpl::allForConversation(int64_t convId)
     return idsForConvId_[convId];
 }
 
-int64_t MessagesImpl::latestForSender(const std::shared_ptr<Api::Address> &address)
+int64_t MessagesImpl::latestForSender(const Api::Address &address)
 {
-    kulloAssert(address);
-    const auto addressString = address->toString();
+    const auto addressString = address.toString();
 
     // Messages are ordered by id and "latest" means having the greatest id,
     // so we can iterate from the end and use the first hit
@@ -118,13 +117,13 @@ void MessagesImpl::remove(int64_t msgId)
         auto conversationId = removedDao->conversationId();
         auto events = removeFromDb(*removedDao);
         sessionListener_->internalEvent(
-                    std::make_shared<Event::SendApiEventsEvent>(events));
+                    nn_make_shared<Event::SendApiEventsEvent>(events));
         sessionListener_->internalEvent(
-                    std::make_shared<Event::ConversationModifiedEvent>(
+                    nn_make_shared<Event::ConversationModifiedEvent>(
                         conversationId));
 
         sessionListener_->internalEvent(
-                    std::make_shared<Event::MessageRemovedEvent>(
+                    nn_make_shared<Event::MessageRemovedEvent>(
                         conversationId, msgId));
     }
 }
@@ -139,7 +138,7 @@ int64_t MessagesImpl::conversation(int64_t msgId)
             : -1;
 }
 
-std::vector<std::shared_ptr<Api::Delivery>> MessagesImpl::deliveryState(
+std::vector<nn_shared_ptr<Api::Delivery>> MessagesImpl::deliveryState(
         int64_t msgId)
 {
     kulloAssert(msgId >= Kullo::ID_MIN && msgId <= Kullo::ID_MAX);
@@ -147,7 +146,7 @@ std::vector<std::shared_ptr<Api::Delivery>> MessagesImpl::deliveryState(
     auto iter = delivery_.find(msgId);
     return iter != delivery_.end()
             ? iter->second
-            : std::vector<std::shared_ptr<Api::Delivery>>();
+            : std::vector<nn_shared_ptr<Api::Delivery>>();
 }
 
 bool MessagesImpl::isRead(int64_t msgId)
@@ -221,20 +220,19 @@ std::string MessagesImpl::footer(int64_t msgId)
     return iter != messages_.end() ? iter->second.footer() : "";
 }
 
-std::shared_ptr<Api::AsyncTask> MessagesImpl::searchAsync(
+nn_shared_ptr<Api::AsyncTask> MessagesImpl::searchAsync(
         const std::string &searchText,
         int64_t convId,
         const boost::optional<Api::SenderPredicate> &sender,
         int32_t limitResults,
         const boost::optional<std::string> &boundary,
-        const std::shared_ptr<Api::MessagesSearchListener> &listener)
+        const nn_shared_ptr<Api::MessagesSearchListener> &listener)
 {
     kulloAssert(convId == -1 || (convId >= Kullo::ID_MIN && convId <= Kullo::ID_MAX));
     kulloAssert(limitResults > 0);
     kulloAssert(boundary == boost::none || !boundary->empty());
-    kulloAssert(listener);
 
-    return std::make_shared<AsyncTaskImpl>(
+    return nn_make_shared<AsyncTaskImpl>(
                 std::make_shared<MessagesSearchWorker>(
                     searchText, convId, sender, limitResults, boundary,
                     sessionData_->sessionConfig_, listener));
@@ -258,7 +256,7 @@ Event::ApiEvents MessagesImpl::messageAdded(int64_t convId, int64_t msgId)
     for (auto &record : deliveryRecords)
     {
         delivery_[msgId].emplace_back(
-                    std::make_shared<DeliveryImpl>(std::move(record)));
+                    nn_make_shared<DeliveryImpl>(std::move(record)));
     }
 
     return {Api::Event(
@@ -295,7 +293,7 @@ Event::ApiEvents MessagesImpl::messageModified(int64_t convId, int64_t msgId)
     for (auto &record : deliveryRecords)
     {
         delivery_[msgId].emplace_back(
-                    std::make_shared<DeliveryImpl>(std::move(record)));
+                    nn_make_shared<DeliveryImpl>(std::move(record)));
     }
     bool deliveryChanged = !ApiImpl::DeliveryImpl::deliveryListsEqual(oldDeliveryList, delivery_[msgId]);
 
@@ -329,7 +327,7 @@ Event::ApiEvents MessagesImpl::conversationWillBeRemoved(int64_t convId)
             result.insert(events.begin(), events.end());
 
             sessionListener_->internalEvent(
-                        std::make_shared<Event::MessageRemovedEvent>(
+                        nn_make_shared<Event::MessageRemovedEvent>(
                             conversationId, msgId));
         }
     }
@@ -374,10 +372,10 @@ bool MessagesImpl::setState(MessagesImpl::MessageState state, int64_t msgId, boo
             tx.commit();
 
             sessionListener_->internalEvent(
-                        std::make_shared<Event::ConversationModifiedEvent>(
+                        nn_make_shared<Event::ConversationModifiedEvent>(
                             conversationId));
             sessionListener_->internalEvent(
-                        std::make_shared<Event::SendApiEventsEvent>(
+                        nn_make_shared<Event::SendApiEventsEvent>(
                             Event::ApiEvents{
                                 Api::Event(Api::EventType::MessageStateChanged,
                                 conversationId, msgId, -1)

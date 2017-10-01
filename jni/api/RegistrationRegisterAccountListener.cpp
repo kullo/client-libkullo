@@ -18,7 +18,7 @@ RegistrationRegisterAccountListener::JavaProxy::JavaProxy(JniType j) : Handle(::
 
 RegistrationRegisterAccountListener::JavaProxy::~JavaProxy() = default;
 
-void RegistrationRegisterAccountListener::JavaProxy::challengeNeeded(const std::shared_ptr<::Kullo::Api::Address> & c_address, const std::shared_ptr<::Kullo::Api::Challenge> & c_challenge) {
+void RegistrationRegisterAccountListener::JavaProxy::challengeNeeded(const ::Kullo::Api::Address & c_address, const ::Kullo::nn_shared_ptr<::Kullo::Api::Challenge> & c_challenge) {
     auto jniEnv = ::djinni::jniGetThreadEnv();
     ::djinni::JniLocalScope jscope(jniEnv, 10);
     const auto& data = ::djinni::JniClass<::JNI::Kullo::Api::RegistrationRegisterAccountListener>::get();
@@ -27,7 +27,7 @@ void RegistrationRegisterAccountListener::JavaProxy::challengeNeeded(const std::
                            ::djinni::get(::JNI::Kullo::Api::Challenge::fromCpp(jniEnv, c_challenge)));
     ::djinni::jniExceptionCheck(jniEnv);
 }
-void RegistrationRegisterAccountListener::JavaProxy::addressNotAvailable(const std::shared_ptr<::Kullo::Api::Address> & c_address, ::Kullo::Api::AddressNotAvailableReason c_reason) {
+void RegistrationRegisterAccountListener::JavaProxy::addressNotAvailable(const ::Kullo::Api::Address & c_address, ::Kullo::Api::AddressNotAvailableReason c_reason) {
     auto jniEnv = ::djinni::jniGetThreadEnv();
     ::djinni::JniLocalScope jscope(jniEnv, 10);
     const auto& data = ::djinni::JniClass<::JNI::Kullo::Api::RegistrationRegisterAccountListener>::get();
@@ -36,7 +36,7 @@ void RegistrationRegisterAccountListener::JavaProxy::addressNotAvailable(const s
                            ::djinni::get(::JNI::Kullo::Api::AddressNotAvailableReason::fromCpp(jniEnv, c_reason)));
     ::djinni::jniExceptionCheck(jniEnv);
 }
-void RegistrationRegisterAccountListener::JavaProxy::finished(const std::shared_ptr<::Kullo::Api::Address> & c_address, const std::shared_ptr<::Kullo::Api::MasterKey> & c_masterKey) {
+void RegistrationRegisterAccountListener::JavaProxy::finished(const ::Kullo::Api::Address & c_address, const ::Kullo::Api::MasterKey & c_masterKey) {
     auto jniEnv = ::djinni::jniGetThreadEnv();
     ::djinni::JniLocalScope jscope(jniEnv, 10);
     const auto& data = ::djinni::JniClass<::JNI::Kullo::Api::RegistrationRegisterAccountListener>::get();
@@ -45,7 +45,7 @@ void RegistrationRegisterAccountListener::JavaProxy::finished(const std::shared_
                            ::djinni::get(::JNI::Kullo::Api::MasterKey::fromCpp(jniEnv, c_masterKey)));
     ::djinni::jniExceptionCheck(jniEnv);
 }
-void RegistrationRegisterAccountListener::JavaProxy::error(const std::shared_ptr<::Kullo::Api::Address> & c_address, ::Kullo::Api::NetworkError c_error) {
+void RegistrationRegisterAccountListener::JavaProxy::error(const ::Kullo::Api::Address & c_address, ::Kullo::Api::NetworkError c_error) {
     auto jniEnv = ::djinni::jniGetThreadEnv();
     ::djinni::JniLocalScope jscope(jniEnv, 10);
     const auto& data = ::djinni::JniClass<::JNI::Kullo::Api::RegistrationRegisterAccountListener>::get();

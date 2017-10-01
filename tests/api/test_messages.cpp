@@ -3,13 +3,13 @@
 
 #include <boost/optional/optional_io.hpp>
 
-#include <kulloclient/api/Address.h>
 #include <kulloclient/api/AsyncTask.h>
 #include <kulloclient/api/Delivery.h>
 #include <kulloclient/api/Messages.h>
 #include <kulloclient/api/MessagesSearchListener.h>
 #include <kulloclient/api/MessagesSearchResult.h>
 #include <kulloclient/api/SenderPredicate.h>
+#include <kulloclient/api_impl/Address.h>
 #include <kulloclient/api_impl/DateTime.h>
 #include <kulloclient/api_impl/debug.h>
 #include <kulloclient/api_impl/deliveryimpl.h>
@@ -145,7 +145,7 @@ public:
         Dao::DeliveryDao(dbSession_).insertDelivery(data1_.id, {deliveryData});
 
         makeSession();
-        uut = session_->messages();
+        uut = session_->messages().as_nullable();
     }
 
 protected:
@@ -198,10 +198,10 @@ K_TEST_F(ApiMessages, allForConversationWorks)
 
 K_TEST_F(ApiMessages, latestForSenderWorks)
 {
-    EXPECT_THAT(uut->latestForSender(Api::Address::create(data1_.senderAddress)),
+    EXPECT_THAT(uut->latestForSender(Api::Address(data1_.senderAddress)),
                 Eq(data3_.id));
 
-    EXPECT_THAT(uut->latestForSender(Api::Address::create("noone#example.com")),
+    EXPECT_THAT(uut->latestForSender(Api::Address("noone#example.com")),
                 Eq(-1));
 }
 
@@ -256,8 +256,7 @@ K_TEST_F(ApiMessages, deliveryWorks)
     auto delivery = uut->deliveryState(data1_.id);
     ASSERT_THAT(delivery.size(), Eq(1u));
 
-    EXPECT_THAT(delivery[0]->recipient()
-            ->isEqualTo(apiDeliveryData.recipient()), Eq(true));
+    EXPECT_THAT(delivery[0]->recipient(), Eq(apiDeliveryData.recipient()));
     EXPECT_THAT(delivery[0]->state(), Eq(apiDeliveryData.state()));
     EXPECT_THAT(delivery[0]->reason(), Eq(apiDeliveryData.reason()));
     EXPECT_THAT(delivery[0]->date(), Eq(apiDeliveryData.date()));
@@ -519,11 +518,9 @@ K_TEST_F(ApiMessages, idRangeWorks)
 
 K_TEST_F(ApiMessages, searchAsyncFailsOnBadInput)
 {
-    auto listener = std::make_shared<SearchListener>();
+    auto listener = Kullo::nn_make_shared<SearchListener>();
 
     EXPECT_THROW(uut->searchAsync("hello", -2, boost::none, 5, SEARCH_BOUNDARY, listener),
-                 Util::AssertionFailed);
-    EXPECT_THROW(uut->searchAsync("hello", -1, boost::none, 5, SEARCH_BOUNDARY, nullptr),
                  Util::AssertionFailed);
     EXPECT_THROW(uut->searchAsync("hello", -1, boost::none, 0, SEARCH_BOUNDARY, listener),
                  Util::AssertionFailed);
@@ -533,15 +530,14 @@ K_TEST_F(ApiMessages, searchAsyncFailsOnBadInput)
 
 K_TEST_F(ApiMessages, searchAsyncCanBeCanceled)
 {
-    auto listener = std::make_shared<SearchListener>();
+    auto listener = Kullo::nn_make_shared<SearchListener>();
     auto task = uut->searchAsync("hello", -1, boost::none, 5, SEARCH_BOUNDARY, listener);
-    ASSERT_THAT(task, Not(IsNull()));
     EXPECT_NO_THROW(task->cancel());
 }
 
 K_TEST_F(ApiMessages, searchAsyncFullMatch)
 {
-    auto listener = std::make_shared<SearchListener>();
+    auto listener = Kullo::nn_make_shared<SearchListener>();
     auto task = uut->searchAsync("hello", -1, boost::none, 5, SEARCH_BOUNDARY, listener);
 
     ASSERT_THAT(TestUtil::waitAndCheck(task, listener->isFinished_),
@@ -551,7 +547,7 @@ K_TEST_F(ApiMessages, searchAsyncFullMatch)
 
 K_TEST_F(ApiMessages, searchAsyncPrefixMatch)
 {
-    auto listener = std::make_shared<SearchListener>();
+    auto listener = Kullo::nn_make_shared<SearchListener>();
     auto task = uut->searchAsync("hell", -1, boost::none, 5, SEARCH_BOUNDARY, listener);
 
     ASSERT_THAT(TestUtil::waitAndCheck(task, listener->isFinished_),
@@ -561,7 +557,7 @@ K_TEST_F(ApiMessages, searchAsyncPrefixMatch)
 
 K_TEST_F(ApiMessages, searchAsyncMultiwordMatch)
 {
-    auto listener = std::make_shared<SearchListener>();
+    auto listener = Kullo::nn_make_shared<SearchListener>();
     auto task = uut->searchAsync("hello world", -1, boost::none, 5, SEARCH_BOUNDARY, listener);
 
     ASSERT_THAT(TestUtil::waitAndCheck(task, listener->isFinished_),
@@ -573,7 +569,7 @@ K_TEST_F(ApiMessages, searchAsyncMultiwordMatch)
 
 K_TEST_F(ApiMessages, searchAsyncMultiwordUnorderedMatch)
 {
-    auto listener = std::make_shared<SearchListener>();
+    auto listener = Kullo::nn_make_shared<SearchListener>();
     auto task = uut->searchAsync("world hello", -1, boost::none, 5, SEARCH_BOUNDARY, listener);
 
     ASSERT_THAT(TestUtil::waitAndCheck(task, listener->isFinished_),
@@ -585,7 +581,7 @@ K_TEST_F(ApiMessages, searchAsyncMultiwordUnorderedMatch)
 
 K_TEST_F(ApiMessages, searchAsyncMultiwordPrefixMatch)
 {
-    auto listener = std::make_shared<SearchListener>();
+    auto listener = Kullo::nn_make_shared<SearchListener>();
     auto task = uut->searchAsync("he w", -1, boost::none, 5, SEARCH_BOUNDARY, listener);
 
     ASSERT_THAT(TestUtil::waitAndCheck(task, listener->isFinished_),
@@ -597,7 +593,7 @@ K_TEST_F(ApiMessages, searchAsyncMultiwordPrefixMatch)
 
 K_TEST_F(ApiMessages, searchAsyncMultipleMatches)
 {
-    auto listener = std::make_shared<SearchListener>();
+    auto listener = Kullo::nn_make_shared<SearchListener>();
     auto task = uut->searchAsync("you", -1, boost::none, 5, SEARCH_BOUNDARY, listener);
 
     ASSERT_THAT(TestUtil::waitAndCheck(task, listener->isFinished_),
@@ -608,7 +604,7 @@ K_TEST_F(ApiMessages, searchAsyncMultipleMatches)
 
 K_TEST_F(ApiMessages, searchAsyncNoMatch)
 {
-    auto listener = std::make_shared<SearchListener>();
+    auto listener = Kullo::nn_make_shared<SearchListener>();
     auto task = uut->searchAsync("help", -1, boost::none, 5, SEARCH_BOUNDARY, listener);
 
     ASSERT_THAT(TestUtil::waitAndCheck(task, listener->isFinished_),
@@ -618,7 +614,7 @@ K_TEST_F(ApiMessages, searchAsyncNoMatch)
 
 K_TEST_F(ApiMessages, searchAsyncEmptySearchText)
 {
-    auto listener = std::make_shared<SearchListener>();
+    auto listener = Kullo::nn_make_shared<SearchListener>();
     auto task = uut->searchAsync("", -1, boost::none, 5, SEARCH_BOUNDARY, listener);
 
     ASSERT_THAT(TestUtil::waitAndCheck(task, listener->isFinished_),
@@ -628,7 +624,7 @@ K_TEST_F(ApiMessages, searchAsyncEmptySearchText)
 
 K_TEST_F(ApiMessages, searchAsyncIgnoresQuotation)
 {
-    auto listener = std::make_shared<SearchListener>();
+    auto listener = Kullo::nn_make_shared<SearchListener>();
     auto task = uut->searchAsync("hello\"", -1, boost::none, 5, SEARCH_BOUNDARY, listener);
 
     ASSERT_THAT(TestUtil::waitAndCheck(task, listener->isFinished_),
@@ -638,7 +634,7 @@ K_TEST_F(ApiMessages, searchAsyncIgnoresQuotation)
 
 K_TEST_F(ApiMessages, searchAsyncRespectsConversationFilterPositiveCase)
 {
-    auto listener = std::make_shared<SearchListener>();
+    auto listener = Kullo::nn_make_shared<SearchListener>();
     auto task = uut->searchAsync("hello", data1_.convId, boost::none, 5, SEARCH_BOUNDARY, listener);
 
     ASSERT_THAT(TestUtil::waitAndCheck(task, listener->isFinished_),
@@ -648,7 +644,7 @@ K_TEST_F(ApiMessages, searchAsyncRespectsConversationFilterPositiveCase)
 
 K_TEST_F(ApiMessages, searchAsyncRespectsConversationFilterNegativeCase)
 {
-    auto listener = std::make_shared<SearchListener>();
+    auto listener = Kullo::nn_make_shared<SearchListener>();
     auto task = uut->searchAsync("hello", data1_.convId + 1, boost::none, 5, SEARCH_BOUNDARY, listener);
 
     ASSERT_THAT(TestUtil::waitAndCheck(task, listener->isFinished_),
@@ -658,7 +654,7 @@ K_TEST_F(ApiMessages, searchAsyncRespectsConversationFilterNegativeCase)
 
 K_TEST_F(ApiMessages, searchAsyncRespectsSenderFilterWithIsPositiveCase)
 {
-    auto listener = std::make_shared<SearchListener>();
+    auto listener = Kullo::nn_make_shared<SearchListener>();
     auto predicate = Api::SenderPredicate(Api::SearchPredicateOperator::Is, data1_.senderAddress);
     auto task = uut->searchAsync("hello", -1, predicate, 5, SEARCH_BOUNDARY, listener);
 
@@ -669,7 +665,7 @@ K_TEST_F(ApiMessages, searchAsyncRespectsSenderFilterWithIsPositiveCase)
 
 K_TEST_F(ApiMessages, searchAsyncRespectsSenderFilterWithIsNegativeCase)
 {
-    auto listener = std::make_shared<SearchListener>();
+    auto listener = Kullo::nn_make_shared<SearchListener>();
     auto predicate = Api::SenderPredicate(Api::SearchPredicateOperator::Is, "x" + data1_.senderAddress);
     auto task = uut->searchAsync("hello", -1, predicate, 5, SEARCH_BOUNDARY, listener);
 
@@ -680,7 +676,7 @@ K_TEST_F(ApiMessages, searchAsyncRespectsSenderFilterWithIsNegativeCase)
 
 K_TEST_F(ApiMessages, searchAsyncRespectsSenderFilterWithIsNotPositiveCase)
 {
-    auto listener = std::make_shared<SearchListener>();
+    auto listener = Kullo::nn_make_shared<SearchListener>();
     auto predicate = Api::SenderPredicate(Api::SearchPredicateOperator::IsNot, "x" + data1_.senderAddress);
     auto task = uut->searchAsync("hello", -1, predicate, 5, SEARCH_BOUNDARY, listener);
 
@@ -691,7 +687,7 @@ K_TEST_F(ApiMessages, searchAsyncRespectsSenderFilterWithIsNotPositiveCase)
 
 K_TEST_F(ApiMessages, searchAsyncRespectsSenderFilterWithIsNotNegativeCase)
 {
-    auto listener = std::make_shared<SearchListener>();
+    auto listener = Kullo::nn_make_shared<SearchListener>();
     auto predicate = Api::SenderPredicate(Api::SearchPredicateOperator::IsNot, data1_.senderAddress);
     auto task = uut->searchAsync("hello", -1, predicate, 5, SEARCH_BOUNDARY, listener);
 
@@ -702,7 +698,7 @@ K_TEST_F(ApiMessages, searchAsyncRespectsSenderFilterWithIsNotNegativeCase)
 
 K_TEST_F(ApiMessages, searchAsyncMultipleMatchesWithLimit)
 {
-    auto listener = std::make_shared<SearchListener>();
+    auto listener = Kullo::nn_make_shared<SearchListener>();
     auto task = uut->searchAsync("you", -1, boost::none, 1, SEARCH_BOUNDARY, listener);
 
     ASSERT_THAT(TestUtil::waitAndCheck(task, listener->isFinished_),
@@ -712,7 +708,7 @@ K_TEST_F(ApiMessages, searchAsyncMultipleMatchesWithLimit)
 
 K_TEST_F(ApiMessages, searchAsyncRandomBoundary)
 {
-    auto listener = std::make_shared<SearchListener>();
+    auto listener = Kullo::nn_make_shared<SearchListener>();
     auto task = uut->searchAsync("hello", -1, boost::none, 5, boost::none, listener);
 
     ASSERT_THAT(TestUtil::waitAndCheck(task, listener->isFinished_),
@@ -738,7 +734,7 @@ K_TEST_F(ApiMessages, searchAsyncRandomBoundary)
 
 K_TEST_F(ApiMessages, searchAsyncSnippetCompressed)
 {
-    auto listener = std::make_shared<SearchListener>();
+    auto listener = Kullo::nn_make_shared<SearchListener>();
     auto task = uut->searchAsync("thanks", -1, boost::none, 5, SEARCH_BOUNDARY, listener);
 
     ASSERT_THAT(TestUtil::waitAndCheck(task, listener->isFinished_),

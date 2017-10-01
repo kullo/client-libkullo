@@ -3,26 +3,24 @@
 
 #pragma once
 
-#include <memory>
-
 namespace Kullo { namespace Api {
 
-class Address;
-class MasterKey;
 enum class NetworkError;
+struct Address;
+struct MasterKey;
 
 /** Listener used in Client.checkCredentialsAsync() */
 class ClientCheckCredentialsListener {
 public:
     virtual ~ClientCheckCredentialsListener() {}
 
-    virtual void finished(const std::shared_ptr<Address> & address, const std::shared_ptr<MasterKey> & masterKey, bool valid) = 0;
+    virtual void finished(const Address & address, const MasterKey & masterKey, bool valid) = 0;
 
     /**
      * Network errors except NetworkError.Unauthorized, which is handled
      * by finished()
      */
-    virtual void error(const std::shared_ptr<Address> & address, NetworkError error) = 0;
+    virtual void error(const Address & address, NetworkError error) = 0;
 };
 
 } }  // namespace Kullo::Api

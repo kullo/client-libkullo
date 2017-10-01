@@ -12,24 +12,24 @@ class ClientImpl : public Api::Client
 public:
     ClientImpl();
 
-    std::shared_ptr<Api::AsyncTask> createSessionAsync(
-            const std::shared_ptr<Api::Address> &address,
-            const std::shared_ptr<Api::MasterKey> &masterKey,
+    nn_shared_ptr<Api::AsyncTask> createSessionAsync(
+            const Api::Address &address,
+            const Api::MasterKey &masterKey,
             const std::string &dbFilePath,
-            const std::shared_ptr<Api::SessionListener> &sessionListener,
-            const std::shared_ptr<Api::ClientCreateSessionListener> &listener) override;
+            const nn_shared_ptr<Api::SessionListener> &sessionListener,
+            const nn_shared_ptr<Api::ClientCreateSessionListener> &listener) override;
 
-    std::shared_ptr<Api::AsyncTask> addressExistsAsync(
-            const std::shared_ptr<Api::Address> &address,
-            const std::shared_ptr<Api::ClientAddressExistsListener> &listener) override;
+    nn_shared_ptr<Api::AsyncTask> addressExistsAsync(
+            const Api::Address &address,
+            const nn_shared_ptr<Api::ClientAddressExistsListener> &listener) override;
 
-    std::shared_ptr<Api::AsyncTask> checkCredentialsAsync(
-            const std::shared_ptr<Api::Address> &address,
-            const std::shared_ptr<Api::MasterKey> &masterKey,
-            const std::shared_ptr<Api::ClientCheckCredentialsListener> &listener) override;
+    nn_shared_ptr<Api::AsyncTask> checkCredentialsAsync(
+            const Api::Address &address,
+            const Api::MasterKey &masterKey,
+            const nn_shared_ptr<Api::ClientCheckCredentialsListener> &listener) override;
 
-    std::shared_ptr<Api::AsyncTask> generateKeysAsync(
-            const std::shared_ptr<Api::ClientGenerateKeysListener> &listener) override;
+    nn_shared_ptr<Api::AsyncTask> generateKeysAsync(
+            const nn_shared_ptr<Api::ClientGenerateKeysListener> &listener) override;
 
     std::unordered_map<std::string, std::string> versions() override;
 };

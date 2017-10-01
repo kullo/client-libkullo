@@ -39,14 +39,14 @@ public:
 
     std::string hash(int64_t msgId, int64_t attId) override;
 
-    std::shared_ptr<Api::AsyncTask> contentAsync(
+    nn_shared_ptr<Api::AsyncTask> contentAsync(
             int64_t msgId, int64_t attId,
-            const std::shared_ptr<Api::MessageAttachmentsContentListener> &listener
+            const nn_shared_ptr<Api::MessageAttachmentsContentListener> &listener
             ) override;
 
-    std::shared_ptr<Api::AsyncTask> saveToAsync(
+    nn_shared_ptr<Api::AsyncTask> saveToAsync(
             int64_t msgId, int64_t attId, const std::string &path,
-            const std::shared_ptr<Api::MessageAttachmentsSaveToListener> &listener
+            const nn_shared_ptr<Api::MessageAttachmentsSaveToListener> &listener
             ) override;
 
     // Event::MessagesEventListener

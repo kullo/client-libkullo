@@ -14,7 +14,7 @@ class DecryptingFilter : public Util::Filter
 {
 public:
     DecryptingFilter(const SymmetricKey &key);
-    ~DecryptingFilter();
+    ~DecryptingFilter() override;
 
     void write(
             Util::Sink &sink,

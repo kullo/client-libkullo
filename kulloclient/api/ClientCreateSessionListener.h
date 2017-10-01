@@ -3,24 +3,25 @@
 
 #pragma once
 
+#include <kulloclient/nn.h>
 #include <memory>
 
 namespace Kullo { namespace Api {
 
-class Address;
 class Session;
 enum class LocalError;
+struct Address;
 
 /** Listener used in Client.createSessionAsync() */
 class ClientCreateSessionListener {
 public:
     virtual ~ClientCreateSessionListener() {}
 
-    virtual void migrationStarted(const std::shared_ptr<Address> & address) = 0;
+    virtual void migrationStarted(const Address & address) = 0;
 
-    virtual void finished(const std::shared_ptr<Session> & session) = 0;
+    virtual void finished(const ::Kullo::nn_shared_ptr<Session> & session) = 0;
 
-    virtual void error(const std::shared_ptr<Address> & address, LocalError error) = 0;
+    virtual void error(const Address & address, LocalError error) = 0;
 };
 
 } }  // namespace Kullo::Api

@@ -13,7 +13,7 @@ class HashVerifyingFilter : public Util::Filter
 {
 public:
     HashVerifyingFilter(const std::vector<unsigned char> &expectedHash);
-    ~HashVerifyingFilter();
+    ~HashVerifyingFilter() override;
 
     void write(
             Util::Sink &sink,

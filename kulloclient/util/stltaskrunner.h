@@ -25,7 +25,7 @@ public:
      */
     ~StlTaskRunner() override;
 
-    void runTaskAsync(const std::shared_ptr<Api::Task> &task) override;
+    void runTaskAsync(const nn_shared_ptr<Api::Task> &task) override;
 
     /**
      * @brief Wait for all tasks to terminate.

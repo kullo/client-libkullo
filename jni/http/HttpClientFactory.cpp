@@ -15,12 +15,14 @@ HttpClientFactory::JavaProxy::JavaProxy(JniType j) : Handle(::djinni::jniGetThre
 
 HttpClientFactory::JavaProxy::~JavaProxy() = default;
 
-std::shared_ptr<::Kullo::Http::HttpClient> HttpClientFactory::JavaProxy::createHttpClient() {
+::Kullo::nn_shared_ptr<::Kullo::Http::HttpClient> HttpClientFactory::JavaProxy::createHttpClient() {
     auto jniEnv = ::djinni::jniGetThreadEnv();
     ::djinni::JniLocalScope jscope(jniEnv, 10);
     const auto& data = ::djinni::JniClass<::JNI::Kullo::Http::HttpClientFactory>::get();
     auto jret = jniEnv->CallObjectMethod(Handle::get().get(), data.method_createHttpClient);
     ::djinni::jniExceptionCheck(jniEnv);
+    DJINNI_ASSERT_MSG(jret, jniEnv, "Got unexpected null return value from function net.kullo.libkullo.http.HttpClientFactory#createHttpClient()");
+    return ::JNI::Kullo::Http::HttpClient::toCpp(jniEnv, jret);
     return ::JNI::Kullo::Http::HttpClient::toCpp(jniEnv, jret);
 }
 std::unordered_map<std::string, std::string> HttpClientFactory::JavaProxy::versions() {

@@ -8,7 +8,7 @@ class ClientGenerateKeysListener :
 {
 public:
     void progress(int8_t progress) override;
-    void finished(const std::shared_ptr<Kullo::Api::Registration> &registration) override;
+    void finished(const Kullo::nn_shared_ptr<Kullo::Api::Registration> &registration) override;
 
     bool isFinished_ = false;
     std::shared_ptr<Kullo::Api::Registration> registration_;

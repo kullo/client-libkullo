@@ -17,7 +17,7 @@ ClientCheckCredentialsListener::JavaProxy::JavaProxy(JniType j) : Handle(::djinn
 
 ClientCheckCredentialsListener::JavaProxy::~JavaProxy() = default;
 
-void ClientCheckCredentialsListener::JavaProxy::finished(const std::shared_ptr<::Kullo::Api::Address> & c_address, const std::shared_ptr<::Kullo::Api::MasterKey> & c_masterKey, bool c_valid) {
+void ClientCheckCredentialsListener::JavaProxy::finished(const ::Kullo::Api::Address & c_address, const ::Kullo::Api::MasterKey & c_masterKey, bool c_valid) {
     auto jniEnv = ::djinni::jniGetThreadEnv();
     ::djinni::JniLocalScope jscope(jniEnv, 10);
     const auto& data = ::djinni::JniClass<::JNI::Kullo::Api::ClientCheckCredentialsListener>::get();
@@ -27,7 +27,7 @@ void ClientCheckCredentialsListener::JavaProxy::finished(const std::shared_ptr<:
                            ::djinni::get(::djinni::Bool::fromCpp(jniEnv, c_valid)));
     ::djinni::jniExceptionCheck(jniEnv);
 }
-void ClientCheckCredentialsListener::JavaProxy::error(const std::shared_ptr<::Kullo::Api::Address> & c_address, ::Kullo::Api::NetworkError c_error) {
+void ClientCheckCredentialsListener::JavaProxy::error(const ::Kullo::Api::Address & c_address, ::Kullo::Api::NetworkError c_error) {
     auto jniEnv = ::djinni::jniGetThreadEnv();
     ::djinni::JniLocalScope jscope(jniEnv, 10);
     const auto& data = ::djinni::JniClass<::JNI::Kullo::Api::ClientCheckCredentialsListener>::get();

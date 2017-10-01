@@ -30,22 +30,22 @@ public:
             const boost::optional<std::thread::id> mainThread);
 
     // Api::Session impl
-    std::shared_ptr<Api::UserSettings> userSettings() override;
-    std::shared_ptr<Api::Conversations> conversations() override;
-    std::shared_ptr<Api::Messages> messages() override;
-    std::shared_ptr<Api::MessageAttachments> messageAttachments() override;
-    std::shared_ptr<Api::Senders> senders() override;
-    std::shared_ptr<Api::Drafts> drafts() override;
-    std::shared_ptr<Api::DraftAttachments> draftAttachments() override;
-    std::shared_ptr<Api::Syncer> syncer() override;
-    std::shared_ptr<Api::AsyncTask> accountInfoAsync(
-            const std::shared_ptr<Api::SessionAccountInfoListener> &listener) override;
-    std::shared_ptr<Api::AsyncTask> registerPushToken(
+    nn_shared_ptr<Api::UserSettings> userSettings() override;
+    nn_shared_ptr<Api::Conversations> conversations() override;
+    nn_shared_ptr<Api::Messages> messages() override;
+    nn_shared_ptr<Api::MessageAttachments> messageAttachments() override;
+    nn_shared_ptr<Api::Senders> senders() override;
+    nn_shared_ptr<Api::Drafts> drafts() override;
+    nn_shared_ptr<Api::DraftAttachments> draftAttachments() override;
+    nn_shared_ptr<Api::Syncer> syncer() override;
+    nn_shared_ptr<Api::AsyncTask> accountInfoAsync(
+            const nn_shared_ptr<Api::SessionAccountInfoListener> &listener) override;
+    nn_shared_ptr<Api::AsyncTask> registerPushToken(
             const Api::PushToken &token) override;
-    std::shared_ptr<Api::AsyncTask> unregisterPushToken(
+    nn_shared_ptr<Api::AsyncTask> unregisterPushToken(
             const Api::PushToken &token) override;
     std::vector<Api::Event> notify(
-            const std::shared_ptr<Api::InternalEvent> &internalEvent) override;
+            const nn_shared_ptr<Api::InternalEvent> &internalEvent) override;
 
     // Event::EventListeners impl
     Event::ConversationsEventListener &conversationsEventListener() const override;

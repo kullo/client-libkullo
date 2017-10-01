@@ -38,6 +38,7 @@ CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_DraftAttachments_00024Cpp
     try {
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
         const auto& ref = ::djinni::objectFromHandleAddress<::Kullo::Api::DraftAttachments>(nativeRef);
+        DJINNI_ASSERT_MSG(j_listener, jniEnv, "Got unexpected null parameter 'listener' to function net.kullo.libkullo.api.DraftAttachments#addAsync(long convId, String path, String mimeType, net.kullo.libkullo.api.DraftAttachmentsAddListener listener)");
         auto r = ref->addAsync(::djinni::I64::toCpp(jniEnv, j_convId),
                                ::djinni::String::toCpp(jniEnv, j_path),
                                ::djinni::String::toCpp(jniEnv, j_mimeType),
@@ -116,6 +117,7 @@ CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_DraftAttachments_00024Cpp
     try {
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
         const auto& ref = ::djinni::objectFromHandleAddress<::Kullo::Api::DraftAttachments>(nativeRef);
+        DJINNI_ASSERT_MSG(j_listener, jniEnv, "Got unexpected null parameter 'listener' to function net.kullo.libkullo.api.DraftAttachments#contentAsync(long convId, long attId, net.kullo.libkullo.api.DraftAttachmentsContentListener listener)");
         auto r = ref->contentAsync(::djinni::I64::toCpp(jniEnv, j_convId),
                                    ::djinni::I64::toCpp(jniEnv, j_attId),
                                    ::JNI::Kullo::Api::DraftAttachmentsContentListener::toCpp(jniEnv, j_listener));
@@ -128,6 +130,7 @@ CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_DraftAttachments_00024Cpp
     try {
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
         const auto& ref = ::djinni::objectFromHandleAddress<::Kullo::Api::DraftAttachments>(nativeRef);
+        DJINNI_ASSERT_MSG(j_listener, jniEnv, "Got unexpected null parameter 'listener' to function net.kullo.libkullo.api.DraftAttachments#saveToAsync(long convId, long attId, String path, net.kullo.libkullo.api.DraftAttachmentsSaveToListener listener)");
         auto r = ref->saveToAsync(::djinni::I64::toCpp(jniEnv, j_convId),
                                   ::djinni::I64::toCpp(jniEnv, j_attId),
                                   ::djinni::String::toCpp(jniEnv, j_path),

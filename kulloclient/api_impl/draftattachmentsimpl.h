@@ -27,11 +27,11 @@ public:
 
     std::vector<int64_t> allForDraft(int64_t convId) override;
 
-    std::shared_ptr<Api::AsyncTask> addAsync(
+    nn_shared_ptr<Api::AsyncTask> addAsync(
             int64_t convId,
             const std::string &path,
             const std::string &mimeType,
-            const std::shared_ptr<Api::DraftAttachmentsAddListener> &listener
+            const nn_shared_ptr<Api::DraftAttachmentsAddListener> &listener
             ) override;
 
     void remove(int64_t convId, int64_t attId) override;
@@ -49,17 +49,17 @@ public:
 
     std::string hash(int64_t convId, int64_t attId) override;
 
-    std::shared_ptr<Api::AsyncTask> contentAsync(
+    nn_shared_ptr<Api::AsyncTask> contentAsync(
             int64_t convId,
             int64_t attId,
-            const std::shared_ptr<Api::DraftAttachmentsContentListener> &listener
+            const nn_shared_ptr<Api::DraftAttachmentsContentListener> &listener
             ) override;
 
-    std::shared_ptr<Api::AsyncTask> saveToAsync(
+    nn_shared_ptr<Api::AsyncTask> saveToAsync(
             int64_t convId,
             int64_t attId,
             const std::string &path,
-            const std::shared_ptr<Api::DraftAttachmentsSaveToListener> &listener
+            const nn_shared_ptr<Api::DraftAttachmentsSaveToListener> &listener
             ) override;
 
     // Event::DraftAttachmentsEventListener impl

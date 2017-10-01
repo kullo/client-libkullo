@@ -5,6 +5,7 @@
 
 #include <boost/optional.hpp>
 #include <cstdint>
+#include <kulloclient/nn.h>
 #include <memory>
 
 namespace Kullo { namespace Http {

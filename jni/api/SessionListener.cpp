@@ -14,7 +14,7 @@ SessionListener::JavaProxy::JavaProxy(JniType j) : Handle(::djinni::jniGetThread
 
 SessionListener::JavaProxy::~JavaProxy() = default;
 
-void SessionListener::JavaProxy::internalEvent(const std::shared_ptr<::Kullo::Api::InternalEvent> & c_event) {
+void SessionListener::JavaProxy::internalEvent(const ::Kullo::nn_shared_ptr<::Kullo::Api::InternalEvent> & c_event) {
     auto jniEnv = ::djinni::jniGetThreadEnv();
     ::djinni::JniLocalScope jscope(jniEnv, 10);
     const auto& data = ::djinni::JniClass<::JNI::Kullo::Api::SessionListener>::get();

@@ -103,6 +103,37 @@ K_TEST_F(Strings, highlightLinksSimple)
                 HasSubstr("</a>"));
 }
 
+K_TEST_F(Strings, highlightLinksAfterPunktuation)
+{
+    EXPECT_THAT(Util::Strings::highlightWebLinks("Other text: https://example.com"),
+                HasSubstr("</a>"));
+    EXPECT_THAT(Util::Strings::highlightWebLinks("Other text:https://example.com"),
+                HasSubstr("</a>"));
+    EXPECT_THAT(Util::Strings::highlightWebLinks("Other text.https://example.com"),
+                HasSubstr("</a>"));
+    EXPECT_THAT(Util::Strings::highlightWebLinks("Other text;https://example.com"),
+                HasSubstr("</a>"));
+    EXPECT_THAT(Util::Strings::highlightWebLinks("Other text,https://example.com"),
+                HasSubstr("</a>"));
+    EXPECT_THAT(Util::Strings::highlightWebLinks("Other text–https://example.com"),
+                HasSubstr("</a>"));
+}
+
+K_TEST_F(Strings, highlightLinksSchemes)
+{
+    // ok
+    EXPECT_THAT(Util::Strings::highlightWebLinks("http://example.com"),
+                HasSubstr("</a>"));
+    EXPECT_THAT(Util::Strings::highlightWebLinks("https://example.com"),
+                HasSubstr("</a>"));
+
+    // other schemes
+    EXPECT_THAT(Util::Strings::highlightWebLinks("httpx://example.com"),
+                Not(HasSubstr("</a>")));
+    EXPECT_THAT(Util::Strings::highlightWebLinks("fakehttp://example.com"),
+                Not(HasSubstr("</a>")));
+}
+
 K_TEST_F(Strings, highlightBorderCases)
 {
     auto out = Util::Strings::highlightWebLinks("This link does not contain trailing dot: http://www. ok?");
@@ -380,6 +411,20 @@ K_TEST_F(Strings, highlightKulloAddressesSimple)
     EXPECT_THAT(Util::Strings::highlightKulloAdresses("address: bla#example.Com"),
                 HasSubstr("</a>"));
     EXPECT_THAT(Util::Strings::highlightKulloAdresses("address: BLA#EXAMPLE.COM"),
+                HasSubstr("</a>"));
+}
+
+K_TEST_F(Strings, highlightKulloAddressesAfterPunktuation)
+{
+    EXPECT_THAT(Util::Strings::highlightKulloAdresses("Other text: test#example.com"),
+                HasSubstr("</a>"));
+    EXPECT_THAT(Util::Strings::highlightKulloAdresses("Other text:test#example.com"),
+                HasSubstr("</a>"));
+    EXPECT_THAT(Util::Strings::highlightKulloAdresses("Other text;test#example.com"),
+                HasSubstr("</a>"));
+    EXPECT_THAT(Util::Strings::highlightKulloAdresses("Other text,test#example.com"),
+                HasSubstr("</a>"));
+    EXPECT_THAT(Util::Strings::highlightKulloAdresses("Other text–test#example.com"),
                 HasSubstr("</a>"));
 }
 

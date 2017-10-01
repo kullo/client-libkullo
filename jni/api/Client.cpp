@@ -41,6 +41,8 @@ CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_Client_00024CppProxy_nati
     try {
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
         const auto& ref = ::djinni::objectFromHandleAddress<::Kullo::Api::Client>(nativeRef);
+        DJINNI_ASSERT_MSG(j_sessionListener, jniEnv, "Got unexpected null parameter 'sessionListener' to function net.kullo.libkullo.api.Client#createSessionAsync(net.kullo.libkullo.api.Address address, net.kullo.libkullo.api.MasterKey masterKey, String dbFilePath, net.kullo.libkullo.api.SessionListener sessionListener, net.kullo.libkullo.api.ClientCreateSessionListener listener)");
+        DJINNI_ASSERT_MSG(j_listener, jniEnv, "Got unexpected null parameter 'listener' to function net.kullo.libkullo.api.Client#createSessionAsync(net.kullo.libkullo.api.Address address, net.kullo.libkullo.api.MasterKey masterKey, String dbFilePath, net.kullo.libkullo.api.SessionListener sessionListener, net.kullo.libkullo.api.ClientCreateSessionListener listener)");
         auto r = ref->createSessionAsync(::JNI::Kullo::Api::Address::toCpp(jniEnv, j_address),
                                          ::JNI::Kullo::Api::MasterKey::toCpp(jniEnv, j_masterKey),
                                          ::djinni::String::toCpp(jniEnv, j_dbFilePath),
@@ -55,6 +57,7 @@ CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_Client_00024CppProxy_nati
     try {
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
         const auto& ref = ::djinni::objectFromHandleAddress<::Kullo::Api::Client>(nativeRef);
+        DJINNI_ASSERT_MSG(j_listener, jniEnv, "Got unexpected null parameter 'listener' to function net.kullo.libkullo.api.Client#addressExistsAsync(net.kullo.libkullo.api.Address address, net.kullo.libkullo.api.ClientAddressExistsListener listener)");
         auto r = ref->addressExistsAsync(::JNI::Kullo::Api::Address::toCpp(jniEnv, j_address),
                                          ::JNI::Kullo::Api::ClientAddressExistsListener::toCpp(jniEnv, j_listener));
         return ::djinni::release(::JNI::Kullo::Api::AsyncTask::fromCpp(jniEnv, r));
@@ -66,6 +69,7 @@ CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_Client_00024CppProxy_nati
     try {
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
         const auto& ref = ::djinni::objectFromHandleAddress<::Kullo::Api::Client>(nativeRef);
+        DJINNI_ASSERT_MSG(j_listener, jniEnv, "Got unexpected null parameter 'listener' to function net.kullo.libkullo.api.Client#checkCredentialsAsync(net.kullo.libkullo.api.Address address, net.kullo.libkullo.api.MasterKey masterKey, net.kullo.libkullo.api.ClientCheckCredentialsListener listener)");
         auto r = ref->checkCredentialsAsync(::JNI::Kullo::Api::Address::toCpp(jniEnv, j_address),
                                             ::JNI::Kullo::Api::MasterKey::toCpp(jniEnv, j_masterKey),
                                             ::JNI::Kullo::Api::ClientCheckCredentialsListener::toCpp(jniEnv, j_listener));
@@ -78,6 +82,7 @@ CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_Client_00024CppProxy_nati
     try {
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
         const auto& ref = ::djinni::objectFromHandleAddress<::Kullo::Api::Client>(nativeRef);
+        DJINNI_ASSERT_MSG(j_listener, jniEnv, "Got unexpected null parameter 'listener' to function net.kullo.libkullo.api.Client#generateKeysAsync(net.kullo.libkullo.api.ClientGenerateKeysListener listener)");
         auto r = ref->generateKeysAsync(::JNI::Kullo::Api::ClientGenerateKeysListener::toCpp(jniEnv, j_listener));
         return ::djinni::release(::JNI::Kullo::Api::AsyncTask::fromCpp(jniEnv, r));
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, 0 /* value doesn't matter */)

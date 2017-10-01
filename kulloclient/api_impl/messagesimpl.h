@@ -27,13 +27,13 @@ public:
 
     std::vector<int64_t> allForConversation(int64_t convId) override;
 
-    int64_t latestForSender(const std::shared_ptr<Api::Address> & address) override;
+    int64_t latestForSender(const Api::Address & address) override;
 
     void remove(int64_t msgId) override;
 
     int64_t conversation(int64_t msgId) override;
 
-    std::vector<std::shared_ptr<Api::Delivery>> deliveryState(
+    std::vector<nn_shared_ptr<Api::Delivery>> deliveryState(
             int64_t msgId) override;
 
     bool isRead(int64_t msgId) override;
@@ -54,13 +54,13 @@ public:
 
     std::string footer(int64_t msgId) override;
 
-    std::shared_ptr<Api::AsyncTask> searchAsync(
+    nn_shared_ptr<Api::AsyncTask> searchAsync(
             const std::string &searchText,
             int64_t convId,
             const boost::optional<Api::SenderPredicate> &sender,
             int32_t limitResults,
             const boost::optional<std::string> & boundary,
-            const std::shared_ptr<Api::MessagesSearchListener> &listener) override;
+            const nn_shared_ptr<Api::MessagesSearchListener> &listener) override;
 
     // Event::MessagesEventListener
 
@@ -91,7 +91,7 @@ private:
     std::shared_ptr<Api::SessionListener> sessionListener_;
     std::map<int64_t, std::vector<int64_t>> idsForConvId_;
     std::map<int64_t, Dao::MessageDao> messages_;
-    std::map<int64_t, std::vector<std::shared_ptr<Api::Delivery>>> delivery_;
+    std::map<int64_t, std::vector<nn_shared_ptr<Api::Delivery>>> delivery_;
 };
 
 }

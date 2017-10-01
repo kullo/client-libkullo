@@ -91,6 +91,7 @@ CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_MessageAttachments_00024C
     try {
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
         const auto& ref = ::djinni::objectFromHandleAddress<::Kullo::Api::MessageAttachments>(nativeRef);
+        DJINNI_ASSERT_MSG(j_listener, jniEnv, "Got unexpected null parameter 'listener' to function net.kullo.libkullo.api.MessageAttachments#contentAsync(long msgId, long attId, net.kullo.libkullo.api.MessageAttachmentsContentListener listener)");
         auto r = ref->contentAsync(::djinni::I64::toCpp(jniEnv, j_msgId),
                                    ::djinni::I64::toCpp(jniEnv, j_attId),
                                    ::JNI::Kullo::Api::MessageAttachmentsContentListener::toCpp(jniEnv, j_listener));
@@ -103,6 +104,7 @@ CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_MessageAttachments_00024C
     try {
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
         const auto& ref = ::djinni::objectFromHandleAddress<::Kullo::Api::MessageAttachments>(nativeRef);
+        DJINNI_ASSERT_MSG(j_listener, jniEnv, "Got unexpected null parameter 'listener' to function net.kullo.libkullo.api.MessageAttachments#saveToAsync(long msgId, long attId, String path, net.kullo.libkullo.api.MessageAttachmentsSaveToListener listener)");
         auto r = ref->saveToAsync(::djinni::I64::toCpp(jniEnv, j_msgId),
                                   ::djinni::I64::toCpp(jniEnv, j_attId),
                                   ::djinni::String::toCpp(jniEnv, j_path),

@@ -3,9 +3,9 @@
 
 #include <smartsqlite/scopedtransaction.h>
 
-#include "kulloclient/api/Address.h"
-#include "kulloclient/api/MasterKey.h"
+#include "kulloclient/api_impl/Address.h"
 #include "kulloclient/api_impl/DateTime.h"
+#include "kulloclient/api_impl/MasterKey.h"
 #include "kulloclient/util/assert.h"
 #include "kulloclient/util/kulloaddress.h"
 #include "kulloclient/util/masterkey.h"
@@ -24,15 +24,14 @@ UserSettingsImpl::UserSettingsImpl(
     dao_.load(userSettings_);
 }
 
-std::shared_ptr<Api::Address> UserSettingsImpl::address()
+Api::Address UserSettingsImpl::address()
 {
-    return Api::Address::create(userSettings_.credentials.address->toString());
+    return Api::Address(*userSettings_.credentials.address);
 }
 
-std::shared_ptr<Api::MasterKey> UserSettingsImpl::masterKey()
+Api::MasterKey UserSettingsImpl::masterKey()
 {
-    return Api::MasterKey::createFromDataBlocks(
-                userSettings_.credentials.masterKey->dataBlocks());
+    return Api::MasterKey(*userSettings_.credentials.masterKey);
 }
 
 std::string UserSettingsImpl::name()

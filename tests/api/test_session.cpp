@@ -4,12 +4,12 @@
 #include <boost/optional.hpp>
 #include <kulloclient/registry.h>
 #include <kulloclient/api/AccountInfo.h>
-#include <kulloclient/api/Address.h>
 #include <kulloclient/api/AsyncTask.h>
-#include <kulloclient/api/MasterKey.h>
 #include <kulloclient/api/PushToken.h>
 #include <kulloclient/api/SessionAccountInfoListener.h>
+#include <kulloclient/api_impl/Address.h>
 #include <kulloclient/api_impl/clientcreatesessionworker.h>
+#include <kulloclient/api_impl/MasterKey.h>
 #include <kulloclient/api_impl/sessionimpl.h>
 #include <kulloclient/util/assert.h>
 
@@ -78,8 +78,8 @@ K_TEST_F(ApiSession, userSettingsWorks)
 {
     auto result = uut->userSettings();
     ASSERT_THAT(result, Not(IsNull()));
-    EXPECT_THAT(result->address()->isEqualTo(address_), Eq(true));
-    EXPECT_THAT(result->masterKey()->isEqualTo(masterKey_), Eq(true));
+    EXPECT_THAT(result->address(), Eq(address_));
+    EXPECT_THAT(result->masterKey(), Eq(masterKey_));
 }
 
 K_TEST_F(ApiSession, conversationsWorks)
@@ -117,14 +117,9 @@ K_TEST_F(ApiSession, syncerWorks)
     EXPECT_THAT(uut->syncer(), Not(IsNull()));
 }
 
-K_TEST_F(ApiSession, accountInfoAsyncFailsOnNull)
-{
-    EXPECT_THROW(uut->accountInfoAsync(nullptr), Util::AssertionFailed);
-}
-
 K_TEST_F(ApiSession, accountInfoAsyncCanBeCanceled)
 {
-    auto listener = std::make_shared<AccountInfoListener>();
+    auto listener = Kullo::nn_make_shared<AccountInfoListener>();
     auto task = uut->accountInfoAsync(listener);
     ASSERT_THAT(task, Not(IsNull()));
     EXPECT_NO_THROW(task->cancel());
@@ -132,7 +127,7 @@ K_TEST_F(ApiSession, accountInfoAsyncCanBeCanceled)
 
 K_TEST_F(ApiSession, accountInfoAsyncWorks)
 {
-    auto listener = std::make_shared<AccountInfoListener>();
+    auto listener = Kullo::nn_make_shared<AccountInfoListener>();
     auto task = uut->accountInfoAsync(listener);
 
     ASSERT_THAT(TestUtil::waitAndCheck(task, listener->isFinished_),
@@ -199,7 +194,7 @@ K_TEST_F(ApiSession, notifyWorks)
     Event::ApiEvents apiEventSet = { apiEvent };
     std::vector<Api::Event> apiEventVector = { apiEvent };
 
-    auto event = std::make_shared<MockEvent>();
+    auto event = Kullo::nn_make_shared<MockEvent>();
     EXPECT_CALL(*event, notify(_))
             .Times(1)
             .WillRepeatedly(Return(apiEventSet));

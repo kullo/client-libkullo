@@ -172,6 +172,7 @@ CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_Messages_00024CppProxy_na
     try {
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
         const auto& ref = ::djinni::objectFromHandleAddress<::Kullo::Api::Messages>(nativeRef);
+        DJINNI_ASSERT_MSG(j_listener, jniEnv, "Got unexpected null parameter 'listener' to function net.kullo.libkullo.api.Messages#searchAsync(String searchText, long convId, net.kullo.libkullo.api.SenderPredicate sender, int limitResults, String boundary, net.kullo.libkullo.api.MessagesSearchListener listener)");
         auto r = ref->searchAsync(::djinni::String::toCpp(jniEnv, j_searchText),
                                   ::djinni::I64::toCpp(jniEnv, j_convId),
                                   ::djinni::Optional<boost::optional, ::JNI::Kullo::Api::SenderPredicate>::toCpp(jniEnv, j_sender),

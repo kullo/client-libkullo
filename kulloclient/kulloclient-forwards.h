@@ -3,19 +3,21 @@
 
 namespace Kullo {
     namespace Api {
-        class Address;
+        class AddressHelpers;
         class AsyncTask;
         class Challenge;
         class Client;
-        class MasterKey;
+        class MasterKeyHelpers;
         class Registration;
         class Session;
         class UserSettings;
 
         // Records
+        struct Address;
         struct AccountInfo;
         struct DateTime;
         struct Event;
+        struct MasterKey;
         struct MessagesSearchResult;
         struct SenderPredicate;
         struct SyncProgress;

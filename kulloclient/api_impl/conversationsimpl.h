@@ -3,6 +3,7 @@
 
 #include "kulloclient/api/Conversations.h"
 #include "kulloclient/api/SessionListener.h"
+#include "kulloclient/api_impl/Address.h"
 #include "kulloclient/api_impl/DateTime.h"
 #include "kulloclient/api_impl/sessiondata.h"
 #include "kulloclient/dao/conversationdao.h"
@@ -29,17 +30,15 @@ public:
     std::vector<int64_t> all() override;
 
     int64_t get(
-            const std::unordered_set<std::shared_ptr<Api::Address>> &participants
+            const std::unordered_set<Api::Address> &participants
             ) override;
 
-    int64_t add(
-            const std::unordered_set<std::shared_ptr<Api::Address>> &participants
+    int64_t add(const std::unordered_set<Api::Address> &participants
             ) override;
 
     void triggerRemoval(int64_t convId) override;
 
-    std::unordered_set<std::shared_ptr<Api::Address>> participants(
-            int64_t convId) override;
+    std::unordered_set<Api::Address> participants(int64_t convId) override;
 
     int32_t totalMessages(int64_t convId) override;
 
@@ -68,8 +67,7 @@ public:
     Event::ApiEvents conversationWillBeRemoved(int64_t convId) override;
 
 private:
-    std::string participantsToString(
-            const std::unordered_set<std::shared_ptr<Api::Address>> &participants);
+    std::string participantsToString(const std::unordered_set<Api::Address> &participants);
     int64_t get(const std::string &participants);
 
     std::shared_ptr<SessionData> sessionData_;

@@ -21,8 +21,8 @@ public:
 
     // Api::UserSettings
 
-    std::shared_ptr<Api::Address> address() override;
-    std::shared_ptr<Api::MasterKey> masterKey() override;
+    Api::Address address() override;
+    Api::MasterKey masterKey() override;
     std::string name() override;
     void setName(const std::string &name) override;
     std::string organization() override;

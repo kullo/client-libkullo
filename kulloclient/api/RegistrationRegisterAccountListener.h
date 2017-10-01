@@ -3,28 +3,29 @@
 
 #pragma once
 
+#include <kulloclient/nn.h>
 #include <memory>
 
 namespace Kullo { namespace Api {
 
-class Address;
 class Challenge;
-class MasterKey;
 enum class AddressNotAvailableReason;
 enum class NetworkError;
+struct Address;
+struct MasterKey;
 
 /** Listener used in Registration.registerAccountAsync() */
 class RegistrationRegisterAccountListener {
 public:
     virtual ~RegistrationRegisterAccountListener() {}
 
-    virtual void challengeNeeded(const std::shared_ptr<Address> & address, const std::shared_ptr<Challenge> & challenge) = 0;
+    virtual void challengeNeeded(const Address & address, const ::Kullo::nn_shared_ptr<Challenge> & challenge) = 0;
 
-    virtual void addressNotAvailable(const std::shared_ptr<Address> & address, AddressNotAvailableReason reason) = 0;
+    virtual void addressNotAvailable(const Address & address, AddressNotAvailableReason reason) = 0;
 
-    virtual void finished(const std::shared_ptr<Address> & address, const std::shared_ptr<MasterKey> & masterKey) = 0;
+    virtual void finished(const Address & address, const MasterKey & masterKey) = 0;
 
-    virtual void error(const std::shared_ptr<Address> & address, NetworkError error) = 0;
+    virtual void error(const Address & address, NetworkError error) = 0;
 };
 
 } }  // namespace Kullo::Api

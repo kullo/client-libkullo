@@ -20,6 +20,8 @@ public:
     */
     explicit SymmetricKey(const std::string& hexStr = "");
 
+    explicit SymmetricKey(const std::vector<unsigned char>& raw);
+
     explicit SymmetricKey(std::shared_ptr<SymmetricKeyImpl> priv);
     std::shared_ptr<SymmetricKeyImpl> priv() const;
 

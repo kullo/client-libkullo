@@ -84,29 +84,27 @@ std::string MessageAttachmentsImpl::hash(int64_t msgId, int64_t attId)
     return daoIter != attachments_.end() ? daoIter->second.hash() : "";
 }
 
-std::shared_ptr<Api::AsyncTask> MessageAttachmentsImpl::contentAsync(
+nn_shared_ptr<Api::AsyncTask> MessageAttachmentsImpl::contentAsync(
         int64_t msgId, int64_t attId,
-        const std::shared_ptr<Api::MessageAttachmentsContentListener> &listener)
+        const nn_shared_ptr<Api::MessageAttachmentsContentListener> &listener)
 {
     kulloAssert(msgId >= Kullo::ID_MIN && msgId <= Kullo::ID_MAX);
     kulloAssert(attId >= Kullo::ID_MIN && attId <= Kullo::ID_MAX);
-    kulloAssert(listener);
 
-    return std::make_shared<AsyncTaskImpl>(
+    return nn_make_shared<AsyncTaskImpl>(
                 std::make_shared<MessageAttachmentsContentWorker>(
                     msgId, attId, sessionData_->sessionConfig_, listener));
 }
 
-std::shared_ptr<Api::AsyncTask> MessageAttachmentsImpl::saveToAsync(
+nn_shared_ptr<Api::AsyncTask> MessageAttachmentsImpl::saveToAsync(
         int64_t msgId, int64_t attId, const std::string &path,
-        const std::shared_ptr<Api::MessageAttachmentsSaveToListener> &listener)
+        const nn_shared_ptr<Api::MessageAttachmentsSaveToListener> &listener)
 {
     kulloAssert(msgId >= Kullo::ID_MIN && msgId <= Kullo::ID_MAX);
     kulloAssert(attId >= Kullo::ID_MIN && attId <= Kullo::ID_MAX);
     kulloAssert(!path.empty());
-    kulloAssert(listener);
 
-    return std::make_shared<AsyncTaskImpl>(
+    return nn_make_shared<AsyncTaskImpl>(
                 std::make_shared<MessageAttachmentsSaveToWorker>(
                     msgId, attId, path, sessionData_->sessionConfig_, listener));
 }

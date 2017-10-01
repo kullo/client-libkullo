@@ -341,9 +341,9 @@ Json::Value FakeHttpClient::readJson(const std::vector<uint8_t> &responseBody)
     return json;
 }
 
-std::shared_ptr<Http::HttpClient> FakeHttpClientFactory::createHttpClient()
+Kullo::nn_shared_ptr<Http::HttpClient> FakeHttpClientFactory::createHttpClient()
 {
-    return std::make_shared<FakeHttpClient>();
+    return Kullo::nn_make_shared<FakeHttpClient>();
 }
 
 std::unordered_map<std::string, std::string> FakeHttpClientFactory::versions()

@@ -1,63 +1,55 @@
 /* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
-#include <kulloclient/api/Address.h>
+#include <kulloclient/api_impl/Address.h>
 
 #include "tests/kullotest.h"
 
 using namespace testing;
 using namespace Kullo;
 
-K_TEST(ApiAddressStatic, createFailsForInvalidAddress)
-{
-    EXPECT_THAT(Api::Address::create(""), IsNull());
-    EXPECT_THAT(Api::Address::create("invalid@address"), IsNull());
-}
-
-K_TEST(ApiAddressStatic, createWorks)
-{
-    EXPECT_THAT(Api::Address::create("example#kullo.net"), Not(IsNull()));
-}
-
-
 class ApiAddress : public KulloTest
 {
 protected:
-    ApiAddress()
-        : uut(Api::Address::create(addr))
-    {}
-
-    std::string addr = "example#kullo.net";
-    std::shared_ptr<Api::Address> uut;
+    const std::string addressString_ = "example#kullo.net";
+    const Api::Address uut_ = addressString_;
 };
+
+K_TEST_F(ApiAddress, componentwiseConstructorWorks)
+{
+    EXPECT_THAT(uut_, Eq(Api::Address("example", "kullo.net")));
+    EXPECT_THAT(uut_, Ne(Api::Address("examplx", "kullo.net")));
+    EXPECT_THAT(uut_, Ne(Api::Address("example", "kullo.org")));
+
+    EXPECT_ANY_THROW(Api::Address("", "kullo.net"));
+    EXPECT_ANY_THROW(Api::Address(" example", "kullo.net"));
+    EXPECT_ANY_THROW(Api::Address("example ", "kullo.net"));
+    EXPECT_ANY_THROW(Api::Address("exampleä", "kullo.net"));
+
+    EXPECT_ANY_THROW(Api::Address("example", ""));
+    EXPECT_ANY_THROW(Api::Address("example", " kullo.net"));
+    EXPECT_ANY_THROW(Api::Address("example", "kullo.net "));
+    EXPECT_ANY_THROW(Api::Address("example", "kullo.netö"));
+}
 
 K_TEST_F(ApiAddress, toStringWorks)
 {
-    EXPECT_THAT(uut->toString(), Eq(addr));
+    EXPECT_THAT(uut_.toString(), Eq(addressString_));
 }
 
 K_TEST_F(ApiAddress, localPartWorks)
 {
-    EXPECT_THAT(uut->localPart(), Eq("example"));
+    EXPECT_THAT(uut_.localPart, Eq("example"));
 }
 
 K_TEST_F(ApiAddress, domainPartWorks)
 {
-    EXPECT_THAT(uut->domainPart(), Eq("kullo.net"));
+    EXPECT_THAT(uut_.domainPart, Eq("kullo.net"));
 }
 
 K_TEST_F(ApiAddress, isEqualToWorks)
 {
-    auto uut2 =  Api::Address::create(addr);
-    EXPECT_THAT(uut->isEqualTo(uut2), Eq(true));
+    auto address2 = Api::Address(addressString_);
+    EXPECT_THAT(uut_, Eq(address2));
 
-    auto uut3 =  Api::Address::create("other#kullo.net");
-    EXPECT_THAT(uut->isEqualTo(uut3), Eq(false));
-}
-
-K_TEST_F(ApiAddress, isLessThanWorks)
-{
-    auto uut2 =  Api::Address::create(addr);
-    EXPECT_THAT(uut->isLessThan(uut2), Eq(false));
-
-    auto uut3 =  Api::Address::create("other#kullo.net");
-    EXPECT_THAT(uut->isLessThan(uut3), Eq(true));
+    auto address3 = Api::Address("other#kullo.net");
+    EXPECT_THAT(uut_, Ne(address3));
 }

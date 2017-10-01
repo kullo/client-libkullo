@@ -3,7 +3,7 @@
 
 #include "kulloclient/api/DeliveryState.h"
 #include "kulloclient/api/DeliveryReason.h"
-#include "kulloclient/api_impl/addressimpl.h"
+#include "kulloclient/api_impl/Address.h"
 #include "kulloclient/api_impl/DateTime.h"
 #include "kulloclient/util/assert.h"
 
@@ -14,9 +14,9 @@ DeliveryImpl::DeliveryImpl(const Util::Delivery &delivery)
     : delivery_(delivery)
 {}
 
-std::shared_ptr<Api::Address> DeliveryImpl::recipient()
+Api::Address DeliveryImpl::recipient()
 {
-    return std::make_shared<AddressImpl>(delivery_.recipient);
+    return Api::Address(delivery_.recipient);
 }
 
 Api::DeliveryState DeliveryImpl::state()
@@ -65,16 +65,16 @@ bool DeliveryImpl::operator!=(const DeliveryImpl &other) const
     return !(*this == other);
 }
 
-bool DeliveryImpl::deliveryListsEqual(std::vector<std::shared_ptr<Api::Delivery>> list1,
-                                      std::vector<std::shared_ptr<Api::Delivery>> list2)
+bool DeliveryImpl::deliveryListsEqual(std::vector<nn_shared_ptr<Api::Delivery>> list1,
+                                      std::vector<nn_shared_ptr<Api::Delivery>> list2)
 {
     if (list1.size() != list2.size()) return false;
 
     for (unsigned int pos = 0; pos < list1.size(); ++pos)
     {
-        auto item1 = std::dynamic_pointer_cast<DeliveryImpl>(list1[pos]);
+        auto item1 = std::dynamic_pointer_cast<DeliveryImpl>(list1[pos].as_nullable());
         kulloAssert(item1);
-        auto item2 = std::dynamic_pointer_cast<DeliveryImpl>(list2[pos]);
+        auto item2 = std::dynamic_pointer_cast<DeliveryImpl>(list2[pos].as_nullable());
         kulloAssert(item2);
 
         if (*item1 != *item2) return false;

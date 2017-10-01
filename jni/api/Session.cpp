@@ -117,6 +117,7 @@ CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_Session_00024CppProxy_nat
     try {
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
         const auto& ref = ::djinni::objectFromHandleAddress<::Kullo::Api::Session>(nativeRef);
+        DJINNI_ASSERT_MSG(j_listener, jniEnv, "Got unexpected null parameter 'listener' to function net.kullo.libkullo.api.Session#accountInfoAsync(net.kullo.libkullo.api.SessionAccountInfoListener listener)");
         auto r = ref->accountInfoAsync(::JNI::Kullo::Api::SessionAccountInfoListener::toCpp(jniEnv, j_listener));
         return ::djinni::release(::JNI::Kullo::Api::AsyncTask::fromCpp(jniEnv, r));
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, 0 /* value doesn't matter */)
@@ -147,6 +148,7 @@ CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_Session_00024CppProxy_nat
     try {
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
         const auto& ref = ::djinni::objectFromHandleAddress<::Kullo::Api::Session>(nativeRef);
+        DJINNI_ASSERT_MSG(j_internalEvent, jniEnv, "Got unexpected null parameter 'internalEvent' to function net.kullo.libkullo.api.Session#notify(net.kullo.libkullo.api.InternalEvent internalEvent)");
         auto r = ref->notify(::JNI::Kullo::Api::InternalEvent::toCpp(jniEnv, j_internalEvent));
         return ::djinni::release(::djinni::List<::JNI::Kullo::Api::Event>::fromCpp(jniEnv, r));
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, 0 /* value doesn't matter */)
