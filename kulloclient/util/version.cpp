@@ -89,7 +89,7 @@ namespace {
     #error unknown platform
 #endif
 
-const std::string LIBKULLO_VERSION = "v66";
+const std::string LIBKULLO_VERSION = "v67";
 const std::string LIBKULLO_USER_AGENT =
         "libkulloclient/" + LIBKULLO_VERSION + " (" + KULLO_OS + "/" + KULLO_OS_USERVERSION + ")";
 }

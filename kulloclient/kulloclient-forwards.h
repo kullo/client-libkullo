@@ -7,6 +7,7 @@ namespace Kullo {
         class AsyncTask;
         class Challenge;
         class Client;
+        class InternalEvent;
         class MasterKeyHelpers;
         class Registration;
         class Session;
@@ -22,6 +23,7 @@ namespace Kullo {
         struct SenderPredicate;
         struct SyncProgress;
 
+        enum class AddressNotAvailableReason;
         enum class ChallengeType;
         enum class LocalError;
         enum class NetworkError;

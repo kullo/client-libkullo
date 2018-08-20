@@ -63,6 +63,10 @@ Tips and Tricks
 Changelog
 ---------
 
+### v67 (2018-05-09)
+ 
+ * Build paths adjustments of dependencies
+
 ### v66 (2017-09-25)
 
  * Use non-nullable types where possible

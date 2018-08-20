@@ -31,7 +31,8 @@ HashVerifyingFilter::HashVerifyingFilter(
     : expectedHash_(expectedHash)
     , impl_(make_unique<Impl>())
 {
-    kulloAssert(expectedHash_.size() == impl_->hashFun->output_length());
+    kulloAssertMsg(expectedHash_.size() == impl_->hashFun->output_length(),
+                   "Wrong expected hash size: " + std::to_string(expectedHash_.size()));
 }
 
 HashVerifyingFilter::~HashVerifyingFilter()
