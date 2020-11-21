@@ -1,4 +1,9 @@
-/* Copyright 2013–2017 Kullo GmbH. All rights reserved. */
+/*
+ * Copyright 2013–2020 Kullo GmbH
+ *
+ * This source code is licensed under the 3-clause BSD license. See LICENSE.txt
+ * in the root directory of this source tree for details.
+ */
 #include "kulloclient/util/version.h"
 
 #include <boost/version.hpp>
@@ -89,7 +94,7 @@ namespace {
     #error unknown platform
 #endif
 
-const std::string LIBKULLO_VERSION = "v68";
+const std::string LIBKULLO_VERSION = "v69";
 const std::string LIBKULLO_USER_AGENT =
         "libkulloclient/" + LIBKULLO_VERSION + " (" + KULLO_OS + "/" + KULLO_OS_USERVERSION + ")";
 }
