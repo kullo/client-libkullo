@@ -21,7 +21,7 @@ CJNIEXPORT void JNICALL Java_net_kullo_libkullo_api_Registry_00024CppProxy_nativ
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, )
 }
 
-CJNIEXPORT void JNICALL Java_net_kullo_libkullo_api_Registry_setLogListener(JNIEnv* jniEnv, jobject /*this*/, jobject j_listener)
+CJNIEXPORT void JNICALL Java_net_kullo_libkullo_api_Registry_00024CppProxy_setLogListener(JNIEnv* jniEnv, jobject /*this*/, jobject j_listener)
 {
     try {
         DJINNI_FUNCTION_PROLOGUE0(jniEnv);
@@ -29,7 +29,7 @@ CJNIEXPORT void JNICALL Java_net_kullo_libkullo_api_Registry_setLogListener(JNIE
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, )
 }
 
-CJNIEXPORT void JNICALL Java_net_kullo_libkullo_api_Registry_setTaskRunner(JNIEnv* jniEnv, jobject /*this*/, jobject j_taskRunner)
+CJNIEXPORT void JNICALL Java_net_kullo_libkullo_api_Registry_00024CppProxy_setTaskRunner(JNIEnv* jniEnv, jobject /*this*/, jobject j_taskRunner)
 {
     try {
         DJINNI_FUNCTION_PROLOGUE0(jniEnv);

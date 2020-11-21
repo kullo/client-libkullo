@@ -19,7 +19,7 @@ CJNIEXPORT void JNICALL Java_net_kullo_libkullo_api_InternalAddressUtils_00024Cp
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, )
 }
 
-CJNIEXPORT jboolean JNICALL Java_net_kullo_libkullo_api_InternalAddressUtils_isValid(JNIEnv* jniEnv, jobject /*this*/, jstring j_localPart, jstring j_domainPart)
+CJNIEXPORT jboolean JNICALL Java_net_kullo_libkullo_api_InternalAddressUtils_00024CppProxy_isValid(JNIEnv* jniEnv, jobject /*this*/, jstring j_localPart, jstring j_domainPart)
 {
     try {
         DJINNI_FUNCTION_PROLOGUE0(jniEnv);

@@ -20,7 +20,7 @@ CJNIEXPORT void JNICALL Java_net_kullo_libkullo_api_InternalDateTimeUtils_00024C
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, )
 }
 
-CJNIEXPORT jboolean JNICALL Java_net_kullo_libkullo_api_InternalDateTimeUtils_isValid(JNIEnv* jniEnv, jobject /*this*/, jshort j_year, jbyte j_month, jbyte j_day, jbyte j_hour, jbyte j_minute, jbyte j_second, jshort j_tzOffsetMinutes)
+CJNIEXPORT jboolean JNICALL Java_net_kullo_libkullo_api_InternalDateTimeUtils_00024CppProxy_isValid(JNIEnv* jniEnv, jobject /*this*/, jshort j_year, jbyte j_month, jbyte j_day, jbyte j_hour, jbyte j_minute, jbyte j_second, jshort j_tzOffsetMinutes)
 {
     try {
         DJINNI_FUNCTION_PROLOGUE0(jniEnv);
@@ -35,7 +35,7 @@ CJNIEXPORT jboolean JNICALL Java_net_kullo_libkullo_api_InternalDateTimeUtils_is
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, 0 /* value doesn't matter */)
 }
 
-CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_InternalDateTimeUtils_nowUtc(JNIEnv* jniEnv, jobject /*this*/)
+CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_InternalDateTimeUtils_00024CppProxy_nowUtc(JNIEnv* jniEnv, jobject /*this*/)
 {
     try {
         DJINNI_FUNCTION_PROLOGUE0(jniEnv);
@@ -44,7 +44,7 @@ CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_InternalDateTimeUtils_now
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, 0 /* value doesn't matter */)
 }
 
-CJNIEXPORT jstring JNICALL Java_net_kullo_libkullo_api_InternalDateTimeUtils_toString(JNIEnv* jniEnv, jobject /*this*/, jobject j_dateTime)
+CJNIEXPORT jstring JNICALL Java_net_kullo_libkullo_api_InternalDateTimeUtils_00024CppProxy_toString(JNIEnv* jniEnv, jobject /*this*/, jobject j_dateTime)
 {
     try {
         DJINNI_FUNCTION_PROLOGUE0(jniEnv);
@@ -53,7 +53,7 @@ CJNIEXPORT jstring JNICALL Java_net_kullo_libkullo_api_InternalDateTimeUtils_toS
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, 0 /* value doesn't matter */)
 }
 
-CJNIEXPORT jbyte JNICALL Java_net_kullo_libkullo_api_InternalDateTimeUtils_compare(JNIEnv* jniEnv, jobject /*this*/, jobject j_lhs, jobject j_rhs)
+CJNIEXPORT jbyte JNICALL Java_net_kullo_libkullo_api_InternalDateTimeUtils_00024CppProxy_compare(JNIEnv* jniEnv, jobject /*this*/, jobject j_lhs, jobject j_rhs)
 {
     try {
         DJINNI_FUNCTION_PROLOGUE0(jniEnv);

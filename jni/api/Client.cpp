@@ -27,7 +27,7 @@ CJNIEXPORT void JNICALL Java_net_kullo_libkullo_api_Client_00024CppProxy_nativeD
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, )
 }
 
-CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_Client_create(JNIEnv* jniEnv, jobject /*this*/)
+CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_Client_00024CppProxy_create(JNIEnv* jniEnv, jobject /*this*/)
 {
     try {
         DJINNI_FUNCTION_PROLOGUE0(jniEnv);

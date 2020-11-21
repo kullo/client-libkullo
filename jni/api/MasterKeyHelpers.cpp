@@ -20,7 +20,7 @@ CJNIEXPORT void JNICALL Java_net_kullo_libkullo_api_MasterKeyHelpers_00024CppPro
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, )
 }
 
-CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_MasterKeyHelpers_createFromPem(JNIEnv* jniEnv, jobject /*this*/, jstring j_pem)
+CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_MasterKeyHelpers_00024CppProxy_createFromPem(JNIEnv* jniEnv, jobject /*this*/, jstring j_pem)
 {
     try {
         DJINNI_FUNCTION_PROLOGUE0(jniEnv);
@@ -29,7 +29,7 @@ CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_MasterKeyHelpers_createFr
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, 0 /* value doesn't matter */)
 }
 
-CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_MasterKeyHelpers_createFromDataBlocks(JNIEnv* jniEnv, jobject /*this*/, jobject j_dataBlocks)
+CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_MasterKeyHelpers_00024CppProxy_createFromDataBlocks(JNIEnv* jniEnv, jobject /*this*/, jobject j_dataBlocks)
 {
     try {
         DJINNI_FUNCTION_PROLOGUE0(jniEnv);
@@ -38,7 +38,7 @@ CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_MasterKeyHelpers_createFr
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, 0 /* value doesn't matter */)
 }
 
-CJNIEXPORT jboolean JNICALL Java_net_kullo_libkullo_api_MasterKeyHelpers_isValidBlock(JNIEnv* jniEnv, jobject /*this*/, jstring j_block)
+CJNIEXPORT jboolean JNICALL Java_net_kullo_libkullo_api_MasterKeyHelpers_00024CppProxy_isValidBlock(JNIEnv* jniEnv, jobject /*this*/, jstring j_block)
 {
     try {
         DJINNI_FUNCTION_PROLOGUE0(jniEnv);
@@ -47,7 +47,7 @@ CJNIEXPORT jboolean JNICALL Java_net_kullo_libkullo_api_MasterKeyHelpers_isValid
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, 0 /* value doesn't matter */)
 }
 
-CJNIEXPORT jstring JNICALL Java_net_kullo_libkullo_api_MasterKeyHelpers_toPem(JNIEnv* jniEnv, jobject /*this*/, jobject j_masterKey)
+CJNIEXPORT jstring JNICALL Java_net_kullo_libkullo_api_MasterKeyHelpers_00024CppProxy_toPem(JNIEnv* jniEnv, jobject /*this*/, jobject j_masterKey)
 {
     try {
         DJINNI_FUNCTION_PROLOGUE0(jniEnv);
@@ -56,7 +56,7 @@ CJNIEXPORT jstring JNICALL Java_net_kullo_libkullo_api_MasterKeyHelpers_toPem(JN
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, 0 /* value doesn't matter */)
 }
 
-CJNIEXPORT jstring JNICALL Java_net_kullo_libkullo_api_MasterKeyHelpers_encrypt(JNIEnv* jniEnv, jobject /*this*/, jstring j_password, jobject j_masterKey)
+CJNIEXPORT jstring JNICALL Java_net_kullo_libkullo_api_MasterKeyHelpers_00024CppProxy_encrypt(JNIEnv* jniEnv, jobject /*this*/, jstring j_password, jobject j_masterKey)
 {
     try {
         DJINNI_FUNCTION_PROLOGUE0(jniEnv);
@@ -66,7 +66,7 @@ CJNIEXPORT jstring JNICALL Java_net_kullo_libkullo_api_MasterKeyHelpers_encrypt(
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, 0 /* value doesn't matter */)
 }
 
-CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_MasterKeyHelpers_decrypt(JNIEnv* jniEnv, jobject /*this*/, jstring j_password, jstring j_encryptedMasterKey)
+CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_MasterKeyHelpers_00024CppProxy_decrypt(JNIEnv* jniEnv, jobject /*this*/, jstring j_password, jstring j_encryptedMasterKey)
 {
     try {
         DJINNI_FUNCTION_PROLOGUE0(jniEnv);

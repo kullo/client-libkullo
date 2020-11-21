@@ -20,7 +20,7 @@ CJNIEXPORT void JNICALL Java_net_kullo_libkullo_api_AddressHelpers_00024CppProxy
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, )
 }
 
-CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_AddressHelpers_create(JNIEnv* jniEnv, jobject /*this*/, jstring j_address)
+CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_AddressHelpers_00024CppProxy_create(JNIEnv* jniEnv, jobject /*this*/, jstring j_address)
 {
     try {
         DJINNI_FUNCTION_PROLOGUE0(jniEnv);

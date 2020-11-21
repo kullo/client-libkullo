@@ -130,7 +130,7 @@ CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_Conversations_00024CppPro
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, 0 /* value doesn't matter */)
 }
 
-CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_Conversations_emptyConversationTimestamp(JNIEnv* jniEnv, jobject /*this*/)
+CJNIEXPORT jobject JNICALL Java_net_kullo_libkullo_api_Conversations_00024CppProxy_emptyConversationTimestamp(JNIEnv* jniEnv, jobject /*this*/)
 {
     try {
         DJINNI_FUNCTION_PROLOGUE0(jniEnv);

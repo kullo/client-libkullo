@@ -19,7 +19,7 @@ CJNIEXPORT void JNICALL Java_net_kullo_libkullo_api_InternalMasterKeyUtils_00024
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, )
 }
 
-CJNIEXPORT jboolean JNICALL Java_net_kullo_libkullo_api_InternalMasterKeyUtils_isValid(JNIEnv* jniEnv, jobject /*this*/, jobject j_blocks)
+CJNIEXPORT jboolean JNICALL Java_net_kullo_libkullo_api_InternalMasterKeyUtils_00024CppProxy_isValid(JNIEnv* jniEnv, jobject /*this*/, jobject j_blocks)
 {
     try {
         DJINNI_FUNCTION_PROLOGUE0(jniEnv);

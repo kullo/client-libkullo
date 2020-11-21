@@ -19,7 +19,7 @@ CJNIEXPORT void JNICALL Java_net_kullo_libkullo_http_Registry_00024CppProxy_nati
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, )
 }
 
-CJNIEXPORT void JNICALL Java_net_kullo_libkullo_http_Registry_setHttpClientFactory(JNIEnv* jniEnv, jobject /*this*/, jobject j_factory)
+CJNIEXPORT void JNICALL Java_net_kullo_libkullo_http_Registry_00024CppProxy_setHttpClientFactory(JNIEnv* jniEnv, jobject /*this*/, jobject j_factory)
 {
     try {
         DJINNI_FUNCTION_PROLOGUE0(jniEnv);
